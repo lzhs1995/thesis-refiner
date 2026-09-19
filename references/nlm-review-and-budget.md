@@ -1,0 +1,32 @@
+# NLM 审查与账号级预算
+
+先做本地可机械验证的字号、编号、表格数值、域结构、PDF 字体/裁切和来源指纹检查。NLM 聚焦长文的结构、内容、逻辑、术语语言及跨页一致性；返回意见须本地裁决。不能把“低幻觉”理解为不会误报。
+
+默认六类审查：理论/方法、数据图文、结构、术语语法、引文、格式。三包方案（前两类合并、结构语言合并、引文格式合并）只有在真实对照证明覆盖与问题召回均无损后才启用；模拟、离线重排回答不证明查询合并有效。对照不足仍用六类，绝不靠降低覆盖节省额度。长附录按实际检索缺口拆分，尾节单独列入矩阵。
+
+正式复核先冻结排版与 PDF。相同 PDF/source 两轮复用，使用独立 conversation；不是每轮重传一次。同主题的定向补问绑定原问题与来源，避免重复做开放扫描。保留所有原回答，即便最终全部判误报。判断“无新问题”依据本地裁决后的新确认问题数，不能篡改回答成空列表。
+
+## 配额事实与策略
+
+截至 2026-09-19，Google [新版公告](https://support.google.com/gemininotebook/answer/17670842?hl=en) 说明从 2026-09-02 起采用 compute-based limits，受 prompt、模型、功能和对话长度影响，5 小时刷新并有每周上限。[旧套餐表](https://support.google.com/gemininotebook/answer/16213268?hl=en) 仍保留部分每日次数说明；[中文指南](https://notebooklm-guide.com/zh/notebooklm-system-limits-benchmarks/) 仅作补充。账号是否已经迁移、剩余额度和可恢复时间以当前 UI/响应为准。
+
+- regime 为 legacy_daily_count、compute_weekly 或 unknown；记录观测来源、时间、时区和原提示。不猜午夜刷新，不以“500次/24小时”作为通用默认。
+- 同账号默认一个网络请求在途；不同 notebook、target 和 workspace 共用预算。短批最多两个 query 或 10 分钟，当前请求安全结束再交窗；本实现每个调用独立归窗，排队任务优先。
+- 明确任务调用预算，已知可计量额度保留 20% 给最终验收与必要恢复。compute 余量未知时只报告观察到的请求数、耗时和覆盖，不把次数冒充计算单位。每次预算调整保留新观测，不能清掉 UNCERTAIN 请求“恢复余额”。
+- 相同账号、notebook、操作、文件版本、轮次、来源和 prompt 去重。相同 PDF 上传可跨轮复用，不能误用其他 notebook 的 upload 回执。
+- 空控制帧、超时或进程退出不等于服务端请求结束。UNCERTAIN 会隔离账号并保留资源租约；核对原请求终态及 transport 后才能显式 reconcile。可能已受理的失败不退款。
+- 限流账号级暂停。到实际提示时间后只有一个必要审查问题充当恢复探针，失败就保留暂停；不通过登录、换账号、新页或改 default 绕开限额。
+
+## 执行入口
+
+`scripts/nlm_runtime.py` 使用 `multi-agent-collaboration/scripts/resource_broker.py` 的共享队列和 OS 锁。准备私有 binding：账号匿名键、notebook/target、workspace/surface UUID、broker 文件哈希、transport 文件哈希、按 operation 列出的 argv 模板及严格复用标志。`commands` 是已验证 transport 的命令数组，使用 `{notebook_id}`、`{source_ids_csv}`、`{prompt_file}`、`{file}` 等占位；不拼 shell 字符串。
+
+```bash
+python3 scripts/nlm_runtime.py configure --account ACCOUNT_KEY --input /absolute/quota-policy.json
+python3 scripts/nlm_runtime.py run --binding /absolute/binding.json --input /absolute/query.json
+python3 scripts/nlm_runtime.py report --account ACCOUNT_KEY
+```
+
+先核查现场 CLI 的 `--version` / `--help`，再固定模板。已观察到 `nlm 0.9.12` 用 `notebook query NOTEBOOK QUESTION`；`notebooklm 0.8.1` 的上传是 `source add CONTENT -n NOTEBOOK --type file`，全文要 `source fulltext SOURCE -n NOTEBOOK --json`（默认文本只显示 2000 字符），没有 copy 命令。文件不存在时可能被当内联文本，因此上传前必须检查存在性与 PDF 签名。不要从一个 CLI 的帮助推导另一个 CLI 的语法。
+
+已绑定 transport 优先于泛用 skill 的自动登录、备用后端或新页面恢复。`NLMUnifiedClient` 明确拒绝未验证的 copy、自动建 notebook 和绕过队列的 batch；备用 CLI 只有单独测量并写入 binding 才可用。通道错误不自动切后端重发。
