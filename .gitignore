@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+*.sqlite3*
+INSTALL_MANIFEST.json
+backups/
+*.docx
+*.pdf
+*.RData
+*.rds
+*.dta
+private/
+evidence/
+handoff/
+*.binding.json
