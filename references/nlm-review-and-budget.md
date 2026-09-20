@@ -30,3 +30,16 @@ python3 scripts/nlm_runtime.py report --account ACCOUNT_KEY
 先核查现场 CLI 的 `--version` / `--help`，再固定模板。已观察到 `nlm 0.9.12` 用 `notebook query NOTEBOOK QUESTION`；`notebooklm 0.8.1` 的上传是 `source add CONTENT -n NOTEBOOK --type file`，全文要 `source fulltext SOURCE -n NOTEBOOK --json`（默认文本只显示 2000 字符），没有 copy 命令。文件不存在时可能被当内联文本，因此上传前必须检查存在性与 PDF 签名。不要从一个 CLI 的帮助推导另一个 CLI 的语法。
 
 已绑定 transport 优先于泛用 skill 的自动登录、备用后端或新页面恢复。`NLMUnifiedClient` 明确拒绝未验证的 copy、自动建 notebook 和绕过队列的 batch；备用 CLI 只有单独测量并写入 binding 才可用。通道错误不自动切后端重发。
+
+## 全文输出丢失身份字段
+
+`nlm 0.9.12` 的全文 JSON 可能只有 content/title/source_type/url/char_count，
+即使底层 `hizoJc` 响应包含来源 ID。不能把请求中的 ID 填回去冒充服务端回显，
+也不能因 CLI exit0 或全文看似相同就撤掉来源检查。
+
+已验证的 transport 可在原请求 fully_received、终态回执和原始响应哈希均核实后，
+调用 `scripts/nlm_fulltext.py` 的 `normalize_rpc_fulltext`：从服务端响应提取 ID，
+核对请求 ID、完整文本、标题和字符数，并另存归一化结果。保留原 CLI 字节及所有
+失败回执；本工具不发请求、不改变预算/租约、不把原 UNCERTAIN 改成 PASS。
+notebook 归属来自实际请求绑定，不能声称该响应回显了 notebook ID。
+没有可靠原始响应时保持失败并核清；已有可验证全文则离线复用，避免重复上传或读取。
