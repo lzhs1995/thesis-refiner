@@ -65,7 +65,8 @@ def verify_archive(spec, expected):
                 for chunk in iter(lambda: stream.read(1024 * 1024), b""):
                     digest.update(chunk)  # ZipExtFile also verifies CRC on full read.
             need(digest.hexdigest() == ref["sha256"], "ZIP:HASH_MISMATCH:" + name)
-    return {"file": str(path), "sha256": sha(path), "members": len(wanted), "crc_checked": True}
+    return {"file": str(path), "sha256": sha(path), "bytes": path.stat().st_size,
+            "members": len(wanted), "crc_checked": True}
 
 
 def audit(contract):
@@ -125,6 +126,17 @@ def audit(contract):
         pin = expected[name]
         links.append({"role": identity, **pin, "markdown": local_link(role.get("label"), pin["path"])})
     archive = verify_archive(contract["zip"], expected) if "zip" in contract else None
+    if archive and any(key in contract["zip"] for key in ("label", "role")):
+        # The archive normally lives outside the package and is not a package
+        # member. Link its independently verified identity without changing
+        # either the directory or the ZIP member set.
+        spec = contract["zip"]
+        label = string(spec.get("label"), "ZIP_LINK_LABEL")
+        identity = string(spec.get("role", "archive"), "ZIP_LINK_ROLE")
+        need(identity not in seen, "ZIP_LINK:DUPLICATE_ROLE")
+        need(Path(archive["file"]).suffix.lower() == ".zip", "ZIP_LINK:ZIP_SUFFIX_REQUIRED")
+        links.append({"role": identity, "path": archive["file"], "sha256": archive["sha256"],
+                      "bytes": archive["bytes"], "markdown": local_link(label, archive["file"])})
     return {"status": "PASS", "schema": "delivery-manifest-v1", "manifest": contract["manifest"],
             "files": len(rows), "source_mappings": sources, "zip": archive, "links": links,
             "markdown": "\n\n".join(row["markdown"] for row in links) + "\n",

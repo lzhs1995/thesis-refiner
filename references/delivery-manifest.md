@@ -15,12 +15,16 @@
   ],
   "zip": {
     "file": {"path": "/absolute/delivery/final-package.zip", "sha256": "<actual-sha256>"},
-    "prefix": "final-package/"
+    "prefix": "final-package/",
+    "label": "完整ZIP",
+    "role": "archive"
   }
 }
 ```
 
 ZIP带顶层目录时显式写含末尾`/`的`prefix`，无顶层时写`""`。不按basename或模糊suffix找成员。重复成员、额外文件、错前缀、路径逃逸、加密/符号链接成员和CRC/大小/SHA错误均失败。包内清单自身不列在`files`中，由检查器按原字节加入集合；包外旁置清单不加入ZIP。空目录只能是已声明文件的祖先。
+
+要在聊天中交付包外ZIP，显式提供`zip.label`；检查器在完整核验后追加该ZIP的绝对链接，`zip.role`默认`archive`且不能与包内角色重复，文件须为`.zip`后缀。省略标签时保留旧行为，只报告ZIP核验。包外ZIP不塞进包内`roles`或成员清单，也不参与自身成员集合。
 
 `require_sources: true`要求每项都有`source`引用；默认只核已提供的映射并报告条数。角色是作者声明，本工具核文件身份和后缀，不能判断某PDF是否真是逐字稿。音频解码、文本绑定、时长和逐句听审各自记录。
 

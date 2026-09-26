@@ -61,6 +61,23 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result["status"], "COMPLETE", result)
         self.assertFalse(result["evidence_chain"]["full_reproduction"])
 
+    def test_optional_reference_size_is_checked_at_round_acceptance(self):
+        document = self.state["documents"]["main"]
+        original = document["rounds"][0]
+        self.assertTrue(w.audit_round(original, document)["pass"])
+        for field in ("raw_answer", "receipt", "local_coverage_evidence"):
+            for size in (1, True, None, -1):
+                round_ = copy.deepcopy(original)
+                round_["queries"][0][field]["bytes"] = size
+                with self.subTest(field=field, size=size):
+                    result = w.audit_round(round_, document)
+                    self.assertFalse(result["pass"])
+                    self.assertIn("ARTIFACT_SIZE_MISMATCH", str(result["errors"]))
+            round_ = copy.deepcopy(original)
+            value = round_["queries"][0][field]
+            value["bytes"] = Path(value["path"]).stat().st_size
+            self.assertTrue(w.audit_round(round_, document)["pass"])
+
     def test_original_census_cannot_omit_untouched_appendix(self):
         self.state["original"]["items"].pop()
         self.assertFalse(w.audit_chain(self.state)["pass"])

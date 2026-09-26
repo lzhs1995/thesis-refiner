@@ -54,6 +54,35 @@ class ManifestTests(unittest.TestCase):
         self.assertIn("最终包 (一)", result["markdown"])
         self.assertEqual(result["semantic_visual_listening_review"], "NOT_PERFORMED")
 
+    def test_external_archive_link_uses_verified_zip_identity(self):
+        from urllib.parse import unquote
+        unusual = self.base / "完整包 #1 (正式).zip"
+        unusual.write_bytes(self.archive.read_bytes())
+        self.contract["zip"].update(file=self.pin(unusual), label="完整ZIP")
+        result = audit(self.contract)
+        archive = result["links"][-1]
+        self.assertEqual(archive["role"], "archive")
+        self.assertEqual(archive["sha256"], self.pin(unusual)["sha256"])
+        self.assertEqual(Path(unquote(archive["markdown"].split("](<", 1)[1][:-2])), unusual)
+        self.assertEqual(result["zip"]["members"], 2)
+        self.assertEqual(result["files"], 1)
+
+    def test_archive_link_rejects_bad_label_role_or_suffix(self):
+        for case in ("empty_label", "role_only", "duplicate_role", "suffix"):
+            contract = copy.deepcopy(self.contract)
+            contract["zip"]["label"] = "完整ZIP"
+            if case == "empty_label": contract["zip"]["label"] = ""
+            if case == "role_only":
+                del contract["zip"]["label"]
+                contract["zip"]["role"] = "archive"
+            if case == "duplicate_role": contract["zip"]["role"] = "audio"
+            if case == "suffix":
+                wrong = self.base / "wrong.pdf"
+                wrong.write_bytes(self.archive.read_bytes())
+                contract["zip"]["file"] = self.pin(wrong)
+            with self.subTest(case=case), self.assertRaises(ValueError):
+                audit(contract)
+
     def test_wrong_prefix_suffix_or_missing_role_fail(self):
         for which in ("prefix", "suffix", "member", "empty"):
             c = copy.deepcopy(self.contract)
@@ -92,6 +121,7 @@ class ManifestTests(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(ValueError): audit(self.contract)
 
     def test_cli_writes_new_links_and_never_overwrites(self):
+        self.contract["zip"]["label"] = "完整ZIP"
         contract = self.base / "contract.json"
         contract.write_text(json.dumps(self.contract))
         out = self.base / "links.md"
@@ -100,6 +130,7 @@ class ManifestTests(unittest.TestCase):
         p = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         before = out.read_bytes()
+        self.assertIn(b"final.zip", before)
         p = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(p.returncode, 2)
         self.assertEqual(out.read_bytes(), before)

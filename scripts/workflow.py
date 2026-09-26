@@ -40,6 +40,9 @@ def checked_ref(value):
     path = Path(value["path"])
     if not path.is_absolute() or not path.is_file() or sha(path) != value["sha256"]:
         raise EvidenceError("ARTIFACT_MISSING_OR_CHANGED: " + str(path))
+    if "bytes" in value and (type(value["bytes"]) is not int or value["bytes"] < 0
+                             or path.stat().st_size != value["bytes"]):
+        raise EvidenceError("ARTIFACT_SIZE_MISMATCH: " + str(path))
     return path
 
 
