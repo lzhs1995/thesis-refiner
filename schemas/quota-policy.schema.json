@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Observed NotebookLM quota policy; timestamps are UTC Unix seconds",
+  "required": [
+    "regime",
+    "source",
+    "observed_at"
+  ],
+  "properties": {
+    "regime": {
+      "enum": [
+        "legacy_daily_count",
+        "compute_weekly",
+        "unknown"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observed_at": {
+      "type": "number",
+      "minimum": 0
+    },
+    "window_ends_at": {
+      "type": "number",
+      "minimum": 0
+    },
+    "timezone": {
+      "type": "string",
+      "minLength": 1
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observed_used": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reserve_fraction": {
+      "type": "number",
+      "minimum": 0,
+      "exclusiveMaximum": 1
+    },
+    "task_query_budget": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

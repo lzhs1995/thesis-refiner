@@ -1,0 +1,561 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Thesis refinement checkpoint v1; dynamic hashes and acceptance are checked by workflow.py",
+  "required": [
+    "schema_version",
+    "task_id",
+    "original",
+    "nodes",
+    "dispositions",
+    "required_documents",
+    "documents"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "original": {
+      "type": "object",
+      "required": [
+        "baseline",
+        "items"
+      ],
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/fileRef"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "artifacts"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "data",
+              "cleaning",
+              "variables",
+              "sample",
+              "model",
+              "output",
+              "table",
+              "figure",
+              "claim",
+              "contrast_test"
+            ]
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/fileRef"
+            }
+          },
+          "empirical_kind": {
+            "enum": [
+              "descriptive",
+              "estimated"
+            ]
+          },
+          "lineage": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          },
+          "lineage_gaps": {
+            "type": "object"
+          },
+          "accepted_partial": {
+            "type": "boolean"
+          },
+          "model_health": {
+            "type": "object",
+            "required": [
+              "normal_termination",
+              "standard_errors_valid",
+              "draws_requested",
+              "draws_saved",
+              "replicate_convergence"
+            ]
+          },
+          "verification": {
+            "type": "object",
+            "properties": {
+              "traceability": {
+                "enum": [
+                  "unique_source",
+                  "compatible_candidates",
+                  "documented_partial"
+                ]
+              },
+              "full_reproduction": {
+                "type": "boolean"
+              }
+            }
+          },
+          "empirical_contract": {
+            "$ref": "#/$defs/fileRef"
+          },
+          "reproduction_receipt": {
+            "$ref": "#/$defs/fileRef"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "claim"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "empirical_kind",
+                "depends_on",
+                "lineage",
+                "verification"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "model"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "model_health"
+              ]
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "verification"
+              ],
+              "properties": {
+                "verification": {
+                  "required": [
+                    "full_reproduction"
+                  ],
+                  "properties": {
+                    "full_reproduction": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "reproduction_receipt"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "dispositions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "action",
+          "reason",
+          "category",
+          "review_evidence",
+          "numeric_dispositions"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "retain",
+              "rewrite",
+              "move",
+              "delete"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "enum": [
+              "empirical",
+              "nonempirical"
+            ]
+          },
+          "review_evidence": {
+            "$ref": "#/$defs/fileRef"
+          },
+          "numeric_dispositions": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "mention",
+                    "kind",
+                    "claim_id"
+                  ],
+                  "properties": {
+                    "mention": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "const": "empirical"
+                    },
+                    "claim_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "mention",
+                    "kind",
+                    "reason",
+                    "evidence"
+                  ],
+                  "properties": {
+                    "mention": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "const": "nonempirical"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "evidence": {
+                      "$ref": "#/$defs/fileRef"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "required_documents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "documents": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "docx",
+          "pdf",
+          "scope_ids",
+          "gates",
+          "rounds"
+        ],
+        "properties": {
+          "docx": {
+            "$ref": "#/$defs/fileRef"
+          },
+          "pdf": {
+            "$ref": "#/$defs/fileRef"
+          },
+          "scope_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true,
+            "minItems": 1
+          },
+          "page_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "gates": {
+            "type": "object",
+            "required": [
+              "native",
+              "export",
+              "format",
+              "visual",
+              "pdf_fonts"
+            ],
+            "additionalProperties": {
+              "$ref": "#/$defs/fileRef"
+            }
+          },
+          "has_zotero": {
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/$defs/source"
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/source"
+            }
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "mode",
+                "pdf_sha256",
+                "queries",
+                "issues",
+                "issue_census_evidence"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "mode": {
+                  "enum": [
+                    "real",
+                    "simulation"
+                  ]
+                },
+                "queries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "request_id",
+                      "raw_answer",
+                      "receipt",
+                      "coverage",
+                      "local_coverage_evidence"
+                    ],
+                    "properties": {
+                      "request_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "conversation_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "source_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "source_ids": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "uniqueItems": true
+                      },
+                      "raw_answer": {
+                        "$ref": "#/$defs/fileRef"
+                      },
+                      "receipt": {
+                        "$ref": "#/$defs/fileRef"
+                      },
+                      "local_coverage_evidence": {
+                        "$ref": "#/$defs/fileRef"
+                      },
+                      "coverage": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "scope_id",
+                            "topic",
+                            "locator",
+                            "citation_ids"
+                          ],
+                          "properties": {
+                            "scope_id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "topic": {
+                              "enum": [
+                                "theory_methods",
+                                "data_figures",
+                                "structure",
+                                "language",
+                                "citations",
+                                "format"
+                              ]
+                            },
+                            "locator": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "citation_ids": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "type": [
+                                  "string",
+                                  "integer"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "anyOf": [
+                      {
+                        "required": [
+                          "source_id"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "source_ids"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "issues": {
+                  "type": "array"
+                },
+                "issue_census_evidence": {
+                  "$ref": "#/$defs/fileRef"
+                }
+              }
+            }
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "source"
+            ]
+          },
+          {
+            "required": [
+              "sources"
+            ]
+          }
+        ]
+      }
+    },
+    "empirical_contract": {
+      "$ref": "#/$defs/fileRef"
+    }
+  },
+  "$defs": {
+    "fileRef": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(/|[A-Za-z]:[\\\\/])"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "id",
+        "receipt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "$ref": "#/$defs/fileRef"
+        },
+        "pdf": {
+          "$ref": "#/$defs/fileRef"
+        },
+        "scope_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "pages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "equivalence_receipt": {
+          "$ref": "#/$defs/fileRef"
+        }
+      }
+    }
+  }
+}
