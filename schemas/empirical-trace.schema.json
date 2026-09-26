@@ -81,7 +81,134 @@
       }
     },
     "tables": {
-      "type": "array"
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "artifact",
+                  "row_key"
+                ],
+                "not": {
+                  "required": [
+                    "row_keys"
+                  ]
+                },
+                "properties": {
+                  "row_key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "expected_rows": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "uniqueItems": true
+                  },
+                  "expected_cells": {
+                    "type": "object"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "artifact",
+                  "row_keys",
+                  "expected_rows"
+                ],
+                "not": {
+                  "required": [
+                    "row_key"
+                  ]
+                },
+                "properties": {
+                  "row_keys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                  },
+                  "expected_rows": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  },
+                  "expected_cells": {
+                    "type": "object",
+                    "maxProperties": 0
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "artifact": {
+            "$ref": "#/$defs/fileRef"
+          },
+          "expected_n": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "required_columns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "expected_cell_rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "key",
+                "values"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "key": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  ]
+                },
+                "values": {
+                  "type": "object",
+                  "minProperties": 1
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "models": {
       "type": "array"
@@ -153,6 +280,10 @@
         "sha256": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     }
