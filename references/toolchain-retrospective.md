@@ -41,3 +41,11 @@
 - 科学链、原答裁决及[清单交付链接](delivery-manifest.md)：本skill。
 
 源代码、安装、实际进程加载版本分开核验。旧开放PR可能落后于已发布补丁；合入时逐项比较。运行中任务继续固定解释器和私有依赖；新安装不触发应用或agent重启。研究原文、私有路径、账号绑定和原始回执只存本地经验索引，公开仓库仅含通用规则、代码和合成例。
+
+## 本次工具证据的限定接入（2026-10-01）
+
+Word 保存、关闭、重开及 PDF 路线已有实际成功。后续一项 Zotero 任务已有 Refresh 执行与保存/重开持久化：22 个引文域、1 个书目域和24条书目。输入已含这些引用，因此不能称为首次插入；两处年份字符串与整数的严格差异仍未通过。宏返回、任务完成、成品接受、权限故障恢复分别记录，详细原生规则归 [OfficeCLI 指南](https://github.com/lzhs1995/officecli-word-revision/blob/docs/operation-concurrency-20260930/skills/officecli-word-revision/references/operation-concurrency.md)。
+
+另一次启动前故障来自工作器写死错误的 Zotero profile。独立后继从 `profiles.ini` 解析唯一默认项，并核目录、配置身份；44项离线测试及实际主机的离线构造通过。该结果不等于 Refresh 或权限恢复通过。用户已给定的应用启动顺序和授权恢复步骤由 OfficeCLI 维护；不把 profile 缺失或普通打开超时统称 TCC 故障。
+
+历史双 NLM 的实际重叠证据可复用；Word 与来源注册的已测时间线为先后执行，Word+NLM 查询的真实重叠仍未验证。工具验证继续独立推进，已可用的文件管理包按 [采用边界](file-management-scope.md) 交付，不由工具待测项自动触发模型重估或新稿。
