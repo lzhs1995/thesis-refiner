@@ -1,12 +1,31 @@
 # 协作、租约与恢复
 
+## 同 workspace 握手硬门禁（不可绕过）
+
+只准与 **当前真实 caller 所属 workspace UUID 相同** 的独立 terminal pane 中的 agent 握手。
+每次先读 `cmux identify --json` 的 caller，再与实时 tree 的 UUID 对齐；focused、标题、旧摘要、
+历史 surface 编号和环境变量都不能代替身份。用户指定的 executor surface UUID 必须同时精确匹配。
+指定工作区与真实 caller 冲突即拒绝输入，不能回退旧 Claude、伪造身份、搬动面板或另开会话。
+
+必须使用 `multi-agent-collaboration` 的 `cmux_workspace_guard.py`、现役 PreToolUse hook 和
+受保护的 `cmux_bridge`。harness 固定 `--expected-workspace-uuid` 与
+`--expected-executor-uuid`；bridge 在每次粘贴和按键前重核，并用双 UUID 发送。
+跨区、缺 UUID、旧绑定、面板移动或身份不明一律 fail-closed，零发送。裸 `cmux send/send-key`、
+`cmux-agent ask/broadcast` 被 hook 拒绝；不得借 STATUS、恢复授权、force、超时或 shell 环境绕过。
+用户明确指定的目标可存于协作 skill 的 caller-scoped workspace-scope 文件，不因不可用自行撤销。
+
+跨工作区资源协调继续使用现有文件/队列回执，不借资源协调重新指定 executor。
+安装后实测 hook 的 exit 2 与零输入；配置写入不等于运行中客户端重载，旧导入模块也不算自动更新。
+协作 skill 缺失或身份门禁未通过时，禁止发送；已授权的单 agent 离线工作可继续。
+
+
 通用实现归 `multi-agent-collaboration`。论文任务包只附研究 profile、完整清单、保护路径、文档适配器精确 SHA、当前模式与任务 checkpoint，不把论文判断硬编码进通用协作工具。
 
 双 agent 必须有当前任务的真实握手、独立 nonce、报告和回调哈希。旧章节 DONE 不能证明新 skill 工程的参与。502/504/524 等明确 retryable 临时故障最多三轮同会话重试，间隔至少 60 秒；401/403、计费/额度/no-account 不盲重试。投递不确定、消息排队、迟到回调和监督端预算太短先归因，不能伪装成 executor 计费故障。
 
 已获用户自动接管授权时：保存失败 → 停止 executor/sentinel 的该阶段 → 核实没有并发写入 → 固定 checkpoint、活动 nonces 和保护路径 → Codex 接管。始终保留原会话，不 `/clear` 或新建替代 Claude。恢复时在 HANDOFF_READY 交接，确认 solo 写入结束，再给同 UUID/同会话新握手；旧回调只可供审计，不能重新启动已经完成的工作。
 
-跨章节会话可通过 cmux 协调资源与文件所有权，不互相接管 executor。使用 task_id、workspace UUID、surface UUID 为身份，数字 surface ref 仅作当前显示。发消息先定位现有 surface；内置 bridge 验证投递。网络已投递但探测不确定时核对接收端，不重复派发。
+跨工作区的章节会话通过原文件/队列回执协调资源与文件所有权；同工作区才可沿受保护的 cmux transport 发消息，不互相接管 executor。使用 task_id、workspace UUID、surface UUID 为身份，数字 surface ref 仅作当前显示。发消息先定位现有 surface；内置 bridge 验证投递。网络已投递但探测不确定时核对接收端，不重复派发。
 
 资源按申请 → 授予 → 使用 → 排空 → 释放。共享 SQLite 队列让调度者退出后仍可恢复，真实 OS 锁保护调用和交接。过期租约不自动授予别人，先核对原进程、pending 和 lock。
 
