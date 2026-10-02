@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.09.26.10"
+  version: "2026.10.02.1"
 ---
 
 # 论文精炼助手
@@ -60,6 +60,24 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 - 正文与附录单独验收。只复用哈希、来源与审查范围均一致的证据；一个文件变化不自动让另一个失效。
 - 正式终验必须在最终 Word/Zotero、格式、实际 PDF 字体和视觉检查后，对同一冻结 PDF 完成连续两轮完整审查。没有新的本地确认问题，既有确认问题全部解决。三轮同一问题只触发专项裁决，不能自动通过。
 - HTTP 200、空控制帧、上传 READY、退出码 0、同事的 DONE 和模拟回答都不能单独表示审查完成。
+
+## 同 workspace 握手硬门禁（不可绕过）
+
+只准与 **当前真实 caller 所属 workspace UUID 相同** 的独立 terminal pane 中的 agent 握手。
+每次先读 `cmux identify --json` 的 caller，再与实时 tree 的 UUID 对齐；focused、标题、旧摘要、
+历史 surface 编号和环境变量都不能代替身份。用户指定的 executor surface UUID 必须同时精确匹配。
+指定工作区与真实 caller 冲突即拒绝输入，不能回退旧 Claude、伪造身份、搬动面板或另开会话。
+
+必须使用 `multi-agent-collaboration` 的 `cmux_workspace_guard.py`、现役 PreToolUse hook 和
+受保护的 `cmux_bridge`。harness 固定 `--expected-workspace-uuid` 与
+`--expected-executor-uuid`；bridge 在每次粘贴和按键前重核，并用双 UUID 发送。
+跨区、缺 UUID、旧绑定、面板移动或身份不明一律 fail-closed，零发送。裸 `cmux send/send-key`、
+`cmux-agent ask/broadcast` 被 hook 拒绝；不得借 STATUS、恢复授权、force、超时或 shell 环境绕过。
+用户明确指定的目标可存于协作 skill 的 caller-scoped workspace-scope 文件，不因不可用自行撤销。
+
+跨工作区资源协调继续使用现有文件/队列回执，不借资源协调重新指定 executor。
+安装后实测 hook 的 exit 2 与零输入；配置写入不等于运行中客户端重载，旧导入模块也不算自动更新。
+协作 skill 缺失或身份门禁未通过时，禁止发送；已授权的单 agent 离线工作可继续。
 
 ## 执行模式和资源
 
