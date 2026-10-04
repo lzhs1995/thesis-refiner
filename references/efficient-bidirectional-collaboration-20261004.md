@@ -32,6 +32,8 @@ supervisor→executor的prompt和executor→supervisor的callback都通过受保
 
 ## 安装、复测与版本
 
+协作仓安装器现为两端注册PostToolUse确认hook，doctor和harness检查漏注册；临时目录测试覆盖安装、缺失和卸载。配置注册仍不等于当前客户端实际加载。发送器追加Enter或使用明确Tab队列键前，须比较完整可见草稿；禁止删除全部空白后比较。只接受已识别的折行、空页脚间隔及Claude单光标格显示等价，正文空格、缩进、空白内容行和未知尾行必须保留。折叠粘贴摘要不能证明完整草稿。原回调账本及迟到ACK继续由原控制器处理。
+
 协作仓的 `cmux_submit_confirmation_guard.py` 是只读 PostToolUse 检查入口，不发键、不写回执；脚本纳入版本管理不表示安装器已注册或现役客户端已加载。当前compose/queue状态优先于历史确认。`delivery_receipts.py` 可依据当前接收者原生会话内的精确user消息、任务定稿时间、原身份及文件pins核收，不把tool/assistant引用算作入站；收到报告仍须独立验收内容。该模块支持其固定的durable attempt格式，遇到旧`*-attempts`或`.pending.json`明确交回原控制器，不默认为“没有尝试”或迁移重发。通用实现只在协作仓维护，不在论文仓复制另一套发送器。
 
 Stop/SubagentStop重入只接受严格布尔`stop_hook_active is True`；数字1或字符串true不能绕过首次检查。重入成功退出仅结束递归，不产生completion receipt、不disarm、不表示论文完成。下一正常turn仍须校验原任务。不提高循环上限，也不让已接收的callback无限重发。
