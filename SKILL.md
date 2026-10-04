@@ -81,6 +81,14 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 执行模式和资源
 
+握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
+
+**双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** supervisor 的 prompt 和 executor 的 callback 都必须用受保护 bridge、实际小写 `enter` 和发送后读屏。原 marker 留在 compose 时不得报成功；进入队列则记录 pending 并观察原消息，不重贴、不循环 Enter。接收端真实后续活动才能确认，Stop hook 仍须检查固定报告哈希和真实 completion receipt。
+
+协作 bridge 的 callback pending journal 在发送前绑定原 task/nonce、报告与任务包 SHA、真实 workspace 身份。再次调用沿原 journal 只观察，不再次发键；报告或身份变化拒绝确认。旧版本无 journal 的历史失败保留原始证据，不能补造发送记录。导入模块必须来自 task pack 的 required_skill 同一安装，不能混用旧 Claude 路径和新版 release。
+
+两个用户指定的 Claude 可分别承担档案核查和工具审查等独立工作，各自任务包、nonce、产物目录和回调独立；共享代码由一个写入者维护。两个 executor 若同 pane 的不同 tab，则计算可并行，UI 输入须串行按 UUID 重新核验。健康 executor 不因另一位故障重启；持续失效者冻结写入后按已授权单 agent 模式接续，避免维护流程拖住论文交付。
+
 用户授权双 agent 时优先复用已绑定的 Claude 会话，并用 `multi-agent-collaboration` 的真实握手与任务包。用户已授权自动接管时，执行者发生持续故障即保存回执并按安全边界转 Codex 单 agent；不能因此停止整体任务。单 agent 自审标 `solo_self_review`，其他 Codex 会话的独立审查单独署名，不能冒称 Claude 参与。
 
 Word/Zotero 是串行应用资源。NLM 的账号预算与执行容量分开：已有真实证据和固定执行器支持两路时，复用该能力；缺少对应能力时使用串行入口。同账号单并发是本地兼容策略，不能称为 Google 官方安全上限；不同 notebook/target 仍共用额度。多任务按 [并发能力与自动调度](references/nlm-concurrency-and-scheduling.md) 消费固定 READY，真实归还后自动轮转，离线裁决并行。资源交接与论文验收分列；未知终态保留隔离，不能预填“无在途”。
