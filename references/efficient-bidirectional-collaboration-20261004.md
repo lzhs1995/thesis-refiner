@@ -1,6 +1,6 @@
 # 高效握手、多执行者与双向投递
 
-维护版本 efficient-bidirectional.2026.10.04.4。本文是本次维护后的有效入口；同日其他握手/Enter文档保留为历史，不再作为并列操作说明。
+维护版本 efficient-bidirectional.2026.10.05.1。本文是本次维护后的有效入口；同日其他握手/Enter文档保留为历史，不再作为并列操作说明。
 
 ## 先备任务，再握手
 
@@ -18,7 +18,7 @@
 
 supervisor→executor的prompt和executor→supervisor的callback都通过受保护bridge。每次粘贴/按键前重核caller、同workspace、指定目标UUID；首次输入前SHELL/UNKNOWN零输入；已有paste_intent后若识别失败，记为投递未确认，停止按键并核收原次，不能改判为从未发送。按键返回0、文字出现在旧转录块、marker消失或无关新工具输出均不能证明本次消息已消费。
 
-当前bridge粘贴一次并按Enter，随后必须读同一接收端；发送命令成功本身不作送达证据。确认需要：本次新marker关联的新活动、输入框空、marker不在compose或pending queue。排队、已消费、报告已审阅分别记录。若完整待提交文字仍逐字匹配自己的payload，且没有用户新增、排队、压缩或重连，bridge至多补一次Enter，不重新粘贴。
+当前bridge粘贴一次并按Enter，随后必须读同一接收端；发送命令成功本身不作送达证据。确认需要：本次完整消息关联的新活动、原身份和尝试绑定一致、消息不在compose或pending queue。marker独自出现不能确认，多个并行调用不能互借同一目标的成功证据。动态参数未解析时保留未验证；正文中的示例和工具输出不能生成发送目标。排队、已消费、报告已审阅分别记录。若完整待提交文字仍逐字匹配自己的payload，且没有用户新增、排队、压缩或重连，bridge至多补一次Enter，不重新粘贴。
 
 实测Codex忙时可显示`tab to queue message`：仅精确提示、Codex字形、完整自身payload均匹配且没有压缩/重连/队列时，允许一次Tab，之后再读回；进入队列仍不算消费。该路径目前有离线测试，不能称全部真实UI版本均已验证。未知多行输入按用户草稿保护，不通过force清除。
 
@@ -31,6 +31,10 @@ supervisor→executor的prompt和executor→supervisor的callback都通过受保
 旧任务若真实callback已经进入supervisor会话且报告已独立核收，可由supervisor保存原marker及核收依据后，仅`disarm --task-id`该已终态任务。明确记录正式bridge receipt缺失；不得伪造receipt、反复回调、全局禁用Stop hook或让已完成executor无限修复回调。Stop hook提供完成门禁，supervisor负责真实旧任务的有据结案。
 
 ## 安装、复测与版本
+
+协作仓的 `cmux_submit_confirmation_guard.py` 是只读 PostToolUse 检查入口，不发键、不写回执；脚本纳入版本管理不表示安装器已注册或现役客户端已加载。当前compose/queue状态优先于历史确认。`delivery_receipts.py` 可依据当前接收者原生会话内的精确user消息、任务定稿时间、原身份及文件pins核收，不把tool/assistant引用算作入站；收到报告仍须独立验收内容。该模块支持其固定的durable attempt格式，遇到旧`*-attempts`或`.pending.json`明确交回原控制器，不默认为“没有尝试”或迁移重发。通用实现只在协作仓维护，不在论文仓复制另一套发送器。
+
+Stop/SubagentStop重入只接受严格布尔`stop_hook_active is True`；数字1或字符串true不能绕过首次检查。重入成功退出仅结束递归，不产生completion receipt、不disarm、不表示论文完成。下一正常turn仍须校验原任务。不提高循环上限，也不让已接收的callback无限重发。
 
 维护源与实际安装两边都保留本文及对应入口。实体目录安装若被manage_install.py判为foreign，保留目录；按已授权窄维护调用现有mutation_locks及replace_bytes，先核原字节，备份后安装，保留mode与before/after SHA。不得将实体目录强换symlink或整树覆盖。回调journal先安装、bridge后安装。
 

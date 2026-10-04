@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.02.1"
+  version: "2026.10.05.1"
 ---
 
 # 论文精炼助手
@@ -83,7 +83,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
 
-**双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** supervisor 的 prompt 和 executor 的 callback 都必须用受保护 bridge、实际小写 `enter` 和发送后读屏。原 marker 留在 compose 时不得报成功；进入队列则记录 pending 并观察原消息，不重贴、不循环 Enter。接收端真实后续活动才能确认，Stop hook 仍须检查固定报告哈希和真实 completion receipt。
+**双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** supervisor 的 prompt 和 executor 的 callback 都必须用受保护 bridge、实际小写 `enter` 和发送后读屏。原 marker 留在 compose 时不得报成功；进入队列则记录 pending 并观察原消息，不重贴、不循环 Enter。确认须绑定本次完整消息、原身份与原尝试，不能借同一目标的其他调用或无关活动确认。Stop hook 首次仍检查固定报告哈希和真实 completion receipt；Stop/SubagentStop 的布尔 `stop_hook_active is True` 仅终止 hook 递归，不授予完成、不清任务，下一正常 turn 继续核验。具体兼容边界见下方双向投递维护文档。
 
 协作 bridge 的 callback pending journal 在发送前绑定原 task/nonce、报告与任务包 SHA、真实 workspace 身份。再次调用沿原 journal 只观察，不再次发键；报告或身份变化拒绝确认。旧版本无 journal 的历史失败保留原始证据，不能补造发送记录。导入模块必须来自 task pack 的 required_skill 同一安装，不能混用旧 Claude 路径和新版 release。
 
