@@ -38,7 +38,7 @@ supervisor→executor的prompt和executor→supervisor的callback都通过受保
 
 Stop/SubagentStop重入只接受严格布尔`stop_hook_active is True`；数字1或字符串true不能绕过首次检查。重入成功退出仅结束递归，不产生completion receipt、不disarm、不表示论文完成。下一正常turn仍须校验原任务。不提高循环上限，也不让已接收的callback无限重发。
 
-维护源与实际安装两边都保留本文及对应入口。实体目录安装若被manage_install.py判为foreign，保留目录；按已授权窄维护调用现有mutation_locks及replace_bytes，先核原字节，备份后安装，保留mode与before/after SHA。不得将实体目录强换symlink或整树覆盖。回调journal先安装、bridge后安装。
+维护源与实际安装两边都保留本文及对应入口。实体目录安装若被manage_install.py判为foreign，保留目录；按已授权窄维护调用现有mutation_locks及replace_bytes，先核原字节，备份后安装，保留mode与before/after SHA。不得将实体目录强换symlink或整树覆盖。新任务启动器及hook必须指向同一完整固定版本，不能先装新journal读取器再配旧bridge；历史任务仍沿原固定控制器。
 
 后置检查必须读取发送器实际写入的原journal格式。任务投递使用task-dispatch-v1，正式回调使用completion_receipt旁的*-attempts；只识别旧deliveries-v1会把已确认回调误报为未确认。新读取器须复核报告与任务包SHA、原executor和接收方身份、原次完整正文及后续活动；只读恢复的观察必须明确input_operations为整数0。确认标志不能代替证据。发现格式不兼容时修读取器，不重发原消息、不制造回执。源码测试、候选安装、全局安装与实际客户端加载分别验收。
 
@@ -61,3 +61,9 @@ A `DELIVERY_UNVERIFIED_BY_DETECTOR` or `DELIVERY_QUEUED_AT_RECEIVER` result must
 ## 任务提示持久化（2026-10-05）
 
 supervisor的正式任务提示通过submit-task-pack记录原任务、完整文本SHA、任务包SHA及双方workspace/pane身份；粘贴意图先落盘，再执行输入。同任务提示变化不产生新发送槽，未知投递禁止重新粘贴，只有已记录零输入允许一次明确重试。原命令增加--reconcile-only仅观察并核收，不发送按键。delivery10旧记录仍交原控制器，禁止新控制器接管。对应helper PR3 05b638d，440项离线测试通过；尚未替换已安装运行时。
+
+## 配套版本与迟到握手核收
+
+实测旧bridge缺少新读取器要求的`_delivery_confirmed`接口，九项定向用例中混装出现两失败、三异常；完整候选九项通过。不能用宽泛旧套件“失败名称没有增加”代替接口兼容验证。安装后核实际导入根、启动器及hook正反例；这些结果仍不等于现役客户端重载、回调原生送达或论文验收。
+
+握手观察预算应满足阶段最低值。本方预算过短后收到原nonce的真实ACK，应保留旧超时与原投递错误，重核同workspace和原executor身份，用canonical解析器及回执写入器核收原次；不重发握手、不伪造提交时间。正式任务包定稿后，提示必须包含TASK_PACK、REQUIRED_SKILL、CALLBACK_TARGET、完成模板及READ_AND_OBEY_REQUIRED_SKILL_FIRST。输入前拒绝不算派发成功；实际Enter后的确认与最终报告核收继续分开记录。
