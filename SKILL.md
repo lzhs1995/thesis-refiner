@@ -87,6 +87,8 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 协作 bridge 的 callback pending journal 在发送前绑定原 task/nonce、报告与任务包 SHA、真实 workspace 身份。再次调用沿原 journal 只观察，不再次发键；报告或身份变化拒绝确认。旧版本无 journal 的历史失败保留原始证据，不能补造发送记录。导入模块必须来自 task pack 的 required_skill 同一安装，不能混用旧 Claude 路径和新版 release。
 
+若回调已进入 supervisor 原生 user 记录但回执缺失，沿协作技能的原 journal 接收端结算接口恢复：核真实会话与双方身份、原任务包/报告/尝试哈希及发送后完整消息，在原锁且 inode 未变时原子写入回执。禁止重贴回调、覆盖原回执或伪造尝试。只读验证、正式回执、executor 后续 Stop、产物核收和全局部署分别记账；不能由其中一项推定其余通过。旧任务保持原控制器，新版读取器不能单独覆盖到不兼容旧 bridge。
+
 两个用户指定的 Claude 可分别承担档案核查和工具审查等独立工作，各自任务包、nonce、产物目录和回调独立；共享代码由一个写入者维护。两个 executor 若同 pane 的不同 tab，则计算可并行，UI 输入须串行按 UUID 重新核验。健康 executor 不因另一位故障重启；持续失效者冻结写入后按已授权单 agent 模式接续，避免维护流程拖住论文交付。
 
 用户授权双 agent 时优先复用已绑定的 Claude 会话，并用 `multi-agent-collaboration` 的真实握手与任务包。用户已授权自动接管时，执行者发生持续故障即保存回执并按安全边界转 Codex 单 agent；不能因此停止整体任务。单 agent 自审标 `solo_self_review`，其他 Codex 会话的独立审查单独署名，不能冒称 Claude 参与。
