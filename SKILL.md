@@ -9,6 +9,8 @@ metadata:
 
 # 论文精炼助手
 
+协作在发送前拒绝身份时，按[协作故障分层与效率](references/collaboration-identity-efficiency.md)处理：本地桥故障不能记成 Claude 不可用；继续已授权独立工作，保留原会话和未确认发送记录。
+
 ## macOS 自动化故障：优先执行规则
 
 用户已明确授权自动处理时，沿用该授权，读取当前安装的 `officecli-word-revision/references/macos-tcc-zotero-word.md`，不得再次把同一个 Automation 开关或确认问题交给用户。先按实际发送方核查，再按已授权范围自动恢复；TCC.db 备份/重置是有证据的恢复动作，不是普通文稿流水线的隐含动作。多个 agent 只保留一个恢复执行者，其余继续离线工作；Claude 持续失效时沿既有授权切换 supervisor 单 agent，不停整个任务。实际原生操作未通过前，不得把“已记录规则”“权限条目存在”或“退出码0”称为恢复成功。
