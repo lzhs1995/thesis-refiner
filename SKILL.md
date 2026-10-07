@@ -175,3 +175,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 普通终端原 Claude 因 login 的 EPERM 无法调用工具时，按[权限边界与原任务接续](references/shared-daemon-caller.md#普通终端的-login-权限拒绝)核本地 Hook；不重发原任务，不重做已完成的原生动作。
 
 完成消息已到达而执行者仍等待时，执行[主管核收与原会话恢复](references/completion-settlement-recovery.md)：优先结算原次回调、独立裁定、精确解除该任务，再以原会话真实回复核验恢复；不要误判 API 死亡或重复派审。
+
+## 有限实证复核与协作效率
+
+实证材料续交时读[以实际交付衡量协作效率](references/bounded-empirical-review.md)：从章节采用终点组织工作，复用已核收证据，限定复核范围和停止条件，将回调排障与实际交付分开。本指南不新增研究或审查轮次。
