@@ -1,5 +1,7 @@
 # 协作、租约与恢复
 
+任务分工、握手预算归因与已验收成果收尾见[协作提效与收尾](collaboration-efficiency-and-closeout.md)。沿用下列原会话、身份与资源边界。
+
 ## 同 workspace 握手硬门禁（不可绕过）
 
 只准与 **当前真实 caller 所属 workspace UUID 相同** 的独立 terminal pane 中的 agent 握手。

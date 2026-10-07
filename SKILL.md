@@ -81,6 +81,8 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 执行模式和资源
 
+按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)决定零、一或两个 executor，使用相位握手预算，及时结案已接受成果；通信维护不扩大为新科研审轮。
+
 握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
 
 **双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** supervisor 的 prompt 和 executor 的 callback 都必须用受保护 bridge、实际小写 `enter` 和发送后读屏。原 marker 留在 compose 时不得报成功；进入队列则记录 pending 并观察原消息，不重贴、不循环 Enter。确认须绑定本次完整消息、原身份与原尝试，不能借同一目标的其他调用或无关活动确认。Stop hook 首次仍检查固定报告哈希和真实 completion receipt；Stop/SubagentStop 的布尔 `stop_hook_active is True` 仅终止 hook 递归，不授予完成、不清任务，下一正常 turn 继续核验。具体兼容边界见下方双向投递维护文档。
