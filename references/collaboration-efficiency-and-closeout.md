@@ -75,3 +75,10 @@ Windows与Mac资料按证据比较，不以所在平台决定优先级。
 
 归档完成、统计插件验收、回调结算和工具维护分列完成条件。后继导航文字不属于
 已经上传的旧快照；说明其时间边界即可，不因每次状态更新循环打包、重审或重跑。
+# Codex 队列显示误判（2026-10-08）
+
+实测 `• Queued follow-up inputs` 标题在回调正文上方，而编辑队列提示在正文下方；只从下方提示寻找 nonce 会误报 COMPOSE_OCCUPIED。协作桥须识别实际队列区域，并在下一个输入框前停止匹配，不能把草稿或先前对话中的 nonce 当排队证据。
+
+Enter 后仍在输入框、执行界面明确提示的一次 Tab 后进入队列、接收端消费、报告核收分别记录。队列状态仍是 pending，不等于回调成功，也不能重贴或重握手。沿原 journal 核收；主管同时继续独立主线。此类本地误判不归因 Claude API，不通过加长握手等待解决。
+
+复用 multi-agent-collaboration 的 `references/queued-followup-inputs.md` 和 `scripts/test_queued_followup.py`，不在论文技能复制发送器。源码、离线测试、实际安装、现场双向验收分别汇报；在途任务保持原绑定。
