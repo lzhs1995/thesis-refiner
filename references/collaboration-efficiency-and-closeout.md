@@ -22,6 +22,12 @@
   workspace/surface UUID，Enter 后核完整消息与原 marker。compose、
   queued、实际消费、正式 receipt、报告接受分列。unknown 只读核原 attempt，
   不重贴、不循环按键、不删 journal。报告已读取不能伪造 callback receipt。
+- **ACK 后及时交出具体业务。** 握手前备好研究范围、真实输入和验收条件，
+  ACK 后补身份凭据并立即定稿、派单。握手已过而包仍是 draft 或尚未提交，
+  属于 `SUPERVISOR_DISPATCH_PENDING`，不能称 Claude 停工或失效。
+  ACK、定稿、提交、消费分别记录实际时间；压缩接续先补这个已有交接，
+  不重握手，不重发已提交尝试。原任务核收后再衔接独立待办，正常执行或
+  压缩中不叠加任务。本条是调度规则，不表示自动派单 hook 已实现。
 - **报告完成就沿原入口回调。** 不额外等待 supervisor 空闲，不建秒级
   watcher；由原 bridge 判定输入区及既有补键条件。supervisor 可读固定
   报告并推进不依赖传输回执的工作，回执缺失如实保留。
