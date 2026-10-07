@@ -157,3 +157,5 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 见[共享后台身份与有界回调收尾](references/shared-daemon-caller.md)：统一核实 caller 与任务归属；原次回调零输入核收，等待期间继续主线。
 
 共享后台误认本方客户端时，按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md#共享-daemon-与重复-tty-的正确归因)核唯一原生客户端及 UUID；其他窗口残留同名 TTY 不能否决它。不称 Claude 身份失败、不伪造环境；修复须进入实际启动器与 hook。两个已授权 Claude 的独立工作并行，同 pane 输入串行，已通过的本任务握手直接复用。
+
+普通终端原 Claude 因 login 的 EPERM 无法调用工具时，按[权限边界与原任务接续](references/shared-daemon-caller.md#普通终端的-login-权限拒绝)核本地 Hook；不重发原任务，不重做已完成的原生动作。
