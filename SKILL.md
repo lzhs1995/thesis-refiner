@@ -83,6 +83,14 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 执行模式和资源
 
+新握手必须显式给出真实执行者类型：Claude Code 使用 `--executor claude`，或逐个写
+`--executor-surface surface:24=claude`；不能只给 surface 编号而依赖工具默认类型。
+协作 harness 的新版本在缺少类型时于发现和发送前拒绝。类型声明仍须配合实时 UUID
+与真实 ACK，不能代替身份核验。误向 Claude 发出 Codex 身份挑战属于主管参数错误，
+不计为 Claude 失效或服务重试；保留失败，核终态关闭原 marker 后以新 nonce 接续，
+不改旧回执、不要求虚报身份、不让握手维护暂停独立研究工作。代码已推送、已安装和
+现场双向验证分别报告，不能只改文档就称运行中工具已修复。
+
 按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)决定零、一或两个 executor，使用相位握手预算，及时结案已接受成果；通信维护不扩大为新科研审轮。
 
 握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
