@@ -3,6 +3,13 @@
 本页补充[协作、租约与恢复](collaboration-and-recovery.md)；
 通用握手与发送实现仍由 multi-agent-collaboration 维护。
 
+哨兵 `SENTINEL_ROLE_MAP_REFUSED` 先按
+[协作 skill 的角色表兼容规则](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/efficiency-and-closeout.md#哨兵启动失败先核角色表格式)
+核 `surface_ref`/`identity` 与单个/多个执行者的实际格式。复用该仓的唯一解析器，
+不在论文 skill 复制一套；监控启动失败不等于 Claude 业务失败，不重复派单或
+重握手。文件解析、实时身份、daemon 运行及业务交付分别留证。新版本测试和
+发布不热改正在执行的论文任务包或哨兵，原失败及适配记录保留。
+
 - **按收益分工。** 一人可快速完成的整理直接执行；有独立的引文溯源、
   统计输出核查或工具审查时再派给一个或两个已授权 executor。
   每人有独立任务包、nonce、输出目录和完成条件；共享文稿、公共脚本
