@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.09.26.10"
+  version: "2026.10.05.1"
 ---
 
 # 论文精炼助手
@@ -61,7 +61,42 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 - 正式终验必须在最终 Word/Zotero、格式、实际 PDF 字体和视觉检查后，对同一冻结 PDF 完成连续两轮完整审查。没有新的本地确认问题，既有确认问题全部解决。三轮同一问题只触发专项裁决，不能自动通过。
 - HTTP 200、空控制帧、上传 READY、退出码 0、同事的 DONE 和模拟回答都不能单独表示审查完成。
 
+## 同 workspace 握手硬门禁（不可绕过）
+
+只准与 **当前真实 caller 所属 workspace UUID 相同** 的独立 terminal pane 中的 agent 握手。
+每次先读 `cmux identify --json` 的 caller，再与实时 tree 的 UUID 对齐；focused、标题、旧摘要、
+历史 surface 编号和环境变量都不能代替身份。用户指定的 executor surface UUID 必须同时精确匹配。
+指定工作区与真实 caller 冲突即拒绝输入，不能回退旧 Claude、伪造身份、搬动面板或另开会话。
+
+必须使用 `multi-agent-collaboration` 的 `cmux_workspace_guard.py`、现役 PreToolUse hook 和
+受保护的 `cmux_bridge`。harness 固定 `--expected-workspace-uuid` 与
+`--expected-executor-uuid`；bridge 在每次粘贴和按键前重核，并用双 UUID 发送。
+跨区、缺 UUID、旧绑定、面板移动或身份不明一律 fail-closed，零发送。裸 `cmux send/send-key`、
+`cmux-agent ask/broadcast` 被 hook 拒绝；不得借 STATUS、恢复授权、force、超时或 shell 环境绕过。
+用户明确指定的目标可存于协作 skill 的 caller-scoped workspace-scope 文件，不因不可用自行撤销。
+
+跨工作区资源协调继续使用现有文件/队列回执，不借资源协调重新指定 executor。
+安装后实测 hook 的 exit 2 与零输入；配置写入不等于运行中客户端重载，旧导入模块也不算自动更新。
+协作 skill 缺失或身份门禁未通过时，禁止发送；已授权的单 agent 离线工作可继续。
+
 ## 执行模式和资源
+
+按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)决定零、一或两个 executor，使用相位握手预算，及时结案已接受成果；通信维护不扩大为新科研审轮。
+
+交付后执行[有界收口运行规则](references/executor-closeout-enforcement.md)：
+协作 skill 的 PreToolUse 阻止报告及原回调终态后的额外工具调用，Stop 允许
+精确诚实交接。回调未确认交主管核原次；不能为回执反复追加测试或记忆。
+本 skill 复用同一实现，不复制第二套发送器或 hook。
+
+握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
+
+**双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** supervisor 的 prompt 和 executor 的 callback 都必须用受保护 bridge、实际小写 `enter` 和发送后读屏。原 marker 留在 compose 时不得报成功；进入队列则记录 pending 并观察原消息，不重贴、不循环 Enter。确认须绑定本次完整消息、原身份与原尝试，不能借同一目标的其他调用或无关活动确认。Stop hook 首次仍检查固定报告哈希和真实 completion receipt；Stop/SubagentStop 的布尔 `stop_hook_active is True` 仅终止 hook 递归，不授予完成、不清任务，下一正常 turn 继续核验。具体兼容边界见下方双向投递维护文档。
+
+协作 bridge 的 callback pending journal 在发送前绑定原 task/nonce、报告与任务包 SHA、真实 workspace 身份。再次调用沿原 journal 只观察，不再次发键；报告或身份变化拒绝确认。旧版本无 journal 的历史失败保留原始证据，不能补造发送记录。导入模块必须来自 task pack 的 required_skill 同一安装，不能混用旧 Claude 路径和新版 release。
+
+若回调已进入 supervisor 原生 user 记录但回执缺失，沿协作技能的原 journal 接收端结算接口恢复：核真实会话与双方身份、原任务包/报告/尝试哈希及发送后完整消息，在原锁且 inode 未变时原子写入回执。禁止重贴回调、覆盖原回执或伪造尝试。只读验证、正式回执、executor 后续 Stop、产物核收和全局部署分别记账；不能由其中一项推定其余通过。旧任务保持原控制器，新版读取器不能单独覆盖到不兼容旧 bridge。
+
+两个用户指定的 Claude 可分别承担档案核查和工具审查等独立工作，各自任务包、nonce、产物目录和回调独立；共享代码由一个写入者维护。两个 executor 若同 pane 的不同 tab，则计算可并行，UI 输入须串行按 UUID 重新核验。健康 executor 不因另一位故障重启；持续失效者冻结写入后按已授权单 agent 模式接续，避免维护流程拖住论文交付。
 
 先按[以研究进展衡量协作效率](references/efficient-collaboration.md)划分有界任务：
 数据采集保持唯一负责者，第二执行者只解决独立未决问题；报告、回调和资源释放分别核收。
@@ -101,3 +136,19 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 交付当前有效候选清单、Word/PDF 哈希、逐条处置、实证复盘报告、NLM 原始回答与本地裁决、独立完成轴和资源释放回执。正式论文包冻结后，经验工程进入新的任务目录，不重复原任务模型。
 
 本仓是通用维护源；历史章节材料、账号绑定和本机运行日志不进公开仓库。旧安装的章节专用脚本和参考资料会备份保留，但不能覆盖本入口的双循环与验收契约。安装步骤见 [README](README.md)。
+
+## 双向投递与高效协作维护
+
+执行[高效握手、多执行者与双向投递](references/efficient-bidirectional-collaboration-20261004.md)：每次Enter后读回；输入框残留、排队与消费分别记录；可能已发送的回调仅只读核收，禁止重贴。
+
+
+## 归档双执行者现场经验（2026-10-05）
+
+见[归档回调与独立收尾](references/archive-callback-boundaries-20261005.md)。区分原生入站、正式回执与候选补丁实效；仅文档增量，不替换在途控制器。
+
+
+## 共享后台与回调收尾
+
+见[共享后台身份与有界回调收尾](references/shared-daemon-caller.md)：统一核实 caller 与任务归属；原次回调零输入核收，等待期间继续主线。
+
+共享后台误认本方客户端时，按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md#共享-daemon-与重复-tty-的正确归因)核唯一原生客户端及 UUID；其他窗口残留同名 TTY 不能否决它。不称 Claude 身份失败、不伪造环境；修复须进入实际启动器与 hook。两个已授权 Claude 的独立工作并行，同 pane 输入串行，已通过的本任务握手直接复用。
