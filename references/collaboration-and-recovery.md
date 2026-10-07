@@ -1,5 +1,26 @@
 # 协作、租约与恢复
 
+任务分工、握手预算归因与已验收成果收尾见[协作提效与收尾](collaboration-efficiency-and-closeout.md)。沿用下列原会话、身份与资源边界。
+
+## 同 workspace 握手硬门禁（不可绕过）
+
+只准与 **当前真实 caller 所属 workspace UUID 相同** 的独立 terminal pane 中的 agent 握手。
+每次先读 `cmux identify --json` 的 caller，再与实时 tree 的 UUID 对齐；focused、标题、旧摘要、
+历史 surface 编号和环境变量都不能代替身份。用户指定的 executor surface UUID 必须同时精确匹配。
+指定工作区与真实 caller 冲突即拒绝输入，不能回退旧 Claude、伪造身份、搬动面板或另开会话。
+
+必须使用 `multi-agent-collaboration` 的 `cmux_workspace_guard.py`、现役 PreToolUse hook 和
+受保护的 `cmux_bridge`。harness 固定 `--expected-workspace-uuid` 与
+`--expected-executor-uuid`；bridge 在每次粘贴和按键前重核，并用双 UUID 发送。
+跨区、缺 UUID、旧绑定、面板移动或身份不明一律 fail-closed，零发送。裸 `cmux send/send-key`、
+`cmux-agent ask/broadcast` 被 hook 拒绝；不得借 STATUS、恢复授权、force、超时或 shell 环境绕过。
+用户明确指定的目标可存于协作 skill 的 caller-scoped workspace-scope 文件，不因不可用自行撤销。
+
+跨工作区资源协调继续使用现有文件/队列回执，不借资源协调重新指定 executor。
+安装后实测 hook 的 exit 2 与零输入；配置写入不等于运行中客户端重载，旧导入模块也不算自动更新。
+协作 skill 缺失或身份门禁未通过时，禁止发送；已授权的单 agent 离线工作可继续。
+
+
 通用实现归 `multi-agent-collaboration`。论文任务包只附研究 profile、完整清单、保护路径、文档适配器精确 SHA、当前模式与任务 checkpoint，不把论文判断硬编码进通用协作工具。
 
 具体分工、双向Enter后核收和回调停止条件见[以研究进展衡量协作效率](efficient-collaboration.md)。
@@ -9,7 +30,7 @@
 
 已获用户自动接管授权时：保存失败 → 停止 executor/sentinel 的该阶段 → 核实没有并发写入 → 固定 checkpoint、活动 nonces 和保护路径 → Codex 接管。始终保留原会话，不 `/clear` 或新建替代 Claude。恢复时在 HANDOFF_READY 交接，确认 solo 写入结束，再给同 UUID/同会话新握手；旧回调只可供审计，不能重新启动已经完成的工作。
 
-跨章节会话可通过 cmux 协调资源与文件所有权，不互相接管 executor。使用 task_id、workspace UUID、surface UUID 为身份，数字 surface ref 仅作当前显示。发消息先定位现有 surface；内置 bridge 验证投递。网络已投递但探测不确定时核对接收端，不重复派发。
+跨工作区的章节会话通过原文件/队列回执协调资源与文件所有权；同工作区才可沿受保护的 cmux transport 发消息，不互相接管 executor。使用 task_id、workspace UUID、surface UUID 为身份，数字 surface ref 仅作当前显示。发消息先定位现有 surface；内置 bridge 验证投递。网络已投递但探测不确定时核对接收端，不重复派发。
 
 资源按申请 → 授予 → 使用 → 排空 → 释放。共享 SQLite 队列让调度者退出后仍可恢复，真实 OS 锁保护调用和交接。过期租约不自动授予别人，先核对原进程、pending 和 lock。
 
@@ -36,3 +57,7 @@ NLM 独立使用账号资源。只有原网络请求确实终态、子进程回�
 冻结成果按完整文件哈希核；追加日志按已读前缀核；可变 HANDOFF/索引按当时冻结快照及明确 supersedes 关系核。旧回执指向的导航后来更新时，保存对应原 SHA 的快照并另记后继，不改写旧回执、不按 mtime 猜最终版。旧阶段“音频尚无”的事实与后继“音频完成”各自成立；前一阶段完成不授予新统稿完成。找不到对应快照是证据缺失，不能放宽哈希要求。
 
 投递消费保留 request/delivery ID、目标 UUID、消息哈希、transport 状态、接收端观察及内容接受的独立回执。`UNCONFIRMED` 与消息排队可以同时存在；可见不等于已读，已读不等于审阅通过。沿 `cmux_bridge` 的既有分类器与回执接续，禁止因返回 75 就重复任务，也不把迟到旧阶段 callback 当成新阶段写入许可。
+
+普通握手与状态消息也必须绑定可见的稳定 marker，不能只有任务与完成回调才记录投递。协作工具新源码将普通消息写入 message-dispatch-v1；排队或不确定时只用原 marker 做只读核验，不重新粘贴。任务下发、回调和普通消息共用接收端锁，防止两个发送者同时操作同一输入框。发送后 hook 独立核对原记录、完整正文、观察哈希与当前身份，不能仅凭 Enter 返回成功。
+
+论文任务复用已绑定的安装版本与原次控制器。源码测试、GitHub CI、隔离安装、运行客户端加载、实际双向投递分别记账；更新本文不表示现役客户端已升级。原执行者失效时按既有授权继续本地文件整理，不把通信维护扩大为重估模型或改写论文。
