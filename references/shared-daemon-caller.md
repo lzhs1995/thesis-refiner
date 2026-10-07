@@ -62,3 +62,15 @@ journal can show paste and Enter even when a short screen detector saw nothing.
 Determine zero input from the attempt, not from that null alone. Keep report
 acceptance independent from missing transport receipts and give the executor no
 polling assignment merely to make the supervisor's detector catch up.
+
+## 多任务错误归属与发送核收
+
+同一工作区有两个执行者时，Stop hook 提示必须引用本次判定实际失败的
+任务标记，不能重新扫描后取第一个任务。错误提示会诱导执行者核错回执；
+修复提示归属不等于改变回调门禁或证明通信全链成功。
+
+任务提交后若被其他用户提示隔开，屏幕中的后续活动可能无法归属原任务。
+保留原 attempt，不能将未确认解释为未收到、叠加催促、重复派单，或放宽
+跨消息归属检查。报告完成后独立核收，正式传输回执另列；监督侧继续主线。
+两执行者均有实际工作时不再派通信维护审轮。下一任务在安全终态后接续，
+执行者持续失效则沿既有授权冻结其写入并由监督侧接管。
