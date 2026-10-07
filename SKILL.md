@@ -63,6 +63,11 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 执行模式和资源
 
+先按[以研究进展衡量协作效率](references/efficient-collaboration.md)划分有界任务：
+数据采集保持唯一负责者，第二执行者只解决独立未决问题；报告、回调和资源释放分别核收。
+原回调已验证且对应任务监控已解除后，停止该任务的回调探针，不让通信排障持续占用研究执行者。
+经验文档更新不表示运行中hook已经改变。
+
 用户授权双 agent 时优先复用已绑定的 Claude 会话，并用 `multi-agent-collaboration` 的真实握手与任务包。用户已授权自动接管时，执行者发生持续故障即保存回执并按安全边界转 Codex 单 agent；不能因此停止整体任务。单 agent 自审标 `solo_self_review`，其他 Codex 会话的独立审查单独署名，不能冒称 Claude 参与。
 
 Word/Zotero 是串行应用资源。NLM 的账号预算与执行容量分开：已有真实证据和固定执行器支持两路时，复用该能力；缺少对应能力时使用串行入口。同账号单并发是本地兼容策略，不能称为 Google 官方安全上限；不同 notebook/target 仍共用额度。多任务按 [并发能力与自动调度](references/nlm-concurrency-and-scheduling.md) 消费固定 READY，真实归还后自动轮转，离线裁决并行。资源交接与论文验收分列；未知终态保留隔离，不能预填“无在途”。
