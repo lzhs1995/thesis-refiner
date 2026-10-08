@@ -165,3 +165,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 普通终端原 Claude 因 login 的 EPERM 无法调用工具时，按[权限边界与原任务接续](references/shared-daemon-caller.md#普通终端的-login-权限拒绝)核本地 Hook；不重发原任务，不重做已完成的原生动作。
 
 完成消息已到达而执行者仍等待时，执行[主管核收与原会话恢复](references/completion-settlement-recovery.md)：优先结算原次回调、独立裁定、精确解除该任务，再以原会话真实回复核验恢复；不要误判 API 死亡或重复派审。
+
+## 执行者空闲主动升级（禁止死等）
+
+已 armed 但尚无定稿 task pack 的执行者不得死等。空闲满 10/30/60 分钟时，`multi-agent-collaboration` 的 Stop guard 拦截收尾，执行者须运行该 release 的 `scripts/executor_idle_escalation.py escalate`：每级一条带新标记的普通消息（经 journal bridge，不强占输入框）加一份可供主管拉取的 notice 文件，投递结果如实记账。级间用同脚本的有界 `wait`；三级用尽后向用户报阻塞，不再发送。不重发旧消息、不伪造回执、不 disarm。规则与边界见 collaboration release 的 `references/executor-idle-escalation.md`。主管侧：长忙碌轮中应周期性检查执行者 notice 与入站消息，给出派发、新范围或取消三者之一。
