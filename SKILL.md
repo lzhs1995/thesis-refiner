@@ -168,4 +168,10 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 
 ## 执行者空闲主动升级（禁止死等）
 
-已 armed 但尚无定稿 task pack 的执行者不得死等。空闲满 10/30/60 分钟时，`multi-agent-collaboration` 的 Stop guard 拦截收尾，执行者须运行该 release 的 `scripts/executor_idle_escalation.py escalate`：每级一条带新标记的普通消息（经 journal bridge，不强占输入框）加一份可供主管拉取的 notice 文件，投递结果如实记账。级间用同脚本的有界 `wait`；三级用尽后向用户报阻塞，不再发送。不重发旧消息、不伪造回执、不 disarm。规则与边界见 collaboration release 的 `references/executor-idle-escalation.md`。主管侧：长忙碌轮中应周期性检查执行者 notice 与入站消息，给出派发、新范围或取消三者之一。
+已 armed 但尚无定稿 task pack 的执行者不得死等，**没收到回复就反复问，直到主管回复为止**（用户 2026-10-08 指令）。
+
+- 空闲满 5 分钟起，`multi-agent-collaboration` 的 Stop guard 拦截收尾，除非该任务有一个活着的升级守望进程（pid 在跑且心跳 ≤180 秒）。拦截信息给出可直接粘贴的命令：`nohup python3 -B <release>/scripts/executor_idle_escalation.py watch --task-id <id> --executor-uuid <uuid> >/dev/null 2>&1 &`。
+- 守望进程独立于执行者回合：到期立即发一条带新标记的普通消息（经 journal bridge，不强占输入框）并写一份主管可拉取的 notice 文件，此后**每 10 分钟再发一条**，不设上限；投递结果（CONFIRMED / SUBMITTED_UNCONFIRMED / NO_INPUT / TRANSPORT_ERROR）如实记账。送达≠回复，送达后仍继续问。
+- 只有主管侧动作算「回复」并停止重复：握手回执、草稿或定稿 task pack、marker 活动、或主管在自己 surface 上运行 `executor_idle_escalation.py ack --task-id <id> --executor-uuid <uuid> [--hold-seconds N]`（hold 最长 2 小时）。执行者不能替主管 ack。守望进程在主管回复、派发到达或 marker 过期（ttl）时自行退出。
+- 每条都是新消息，不重发旧消息、不伪造回执、不 disarm。规则与边界见 collaboration release 的 `references/executor-idle-escalation.md`。
+- 主管侧：长忙碌轮中应周期性检查执行者 notice 与入站消息，给出派发、新范围、取消或 ack 之一；Codex 视口上滚（`New activity · Earlier messages available`）时 bridge 会拒投，按 Esc/Enter 回到最新即可。
