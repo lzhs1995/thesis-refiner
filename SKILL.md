@@ -165,3 +165,16 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 普通终端原 Claude 因 login 的 EPERM 无法调用工具时，按[权限边界与原任务接续](references/shared-daemon-caller.md#普通终端的-login-权限拒绝)核本地 Hook；不重发原任务，不重做已完成的原生动作。
 
 完成消息已到达而执行者仍等待时，执行[主管核收与原会话恢复](references/completion-settlement-recovery.md)：优先结算原次回调、独立裁定、精确解除该任务，再以原会话真实回复核验恢复；不要误判 API 死亡或重复派审。
+
+## 执行者空闲主动升级（禁止死等）
+
+已 armed 但尚无定稿 task pack 的执行者不得死等，**没收到回复就反复问，直到主管回复为止**（用户 2026-10-08 指令）。
+
+- **60 秒阈值，循环往复，session 不以任何理由中止**：主管侧无回复满 60 秒，`multi-agent-collaboration` 的 Stop guard 拦截收尾，**包括 Stop-hook 重入（`stop_hook_active=true`）**；后台守望进程活着也不放行，只有主管回复才放行。拦截信息给出前台命令：`python3 -B <release>/scripts/executor_idle_escalation.py pursue --task-id <id> --executor-uuid <uuid>`。
+- 两个进程、一个发送者：
+  - `watch`（后台、脱离会话）是唯一发送者。首条在空闲满 60 秒时发，之后**每 60 秒发一条**新标记普通消息（经 journal bridge，不强占输入框），同时写一份主管可拉取的 notice 文件，不设上限。投递结果（CONFIRMED / SUBMITTED_UNCONFIRMED / NO_INPUT / TRANSPORT_ERROR）如实记账；送达≠回复。
+  - `pursue`（前台）在 watch 死掉时重新拉起它（判据：pid 在跑且心跳 ≤90 秒），然后等待。exit 0 表示主管已回复或已派发，立即结束回合，把输入框让给主管握手；exit 9 表示 540 秒内无回复，再跑一次；它自己从不发送。
+- 「回复」= 主管侧任一动作，包括：握手回执、artifact root 里任何新文件（含一次因执行者忙而失败的 preflight 证据，主管重试即可）、task pack、marker 活动，或主管在自己 surface 上运行 `executor_idle_escalation.py ack --task-id <id> --executor-uuid <uuid> [--hold-seconds N]`（hold 最长 2 小时）。执行者不能替主管 ack。
+- 用户中断永远可以结束循环；marker 过期或被 disarm 时规则结束。
+- 每条都是新消息，不重发旧消息、不伪造回执、不 disarm。规则与边界见 collaboration release 的 `references/executor-idle-escalation.md`。
+- 主管侧：长忙碌轮中应周期性检查执行者 notice 与入站消息，给出派发、新范围、取消或 ack 之一；Codex 视口上滚（`New activity · Earlier messages available`）时 bridge 会拒投，按 Esc/Enter 回到最新即可。
