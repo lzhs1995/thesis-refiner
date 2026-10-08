@@ -43,6 +43,13 @@ multi-agent-collaboration 的 `cmux_idle_pull.py` 与两个 hook 强制：
    被占时零输入，下一分钟再试。主管 ack、晚于请求的派发或普通消息任一出现即停。
    executor Stop 要求催办器在跑（或已被回复）才放行交接。
 5. 请求不是送达确认，不替代 completion receipt；主管仍沿原次核收。
+6. 任何时候等主管都须先登记，不准停下死等：
+   `cmux_idle_pull.py --request --workspace WS --executor EX --supervisor SUP --supervisor-ref <surface> --report <绝对路径> --reason <在等什么>`
+   - 只认真实调用者，不符报 REQUEST_CALLER_MISMATCH。登记后启动同一个催办器。
+   - 未回复期间，executor Stop 返回 EXECUTOR_AWAITING_SUPERVISOR 并拦截。hook 重入也拦，且无 24 小时上限。
+   - 封口只放行精确前台命令
+     `rtk proxy <release>/scripts/cmux_idle_pull.py --wait --workspace WS --executor EX`。
+     它约 100 秒返回一次：ANSWERED 表示主管已回复；WAITING 表示还没有，催办器若已死会先拉起。遇到 WAITING 就原样重跑。
 
 论文任务里主管收到请求后：有下一项独立业务就派新任务包；暂无可派（如
 WAITING_DEPENDENCY）则带理由 ack，并在 evidence 目录写明依赖与负责人。
