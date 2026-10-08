@@ -13,7 +13,7 @@ metadata:
 
 ## macOS 自动化故障：优先执行规则
 
-用户已明确授权自动处理时，沿用该授权，读取当前安装的 `officecli-word-revision/references/macos-tcc-zotero-word.md`，不得再次把同一个 Automation 开关或确认问题交给用户。先按实际发送方核查，再按已授权范围自动恢复；TCC.db 备份/重置是有证据的恢复动作，不是普通文稿流水线的隐含动作。多个 agent 只保留一个恢复执行者，其余继续离线工作；Claude 持续失效时沿既有授权切换 supervisor 单 agent，不停整个任务。实际原生操作未通过前，不得把“已记录规则”“权限条目存在”或“退出码0”称为恢复成功。
+用户已明确授权自动处理时，沿用该授权，读取当前安装的 `officecli-word-revision/references/macos-tcc-zotero-word.md`，不得再次把同一个 Automation 开关或确认问题交给用户。先按实际发送方核查，再按已授权范围自动恢复；TCC.db 备份/重置是有证据的恢复动作，不是普通文稿流水线的隐含动作。多个 agent 只保留一个恢复执行者，其余继续离线工作；Claude 可重试 API 故障先按下文的连续 300 秒证据门槛核验，再沿既有授权和安全交接边界切换 supervisor 单 agent，不停整个任务。实际原生操作未通过前，不得把“已记录规则”“权限条目存在”或“退出码0”称为恢复成功。
 
 目标是形成有据可查、可提交的精简文稿。精简以前必须全量追溯初稿的实证链条；文字删减量不是完成指标。保存用户原始问题、研究设计、目标稿件、允许补核范围和完成条件，恢复任务时先读这些记录。
 
@@ -93,7 +93,21 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)决定零、一或两个 executor，使用相位握手预算，及时结案已接受成果；通信维护不扩大为新科研审轮。
 
+交付后执行[有界收口运行规则](references/executor-closeout-enforcement.md)：
+协作 skill 的 PreToolUse 阻止报告及原回调终态后的额外工具调用，Stop 允许
+精确诚实交接。回调未确认交主管核原次；不能为回执反复追加测试或记忆。
+本 skill 复用同一实现，不复制第二套发送器或 hook。
+
+主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
+正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久
+沿用旧 recap，也不要让用户替已有主管通道转话。
+
 握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
+
+探针全文消失不能证明输入区已空；残留前缀、暂时缺prompt glyph和外来文字按
+协作harness的有界清理后置条件处理。正常ACK等待及原nonce恢复记录为
+`AWAITING_EXECUTOR_ACK/PENDING`，不提前报FAIL。短探针仍逐键核身份、保留
+600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
 
 **双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** supervisor 的 prompt 和 executor 的 callback 都必须用受保护 bridge、实际小写 `enter` 和发送后读屏。原 marker 留在 compose 时不得报成功；进入队列则记录 pending 并观察原消息，不重贴、不循环 Enter。确认须绑定本次完整消息、原身份与原尝试，不能借同一目标的其他调用或无关活动确认。Stop hook 首次仍检查固定报告哈希和真实 completion receipt；Stop/SubagentStop 的布尔 `stop_hook_active is True` 仅终止 hook 递归，不授予完成、不清任务，下一正常 turn 继续核验。具体兼容边界见下方双向投递维护文档。
 
@@ -103,7 +117,12 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 两个用户指定的 Claude 可分别承担档案核查和工具审查等独立工作，各自任务包、nonce、产物目录和回调独立；共享代码由一个写入者维护。两个 executor 若同 pane 的不同 tab，则计算可并行，UI 输入须串行按 UUID 重新核验。健康 executor 不因另一位故障重启；持续失效者冻结写入后按已授权单 agent 模式接续，避免维护流程拖住论文交付。
 
-用户授权双 agent 时优先复用已绑定的 Claude 会话，并用 `multi-agent-collaboration` 的真实握手与任务包。用户已授权自动接管时，执行者发生持续故障即保存回执并按安全边界转 Codex 单 agent；不能因此停止整体任务。单 agent 自审标 `solo_self_review`，其他 Codex 会话的独立审查单独署名，不能冒称 Claude 参与。
+先按[以研究进展衡量协作效率](references/efficient-collaboration.md)划分有界任务：
+数据采集保持唯一负责者，第二执行者只解决独立未决问题；报告、回调和资源释放分别核收。
+原回调已验证且对应任务监控已解除后，停止该任务的回调探针，不让通信排障持续占用研究执行者。
+经验文档更新不表示运行中hook已经改变。
+
+用户授权双 agent 时优先复用已绑定的 Claude 会话，并用 `multi-agent-collaboration` 的真实握手与任务包。可重试 Claude API 故障必须从第一次真实失败起，取得至少连续 300 秒均失败且门槛后有新鲜失败的证据，才可判断该执行者暂时不可用；任何真实 API 成功重置计时，静屏、排队、未知状态与重试次数均不能代替。等待期间推进独立工作；满足门槛后仍须冻结原执行者、核实无并发写入，再依既有授权接管。认证/计费/额度故障不盲重试，用户明确停用或撤回授权单列，详见[协作与恢复](references/collaboration-and-recovery.md)。恢复沿原会话、真实新握手和单写交接；单 agent 自审标 `solo_self_review`，其他 Codex 会话的独立审查单独署名，不能冒称 Claude 参与。
 
 Word/Zotero 是串行应用资源。NLM 的账号预算与执行容量分开：已有真实证据和固定执行器支持两路时，复用该能力；缺少对应能力时使用串行入口。同账号单并发是本地兼容策略，不能称为 Google 官方安全上限；不同 notebook/target 仍共用额度。多任务按 [并发能力与自动调度](references/nlm-concurrency-and-scheduling.md) 消费固定 READY，真实归还后自动轮转，离线裁决并行。资源交接与论文验收分列；未知终态保留隔离，不能预填“无在途”。
 
@@ -152,3 +171,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 见[共享后台身份与有界回调收尾](references/shared-daemon-caller.md)：统一核实 caller 与任务归属；原次回调零输入核收，等待期间继续主线。
 
 共享后台误认本方客户端时，按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md#共享-daemon-与重复-tty-的正确归因)核唯一原生客户端及 UUID；其他窗口残留同名 TTY 不能否决它。不称 Claude 身份失败、不伪造环境；修复须进入实际启动器与 hook。两个已授权 Claude 的独立工作并行，同 pane 输入串行，已通过的本任务握手直接复用。
+
+普通终端原 Claude 因 login 的 EPERM 无法调用工具时，按[权限边界与原任务接续](references/shared-daemon-caller.md#普通终端的-login-权限拒绝)核本地 Hook；不重发原任务，不重做已完成的原生动作。
+
+完成消息已到达而执行者仍等待时，执行[主管核收与原会话恢复](references/completion-settlement-recovery.md)：优先结算原次回调、独立裁定、精确解除该任务，再以原会话真实回复核验恢复；不要误判 API 死亡或重复派审。
