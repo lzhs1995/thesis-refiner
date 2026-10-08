@@ -3,6 +3,13 @@
 本页补充[协作、租约与恢复](collaboration-and-recovery.md)；
 通用握手与发送实现仍由 multi-agent-collaboration 维护。
 
+哨兵 `SENTINEL_ROLE_MAP_REFUSED` 先按
+[协作 skill 的角色表兼容规则](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/efficiency-and-closeout.md#哨兵启动失败先核角色表格式)
+核 `surface_ref`/`identity` 与单个/多个执行者的实际格式。复用该仓的唯一解析器，
+不在论文 skill 复制一套；监控启动失败不等于 Claude 业务失败，不重复派单或
+重握手。文件解析、实时身份、daemon 运行及业务交付分别留证。新版本测试和
+发布不热改正在执行的论文任务包或哨兵，原失败及适配记录保留。
+
 - **按收益分工。** 一人可快速完成的整理直接执行；有独立的引文溯源、
   统计输出核查或工具审查时再派给一个或两个已授权 executor。
   每人有独立任务包、nonce、输出目录和完成条件；共享文稿、公共脚本
@@ -22,6 +29,12 @@
   workspace/surface UUID，Enter 后核完整消息与原 marker。compose、
   queued、实际消费、正式 receipt、报告接受分列。unknown 只读核原 attempt，
   不重贴、不循环按键、不删 journal。报告已读取不能伪造 callback receipt。
+- **ACK 后及时交出具体业务。** 握手前备好研究范围、真实输入和验收条件，
+  ACK 后补身份凭据并立即定稿、派单。握手已过而包仍是 draft 或尚未提交，
+  属于 `SUPERVISOR_DISPATCH_PENDING`，不能称 Claude 停工或失效。
+  ACK、定稿、提交、消费分别记录实际时间；压缩接续先补这个已有交接，
+  不重握手，不重发已提交尝试。原任务核收后再衔接独立待办，正常执行或
+  压缩中不叠加任务。本条是调度规则，不表示自动派单 hook 已实现。
 - **报告完成就沿原入口回调。** 不额外等待 supervisor 空闲，不建秒级
   watcher；由原 bridge 判定输入区及既有补键条件。supervisor 可读固定
   报告并推进不依赖传输回执的工作，回执缺失如实保留。
@@ -39,6 +52,24 @@ GitHub 文档更新、安装、客户端实际加载和研究结果验收是不�
 本页不授权重跑研究、重启会话、额外模型调用或绕过共享资源锁。
 
 ## 双执行者审查的输入与收尾边界
+
+### 子任务收尾后仍由主管推进整篇
+
+正常报告收尾、回调核收、等待同版 PDF 和 Claude API 故障分别判断。旧
+`CALLBACK_UNCONFIRMED` 或自动 recap 不能覆盖新的正式回执；先核原报告、
+核收/disarm 记录与当前屏幕，不据旧截图重启、重握手或重做已接受的审查。
+
+主管核收后追加真实状态及具体安排，沿原受保护通道一次同步，也可并入下一项
+确有必要的任务交接。状态含原任务及证据路径、业务裁决、回调状态、下一动作、
+负责人和触发条件。最终 PDF 未生成时明确依赖及生成者，主管继续生成；若已有
+独立待办则及时正式派单，不能只握手后留 draft，也不为保持两窗口活跃造任务。
+
+状态通知与原 callback 独立：通知 queued/unknown 不影响旧回执确认，只读核原次，
+不重贴、不补 Enter、不额外索取 ACK。原 marker 已解除后，新的用户状态查询或
+主管通知按新授权读取指定证据；当前任务的收口不永久停用会话。不要让用户转话，
+不要把子审查完成报告为论文完成。复用协作 skill 的
+[核收反馈规则](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/efficiency-and-closeout.md#核收后把结论和下一步交回执行者)，
+不另建发送器或轮询器；新增文档不代表运行中的 hook 已加载。
 
 派单时把固定研究证据与主管持续维护的导航页分列：前者绑定路径和SHA，后者
 注明所有者及观察时间。任务包引用的身份与角色附件必须真实存在；未提供的

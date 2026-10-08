@@ -88,6 +88,10 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 精确诚实交接。回调未确认交主管核原次；不能为回执反复追加测试或记忆。
 本 skill 复用同一实现，不复制第二套发送器或 hook。
 
+主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
+正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久
+沿用旧 recap，也不要让用户替已有主管通道转话。
+
 握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
 
 探针全文消失不能证明输入区已空；残留前缀、暂时缺prompt glyph和外来文字按
@@ -157,3 +161,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 见[共享后台身份与有界回调收尾](references/shared-daemon-caller.md)：统一核实 caller 与任务归属；原次回调零输入核收，等待期间继续主线。
 
 共享后台误认本方客户端时，按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md#共享-daemon-与重复-tty-的正确归因)核唯一原生客户端及 UUID；其他窗口残留同名 TTY 不能否决它。不称 Claude 身份失败、不伪造环境；修复须进入实际启动器与 hook。两个已授权 Claude 的独立工作并行，同 pane 输入串行，已通过的本任务握手直接复用。
+
+普通终端原 Claude 因 login 的 EPERM 无法调用工具时，按[权限边界与原任务接续](references/shared-daemon-caller.md#普通终端的-login-权限拒绝)核本地 Hook；不重发原任务，不重做已完成的原生动作。
+
+完成消息已到达而执行者仍等待时，执行[主管核收与原会话恢复](references/completion-settlement-recovery.md)：优先结算原次回调、独立裁定、精确解除该任务，再以原会话真实回复核验恢复；不要误判 API 死亡或重复派审。
