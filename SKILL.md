@@ -90,8 +90,9 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 **executor 不得死等（hook 强制）。** 交接前须用封口放行的唯一一条命令写文件空闲请求
 （`cmux_idle_pull.py --task-pack <原任务包>`，不向主管终端发任何键）；缺请求则
-Stop 拒交接。主管 Stop 在请求未被更新派发或带理由 `--ack` 前持续拦截，codex
-忙碌也不会丢请求。详见[有界收口](references/executor-closeout-enforcement.md#executor-空闲领任务)。
+Stop 拒交接。同一命令启动后台催办器，每 60 秒以新 STATUS 再问主管，直到主管
+ack/派发/回消息（上限 24 小时）；主管 Stop 也在请求未结前持续拦截，codex 忙碌
+不会让 executor 死等。详见[有界收口](references/executor-closeout-enforcement.md#executor-空闲领任务)。
 
 主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
 正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久

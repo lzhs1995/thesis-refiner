@@ -38,7 +38,11 @@ multi-agent-collaboration 的 `cmux_idle_pull.py` 与两个 hook 强制：
 2. executor Stop：精确 handoff_line 只有在本任务、本报告哈希的新鲜请求存在时放行。
 3. 主管 Stop：发给本主管的请求在出现更新的任务派发 attempt 或
    `--ack EXECUTOR --workspace WS --supervisor SUP --reason <非空理由>` 前一直拦截。
-4. 请求不是送达确认，不替代 completion receipt；主管仍沿原次核收。
+4. 反复问直到主管回复：同一命令起后台催办器 `cmux_idle_push.py`，立即问一次，
+   之后每 60 秒用新 marker 的 `STATUS:` 普通消息再问，最长 24 小时；主管输入框
+   被占时零输入，下一分钟再试。主管 ack、晚于请求的派发或普通消息任一出现即停。
+   executor Stop 要求催办器在跑（或已被回复）才放行交接。
+5. 请求不是送达确认，不替代 completion receipt；主管仍沿原次核收。
 
 论文任务里主管收到请求后：有下一项独立业务就派新任务包；暂无可派（如
 WAITING_DEPENDENCY）则带理由 ack，并在 evidence 目录写明依赖与负责人。
