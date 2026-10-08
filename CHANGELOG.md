@@ -1,3 +1,7 @@
+# Unreleased (2026-10-08)
+
+记录 executor 空闲后持续求派单：引用协作仓库的 Stop hook 与 `executor_ready.py persist`——跑在回合之外、每 60 秒重问、不设上限，直到回复真的到达 executor（主管写 mailbox 文件或消息进入本会话转录）。放行只认活循环、已收到回复、操作者停循环；无提醒配额，重入不放行；主管忙时不叠发。本条只改文档，不安装 hook、不改冻结任务。
+
 # 2026.10.05.1
 
 Clarifies full-payload, per-call confirmation for prompts and callbacks, strict

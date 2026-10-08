@@ -150,3 +150,39 @@ Windows与Mac资料按证据比较，不以所在平台决定优先级。
 
 归档完成、统计插件验收、回调结算和工具维护分列完成条件。后继导航文字不属于
 已经上传的旧快照；说明其时间边界即可，不因每次状态更新循环打包、重审或重跑。
+
+## executor 空闲后主动求派单
+
+主管 disarm 后，executor 是空闲而非协作结束。只问一次也会失效：主管读了而没回，这条就
+消失在它的上下文里。用户 2026-10-08 指令：「60 秒没有回复就再问一次，循环往复 …
+直到 codex supervisor 回复为止」，有限提醒和三级阶梯都被这句话否掉。
+
+通用实现在 `multi-agent-collaboration` 的 `scripts/cmux_executor_idle_guard.py`（Stop）
+与 `scripts/executor_ready.py`，契约见其 `references/executor-idle-ready.md`；本 skill
+不复制第二套发送器或 hook。
+
+- **循环跑在回合之外**。派发只能在 executor 不在回合里时发生：2026-10-08 实测 Claude
+  executor 回合进行中 216 次采样有 215 次 `compose_block_text` 为 None，bridge-test 预读记
+  `COMPOSE_OCCUPIED`（preexisting 为空串哈希）并 rc=1 不发送；这是输入块不可观测，不是用户
+  草稿。所以回合内轮询两头不占：既挡住派发，又恰好在回合结束时停止追问。正确做法是
+  `nohup python3 -B scripts/executor_ready.py persist --supervisor <ref> --caller-uuid <uuid>
+  --task <id> --transcript <本会话转录> >/dev/null 2>&1 &` 之后立即结束回合。
+- **Stop hook 的放行条件只有三条**：有活循环（state=ASKING、心跳 ≤180s、记录的
+  interval ≤60s、记录的 pid 仍在跑记录的 argv）、本轮空闲期内收到过真回复、操作者
+  `stop --caller-uuid <uuid>`。手写记录、心跳过期、拉长间隔、换 caller、借用别的活 pid 都不算。
+  重入不是逃生口：`run_loop` 在任何 bridge 调用之前先落记录，所以就算 bridge 一直拒绝，
+  循环仍然是「活的」，拒绝被记成 ask outcome 并在下一个间隔重试。
+- **什么算回复**：主管在 ask 文本给出的 mailbox 目录里写一个 JSON 文件（`{"status": "SOLO",
+  "message": …, "resume_condition": …}`），或消息真的进入本会话转录（只认 user 回合与
+  queued dispatch；工具结果、meta、hook 反馈、压缩摘要是 executor 自己的上下文，不是回复）。
+  送达不等于回复；只写在主管自己线程里的处置，executor 收不到，循环会继续问——这是对的。
+  mailbox 这条通道在 executor 输入被占、视口上滚时同样有效。
+- **不叠发**：每次 ask 用新 marker、新记录、新 journal，仍是普通消息（不是 task pack、不
+  force-compose）。到点前先重读主管输入，若上一条 marker 还在它的 compose 或待发队列里就
+  延后（记 `held_observations`）并重置计时。所以主管忙的时候只积一条，不是每分钟一条。
+  `UNCONFIRMED_DO_NOT_RESEND` 表示原尝试仍有效，只能 `reconcile --marker`，不重贴。
+- 主管把每条 `EXECUTOR_READY` 当作下一工具边界的待办：派任务包，或回
+  `WAITING_DEPENDENCY`/`SOLO` 及触发条件；不得以「主管忙」为由沉默，也不得让用户转告。
+  `SOLO`/`WAITING_DEPENDENCY` 是回复，会终结本轮；按它的 `resume_condition` 恢复，不要
+  到点就自动重启循环。
+- 安装不热加载已运行的客户端；冻结的论文任务不因本条重绑。
