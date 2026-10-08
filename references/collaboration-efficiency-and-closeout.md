@@ -25,10 +25,13 @@
   不在 ACK 前要求业务审计。使用 `--handshake-timeout 600` 或更长预算，
   不用泛化 `--timeout` 覆盖相位预算；有效 ACK 到达立即继续，
   同任务健康握手复用。预算不足或检测器漏观测不能归因 Claude 失效。
-- **prompt 与 callback 都核发送后证据。** 原 bridge 每次写入前核当前
-  workspace/surface UUID，Enter 后核完整消息与原 marker。compose、
-  queued、实际消费、正式 receipt、报告接受分列。unknown 只读核原 attempt，
-  不重贴、不循环按键、不删 journal。报告已读取不能伪造 callback receipt。
+- **prompt 与 callback 都核原生全文回执。** 原 bridge 在输入前绑定接收方
+  workspace/surface/pane UUID、进程、原生 session 与 transcript 追加边界。
+  完整 composer 稳定后才按 Enter；只有原边界后新增、全文精确相等的原生
+  user 记录证明收到。compose、queued、执行、正式 receipt、报告接受分列。
+  unknown 只读核原 attempt，不重贴、不循环按键、不删 journal。报告已读取
+  不能伪造 callback receipt；按[原次恢复规则](verified-compose-delivery.md)
+  处理卡住的输入，不把旧屏幕确认或另一次调用当成本次证据。
 - **ACK 后及时交出具体业务。** 握手前备好研究范围、真实输入和验收条件，
   ACK 后补身份凭据并立即定稿、派单。握手已过而包仍是 draft 或尚未提交，
   属于 `SUPERVISOR_DISPATCH_PENDING`，不能称 Claude 停工或失效。
@@ -47,6 +50,10 @@
   剩余论文主线另列。新改动只做相关增量核查，保留历史失败与纠正依据。
 
 GitHub 文档更新、安装、客户端实际加载和研究结果验收是不同完成轴。
+协作安装器将可证明属于本包的旧 wrapper 整目录备份后链接到固定 release，
+两端 hook 使用同一版本；foreign 配置保留。论文安装器仍只覆盖维护文件并
+备份旧字节，保留章节资源，不复制协作 hook。仅主管安装，执行者审独立反例，
+不在共享配置上同时写入；核收后及时交回下一步或明确依赖，避免重复旧回调。
 报告及回调终态后的可执行约束见[有界收口运行规则](executor-closeout-enforcement.md)；
 该约束结束 executor 本轮扩展工作，不授论文通过、不补造投递回执。
 本页不授权重跑研究、重启会话、额外模型调用或绕过共享资源锁。

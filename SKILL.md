@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.05.1"
+  version: "2026.10.09.1"
 ---
 
 # 论文精炼助手
@@ -99,7 +99,13 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 `AWAITING_EXECUTOR_ACK/PENDING`，不提前报FAIL。短探针仍逐键核身份、保留
 600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
 
-**双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** supervisor 的 prompt 和 executor 的 callback 都必须用受保护 bridge、实际小写 `enter` 和发送后读屏。原 marker 留在 compose 时不得报成功；进入队列则记录 pending 并观察原消息，不重贴、不循环 Enter。确认须绑定本次完整消息、原身份与原尝试，不能借同一目标的其他调用或无关活动确认。Stop hook 首次仍检查固定报告哈希和真实 completion receipt；Stop/SubagentStop 的布尔 `stop_hook_active is True` 仅终止 hook 递归，不授予完成、不清任务，下一正常 turn 继续核验。具体兼容边界见下方双向投递维护文档。
+**双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** prompt、任务包和 callback 复用协作 skill 的同一受保护 bridge。输入前绑定接收方 UUID、进程、原生 session 和 transcript 追加边界；完整 composer 稳定后才按 Enter。只有该原生记录在原边界后新增、与全文精确相等的 user 消息可以确认收到。屏幕、ACK、退出码、空输入区或其他会话的同 marker 均不能证明送达；`RECEIVED_ALTERED` 不算成功。Claude `queued_command` 只证明收到并排队，执行和验收另列。
+
+按[Enter 与原生投递回执](references/verified-compose-delivery.md)处理卡住的原次：不重贴、不换 nonce；先只读核收，确属原完整草稿且稳定时由原 controller 判断是否补键。自动和显式恢复共用一次补 Enter 预算，意图落盘即消耗，不另走 Tab。协作 skill 的 `cmux_native_delivery_guard.py` 在 PostToolUse 核当前投递调用，未确认 exit 2，并给出原次恢复入口；普通工具调用不扫描旧账，不设 disable/advisory 放行。
+
+Stop hook 首次仍检查固定报告哈希和真实 completion receipt；Stop/SubagentStop 的布尔 `stop_hook_active is True` 仅终止 hook 递归，不授予完成、不清任务，下一正常 turn 继续核验。本 skill 不复制另一套发送器或 hook；安装记录、客户端加载、原生消息回执与论文验收分别留证。
+
+任务 disarm 后复用协作 skill 的 `cmux_executor_idle_guard.py` 和后台 `executor_ready.py persist`，每 60 秒处理一次求派发请求，直到主管真实回复、新任务或 operator stop。未确认请求保留原 payload、marker 和恢复预算，重启也不重贴；旧 `CONFIRMED` 须重验原生回执，已排队或读屏失败不堆新请求。全程锁防止重复循环，Stop 递归只结束本次 hook。主管必须沿原 bridge 回复或写请求给出的精确 mailbox 文件，自己线程中的答复不能代替；后台等待期间推进论文主线，有独立待办就派发，否则明确依赖。
 
 协作 bridge 的 callback pending journal 在发送前绑定原 task/nonce、报告与任务包 SHA、真实 workspace 身份。再次调用沿原 journal 只观察，不再次发键；报告或身份变化拒绝确认。旧版本无 journal 的历史失败保留原始证据，不能补造发送记录。导入模块必须来自 task pack 的 required_skill 同一安装，不能混用旧 Claude 路径和新版 release。
 
@@ -148,7 +154,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 
 ## 双向投递与高效协作维护
 
-执行[高效握手、多执行者与双向投递](references/efficient-bidirectional-collaboration-20261004.md)：每次Enter后读回；输入框残留、排队与消费分别记录；可能已发送的回调仅只读核收，禁止重贴。
+执行[高效握手、多执行者与双向投递](references/efficient-bidirectional-collaboration-20261004.md)：按原 attempt 的接收端原生全文回执确认送达；读屏只保护草稿并判断恢复条件。接收、排队、执行与验收分别记录，可能已发送的回调只核原次，禁止重贴。
 
 
 ## 归档双执行者现场经验（2026-10-05）

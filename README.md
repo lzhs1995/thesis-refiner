@@ -1,6 +1,14 @@
 # Thesis Refiner / 论文精炼助手
 
-Current source: **2026.09.26.10**. Read the [toolchain lessons](references/toolchain-retrospective.md) and [manifest/link contract](references/delivery-manifest.md) for result assembly, file identity and final delivery.
+Current source: **2026.10.09.1**. Read the [toolchain lessons](references/toolchain-retrospective.md) and [manifest/link contract](references/delivery-manifest.md) for result assembly, file identity and final delivery.
+
+The [verified delivery contract](references/verified-compose-delivery.md) uses
+`multi-agent-collaboration` 0.2.0's single journaled sender and enforced native
+receipt checks. Enter, visible text and queue banners do not prove delivery.
+Keep an unconfirmed request on its original attempt; the executor's 60-second
+request loop must reconcile that attempt before creating another request.
+The shared hook installation, client loading and actual delivery are verified
+separately. This documentation update does not change a frozen thesis runtime.
 
 The [six-repository version map](references/toolchain-versions.json) distinguishes
 skill releases from runtime compatibility and current-process loading. Install
