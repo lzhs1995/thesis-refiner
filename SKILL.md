@@ -88,6 +88,13 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 精确诚实交接。回调未确认交主管核原次；不能为回执反复追加测试或记忆。
 本 skill 复用同一实现，不复制第二套发送器或 hook。
 
+**executor 不得死等（hook 强制）。** 交接前须用封口放行的唯一一条命令写文件空闲请求
+（`cmux_idle_pull.py --task-pack <原任务包>`，不向主管终端发任何键）；缺请求则
+Stop 拒交接。同一命令启动后台催办器，每 60 秒以新 STATUS 再问主管，直到主管
+ack/派发/回消息（上限 24 小时）；主管 Stop 也在请求未结前持续拦截，codex 忙碌
+不会让 executor 死等。任务途中等主管也须 `--request` 登记；未回复时 executor
+Stop 一直拦（含 hook 重入），只放行前台 `--wait`，反复跑到 ANSWERED。详见[有界收口](references/executor-closeout-enforcement.md#executor-空闲领任务)。
+
 主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
 正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久
 沿用旧 recap，也不要让用户替已有主管通道转话。
