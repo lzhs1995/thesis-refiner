@@ -88,6 +88,10 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 精确诚实交接。回调未确认交主管核原次；不能为回执反复追加测试或记忆。
 本 skill 复用同一实现，不复制第二套发送器或 hook。
 
+主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
+正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久
+沿用旧 recap，也不要让用户替已有主管通道转话。
+
 握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
 
 探针全文消失不能证明输入区已空；残留前缀、暂时缺prompt glyph和外来文字按
