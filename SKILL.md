@@ -92,6 +92,10 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久
 沿用旧 recap，也不要让用户替已有主管通道转话。
 
+报告交接不等于业务完成。按[报告与完成的共同验收](references/executor-closeout-enforcement.md#报告交接与任务完成不能互相代替)
+统一 Hook 与续跑器：真实完成的限定任务才可追加用户完成句；未知回调沿原次
+由主管核收，不让报告锁存吞掉未完任务，也不反复催促已经完成的执行者。
+
 握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
 
 探针全文消失不能证明输入区已空；残留前缀、暂时缺prompt glyph和外来文字按
