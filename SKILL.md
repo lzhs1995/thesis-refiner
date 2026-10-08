@@ -82,6 +82,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 ## 执行模式和资源
 
 按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)决定零、一或两个 executor，使用相位握手预算，及时结案已接受成果；通信维护不扩大为新科研审轮。
+ACK 后等待正式任务包、REPORT_READY 原次核收和已授权接管后的继续推进，见[等待与收尾边界](references/collaboration-efficiency-and-closeout.md#ack-后等待正式任务包)。
 
 交付后执行[有界收口运行规则](references/executor-closeout-enforcement.md)：
 协作 skill 的 PreToolUse 阻止报告及原回调终态后的额外工具调用，Stop 允许
