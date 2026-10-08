@@ -150,3 +150,12 @@ Windows与Mac资料按证据比较，不以所在平台决定优先级。
 
 归档完成、统计插件验收、回调结算和工具维护分列完成条件。后继导航文字不属于
 已经上传的旧快照；说明其时间边界即可，不因每次状态更新循环打包、重审或重跑。
+
+## executor 空闲后主动求派单
+
+主管 disarm 后，executor 是空闲而非协作结束。通用实现在 `multi-agent-collaboration` 的 `scripts/cmux_executor_idle_guard.py`（Stop）与 `scripts/executor_ready.py`，契约见其 `references/executor-idle-ready.md`；本 skill 不复制第二套发送器或 hook。
+
+- executor 只发一条普通 `EXECUTOR_READY|<executor>|<marker>` 消息，随后立即结束回合；`UNCONFIRMED_DO_NOT_RESEND` 表示原尝试仍有效（常排在主管工具调用之后），只能 `reconcile --marker`，不重贴。
+- 主管把每条 `EXECUTOR_READY` 当作下一工具边界的待办：派任务包，或回 `WAITING_DEPENDENCY`/`SOLO` 及触发条件；不得以「主管忙」为由沉默，也不得让用户转告。
+- 派发须在 executor 回合结束后进行：2026-10-08 实测 Claude executor 回合进行中 216 次采样有 215 次 `compose_block_text` 为 None，bridge-test 预读记 `COMPOSE_OCCUPIED`（preexisting 为空串哈希）并 rc=1 不发送；这是输入块不可观测，不是用户草稿。
+- 安装不热加载已运行的客户端；冻结的论文任务不因本条重绑。

@@ -87,6 +87,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 协作 skill 的 PreToolUse 阻止报告及原回调终态后的额外工具调用，Stop 允许
 精确诚实交接。回调未确认交主管核原次；不能为回执反复追加测试或记忆。
 本 skill 复用同一实现，不复制第二套发送器或 hook。
+executor 被 disarm 后不得静默死等：协作 skill 的 Stop hook `cmux_executor_idle_guard.py` 要求先用 `executor_ready.py request` 向原主管发一条带 journal 的 `EXECUTOR_READY` 求派单再结束回合（有限提醒、重入放行）；主管须在下一工具边界派任务包或回 `WAITING_DEPENDENCY`/`SOLO` 及触发条件，见[收尾后的就绪请求](references/collaboration-efficiency-and-closeout.md#executor-空闲后主动求派单)。
 
 主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
 正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久

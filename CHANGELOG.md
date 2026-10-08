@@ -1,3 +1,7 @@
+# Unreleased (2026-10-08)
+
+记录 executor 空闲后主动求派单：引用协作仓库的 Stop hook 与 `executor_ready.py`，主管须回派单或 `WAITING_DEPENDENCY`/`SOLO`。本条只改文档，不安装 hook、不改冻结任务。
+
 # 2026.10.05.1
 
 Clarifies full-payload, per-call confirmation for prompts and callbacks, strict
