@@ -9,6 +9,8 @@ metadata:
 
 # 论文精炼助手
 
+协作在发送前拒绝身份时，按[协作故障分层与效率](references/collaboration-identity-efficiency.md)处理：本地桥故障不能记成 Claude 不可用；继续已授权独立工作，保留原会话和未确认发送记录。
+
 ## macOS 自动化故障：优先执行规则
 
 用户已明确授权自动处理时，沿用该授权，读取当前安装的 `officecli-word-revision/references/macos-tcc-zotero-word.md`，不得再次把同一个 Automation 开关或确认问题交给用户。先按实际发送方核查，再按已授权范围自动恢复；TCC.db 备份/重置是有证据的恢复动作，不是普通文稿流水线的隐含动作。多个 agent 只保留一个恢复执行者，其余继续离线工作；Claude 持续失效时沿既有授权切换 supervisor 单 agent，不停整个任务。实际原生操作未通过前，不得把“已记录规则”“权限条目存在”或“退出码0”称为恢复成功。
@@ -80,6 +82,14 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 协作 skill 缺失或身份门禁未通过时，禁止发送；已授权的单 agent 离线工作可继续。
 
 ## 执行模式和资源
+
+新握手必须显式给出真实执行者类型：Claude Code 使用 `--executor claude`，或逐个写
+`--executor-surface surface:24=claude`；不能只给 surface 编号而依赖工具默认类型。
+协作 harness 的新版本在缺少类型时于发现和发送前拒绝。类型声明仍须配合实时 UUID
+与真实 ACK，不能代替身份核验。误向 Claude 发出 Codex 身份挑战属于主管参数错误，
+不计为 Claude 失效或服务重试；保留失败，核终态关闭原 marker 后以新 nonce 接续，
+不改旧回执、不要求虚报身份、不让握手维护暂停独立研究工作。代码已推送、已安装和
+现场双向验证分别报告，不能只改文档就称运行中工具已修复。
 
 按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)决定零、一或两个 executor，使用相位握手预算，及时结案已接受成果；通信维护不扩大为新科研审轮。
 同页区分报告就绪、回调确认和监督接受；续跑器应在原任务明确收尾后停止催促，
