@@ -4,15 +4,15 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.09.3"
+  version: "2026.10.09.9"
 ---
 
 # 论文精炼助手
 
-本次原生投递与有界等待修订纳入 **2026.10.09.3 版本契约**，保留原生核验与
-同版安装，空闲求派改为显式单次请求和有限等待。须分别验证共享协作 release
-的安装、客户端实际加载及 Claude → supervisor 原生 receipt；本文更新和
-离线检查不证明现役会话已采用。
+本次自动 hook 输出契约修订纳入 **2026.10.09.9 版本契约**，保留原生核验、
+同版安装及用户已授权的每60秒新 marker 主动求派。默认有界观察与该可选
+求派入口分别记录。共享协作 release 的安装、客户端实际加载、Claude →
+supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
 
 ## macOS 自动化故障：优先执行规则
 
@@ -121,6 +121,11 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 PASTE_INTENT/ENTER_SENT 及未耗预算；任务/callback 只读 reconcile。
 未知、压缩、排队、重连或结构改变不补键，缺原 binding/fence 不追补、不重贴。
 
+自动 PostToolUse 成功结果按客户端官方 JSON schema 输出：只把完整核验结果放进
+hookSpecificOutput.additionalContext，hookEventName=PostToolUse；内部 action/results
+不得直接作为顶层输出。以活跃客户端的自动执行记录核收，不用手工运行、配置
+注册或离线测试替代。完整原生消息、真实 callback 与自动 hook 仍分别留证。
+
 协作 skill 的 `cmux_native_delivery_guard.py` 在 PostToolUse 只核当前投递，
 不扫无关旧账、不发键、不造 receipt，也无 disable/advisory 绕过。
 封口保留严格 task-bound 诊断与原 controller 核收；Stop 接受普通诚实
@@ -131,11 +136,28 @@ WAITING_SUPERVISOR（continue:false、suppressOutput:true），保留 task/recei
 主管通过认证 active markers 有界发现冻结报告（PostToolUse
 `cmux_supervisor_report_guard.py`，REPORT_DISCOVERED），再独立审读并裁决。
 发现、实际接收、正式 receipt、论文接受和 disarm 分别留证。
-idle Stop 只写一次持久状态并允许结束；未求派不能阻止 Stop。
-显式 `executor_ready.py persist` 默认 60 秒、硬上限 300 秒，不周期重贴，
-不因重启延长原期限。CCC 有限等待，native Goal 单独核验。
+空闲 executor 不得死等，也不能因 Codex 主管忙而中断论文任务（用户 2026-10-09 明令）：
+`executor_reask.py run` 每 60 秒用新 marker 主动求派，直到主管答复或新派发，无轮数上限；
+每轮记录已配置文件通道的实际写入，空 channels/错误不冒充送达；
+终端只在受保护输入条件成立时发送。新普通消息超过700 UTF-8字节或含任意 CR/LF/tab，
+由同版发送器固定完整正文并发送短通知，保留原 marker 与全部空白；
+通知收到不等于正文已读。正式 task/callback 保持专用绑定。
+可选 `cmux_executor_reask_stop_guard.py` 约束已授权等待段，
+主管答复、新派发或 operator stop 均可结束；不将未完成后继方案标成已部署。
+默认 `executor_ready.py persist` 仅是单请求有界观察。CCC 与 native Goal 单独核验。
 主管回复沿原 bridge 到达原 surface，或写原请求指定 mailbox；
 回复要绑定 loop record 的原 episode_id、caller_surface_uuid 和 task_id。
+
+Claude 新版状态栏可在 CLAUDE.md 与 MCPs 之间显示规则计数。只由同版
+bridge 在完整边框外识别；输入框内同样的文字仍保留为草稿。未知格式不清空，
+空输入不等于回合空闲，更不等于消息送达；沿原生接收证据结算。
+
+
+自动 hook 的嵌套核收保持同一原生 caller 采集来源，每次仍重新核验进程和 cmux 树；
+共享后台继承的 workspace 不得替代实际客户端。完整 Claude 边框成立时，报告及
+recap 中引用的历史 Compacting/Reconnecting 不代表当前状态；只核当前 activity。
+Codex steer queue 标题和已测 warnings 尾行按各自结构识别，真实压缩、重连与
+未知界面仍不输入。界面兼容不降低原 fence 后完整 native user 的逐字核验。
 
 通用实现只在协作 skill 维护，本文不复制发送器或 hook。报告/pack/既有
 attempt 保留原字节，原锁下核收可追加观察及原子发布 receipt；旧任务沿原
@@ -202,3 +224,19 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 普通终端原 Claude 因 login 的 EPERM 无法调用工具时，按[权限边界与原任务接续](references/shared-daemon-caller.md#普通终端的-login-权限拒绝)核本地 Hook；不重发原任务，不重做已完成的原生动作。
 
 完成消息已到达而执行者仍等待时，执行[主管核收与原会话恢复](references/completion-settlement-recovery.md)：优先结算原次回调、独立裁定、精确解除该任务，再以原会话真实回复核验恢复；不要误判 API 死亡或重复派审。
+
+新粘贴统一采用单行：普通/握手用同版 MESSAGE_REFERENCE_V2 保存完整正文；
+正式任务经 submit_task_pack 的 TASK_PACK_V2 绑定完整包SHA；callback保持
+专用原文。共享门禁拒绝任意 CR/LF/tab 或超过700 UTF-8字节的新粘贴，旧次不重贴。
+只有原接收端新增完整 native user 才证明收到；真实 callback 和活跃客户端
+自动hook分别留证，手动hook测试不冒充自动加载。验收后接回用户原任务。
+
+## 首次确实零输入时的唯一接续
+
+仅当原任务包、报告及原 attempt SHA 均未变，且 journal 只有 attempt-0001、
+phase=NO_INPUT、events=[]、无 receipt/pending，closeout hook 才允许执行一次
+任务包所固定的原 controller 同步 callback CLI（rtk proxy + 原 Python -B）；
+入口和参数必须完全匹配，不开放其他工具或替代发送器。原 controller 仍重核
+活跃身份、完整稳定草稿及最多两次 attempt 的预算。已输入、已排队、未知状态
+或第二次 attempt 均不适用，只能沿原证据核收。普通诚实 WAITING_SUPERVISOR
+仍可结束回合，不强迫重试。完整原生收到、真实 callback 与自动 hook 分别验收。

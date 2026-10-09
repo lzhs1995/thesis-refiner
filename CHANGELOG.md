@@ -1,3 +1,19 @@
+# 2026.10.09.9
+
+Synchronize the maintained skill with collaboration 0.4.7: fresh input uses
+bounded single-line notices with pinned complete bodies, while task packs and
+callbacks keep their dedicated routes. Notice reception, body access and task
+acceptance remain separate facts; Enter/Tab success is never native proof.
+
+Document the official PostToolUse output envelope and distinguish automatic
+client invocation from configuration registration and manual checks. Retain
+the narrowly bound callback successor after a proven first zero-input attempt,
+original controllers for in-flight work, and explicitly authorized executor reasks
+separately from default finite idle observation. No duplicate sender is added.
+
+These changes update shared workflow documentation, not manuscript acceptance,
+active task bindings, or a claim that all running clients passed live stress tests.
+
 # 2026.10.09.3
 
 Synchronize the maintained documentation with the canonical native-delivery and
