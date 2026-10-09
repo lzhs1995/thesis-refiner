@@ -4,8 +4,9 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.09.3**, retaining the delivery and installation
-requirements introduced in 2026.10.09.1. The [previous delivery entry](references/verified-compose-delivery.md)
+Current source: **2026.10.09.9**, synchronized with the collaboration 0.4.7
+single-line notice, native-reception and automatic-hook contracts. The
+[delivery entry](references/verified-compose-delivery.md)
 now routes to the authoritative receiver-bound contract. Read the
 [toolchain lessons](references/toolchain-retrospective.md) and
 [manifest/link contract](references/delivery-manifest.md) for result assembly,
@@ -39,6 +40,13 @@ change the nonce, delete a draft, or select a session by newest mtime.
 This repository does not maintain another sender. Actual hooks and wrappers
 must use the same immutable collaboration release; configuration writes do not
 prove that an active client reloaded.
+
+New long or multiline ordinary messages use a bounded single-line notice for the
+SHA-pinned complete body. Formal packs use their dedicated notice and callbacks
+keep their exact task-bound line. A notice receipt does not prove body reading.
+Automatic PostToolUse output uses the official `hookSpecificOutput` envelope;
+observe its execution separately from manual hook checks. Preserve the original
+controller and evidence when reconciling an in-flight task.
 
 ```bash
 python3 -m unittest discover -s tests -v

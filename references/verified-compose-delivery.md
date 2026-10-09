@@ -17,10 +17,16 @@ prompt、任务包、callback、封口与 idle/CCC 等待使用协作 skill 的
   （continue:false、suppressOutput:true）；无证据的确认/共识仍拦截。
 - 主管经认证 active markers 有界发现报告；REPORT_DISCOVERED 不等于
   收到、接受或 disarm。报告可先独立核收，不为通信重跑既有研究。
-- idle Stop 只记录一次状态并放行；显式 persist 默认 60 秒、最多 300 秒，
-  原期限不因重启延长，不无限每 60 秒求派。CCC 等待有期限；native Goal
-  独立验证。主管答复须绑定原请求和原 loop record，不能把别的线程回复
-  或独立 idle binding episode 当成当前等待的答复。
+- 默认 idle Stop 只记录一次状态并放行；executor_ready 的显式 persist 默认
+  60秒、最多300秒，原期限不因重启延长。另保留用户明确授权的可选
+  executor_reask：每60秒用新 marker 求派，直到主管答复、新派发或 operator
+  stop；已配置文件通道结果明确记录，绝不重放旧消息。配套 Stop hook 仅用于
+  该已授权段，未完成的生命周期后继方案不视为已安装。CCC 与 native Goal
+  独立核验。主管答复绑定原请求，不能把别的线程回复算作当前等待的答复。
+- 新普通消息超过700 UTF-8字节或带尾换行时，使用同版固定SHA正文＋短通知；
+  这是保守 wire 预算，不是通用700字阈值。通知 receipt 的
+  confirmation_scope=reference_notice、body_read_confirmed=false；先核SHA、
+  读全文，再按原授权处理。正式任务和callback不改用普通消息入口。
 
 诊断及核收入口只使用统一合同和原 controller 实际支持的接口；不存在
 独立的 `cmux_native_delivery.py --attempt` CLI。通用实现、完整固定版本

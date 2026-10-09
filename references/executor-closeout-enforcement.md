@@ -32,6 +32,11 @@ confirmed 回执也须与完整任务包 SHA 一致，不能沿用漂移后的�
 未求派不能阻止结束；显式 persist 最长 300 秒，不无限每 60 秒求派。
 CCC 等待有期限，native Goal 单独核证。
 
+自动 PostToolUse 成功结果按客户端官方 JSON schema 输出：只把完整核验结果放进
+hookSpecificOutput.additionalContext，hookEventName=PostToolUse；内部 action/results
+不得直接作为顶层输出。以活跃客户端的自动执行记录核收，不用手工运行、配置
+注册或离线测试替代。完整原生消息、真实 callback 与自动 hook 仍分别留证。
+
 源码/CI、安装、运行中客户端加载、现场收口、报告接受分别记账。
 升级前比对现役身份修复，保留旧固定包；安装新规则不宣称旧会话自动生效。
 
@@ -88,3 +93,13 @@ Tab 提交与恢复阶段的一次共享预算分别核验；历史按键不授�
 
 本节只改规则文本。未做、也不宣称：安装到现役 release、运行中客户端加载、
 现场发送验证。
+
+## 首次确实零输入时的唯一接续
+
+仅当原任务包、报告及原 attempt SHA 均未变，且 journal 只有 attempt-0001、
+phase=NO_INPUT、events=[]、无 receipt/pending，closeout hook 才允许执行一次
+任务包所固定的原 controller 同步 callback CLI（rtk proxy + 原 Python -B）；
+入口和参数必须完全匹配，不开放其他工具或替代发送器。原 controller 仍重核
+活跃身份、完整稳定草稿及最多两次 attempt 的预算。已输入、已排队、未知状态
+或第二次 attempt 均不适用，只能沿原证据核收。普通诚实 WAITING_SUPERVISOR
+仍可结束回合，不强迫重试。完整原生收到、真实 callback 与自动 hook 分别验收。
