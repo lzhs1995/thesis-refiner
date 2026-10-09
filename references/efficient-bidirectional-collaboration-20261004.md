@@ -1,69 +1,111 @@
 # 高效握手、多执行者与双向投递
 
-维护版本 efficient-bidirectional.2026.10.09.1。投递的有效规则为[Enter 与原生投递回执](verified-compose-delivery.md)；旧屏幕确认、Tab 队列和全局 marker 检索只作历史记录，不再作为操作说明。
+本页在 efficient-bidirectional.2026.10.09.2 基础上同步
+[论文通信统一合同](verified-compose-delivery.md)，保留任务准备、握手、
+分工、同版安装和原会话恢复要求。旧屏幕确认、queue 即收到、Ctrl+Enter
+路由及独立按键预算不再作为操作规则。文档、离线测试、安装、客户端加载
+和实机原生 receipt 分别验证；历史读取证据不替代当前运行状态。
 
 ## 先备任务，再握手
 
-先备好任务目标、精确输入、允许写入目录、报告路径、完成条件和验证方法，再对当前同workspace的原会话做真实身份核验、握手与finalize。健康ACK不重复获取；迟到ACK先核原task/nonce。分别记录准备、握手、投递、执行、回调、核收耗时。握手上限不是强制等待，不因设置600秒就等满600秒；观察预算过短不能归因执行者，不强制使用实测时间的三倍。
+先备好任务目标、精确输入、允许写入目录、报告路径、完成条件和验证方法，
+再对当前同 workspace 的原会话做真实身份核验、握手与 finalize。首条挑战
+提供 pending receipt 的绝对路径和固定完整 skill；握手只核身份及通道，
+不夹带科学审查。正式提示含 TASK_PACK、REQUIRED_SKILL、CALLBACK_TARGET、
+完成模板及 READ_AND_OBEY_REQUIRED_SKILL_FIRST。
 
-## 以任务收益决定一个或两个执行者
+健康的同任务 ACK 复用，迟到 ACK 按原 task/provider/nonce 有界只读核收，
+保留原失败和投递不确定性，不制造提交时间。ACK 可满足握手条件，但不替代
+原生投递凭据。使用相位要求的观察预算；600 秒预算不是强制等待时长，
+有效 ACK 到达立即继续。观察窗口不足不能归因执行者失效。
 
-复用用户指定且携带上下文的会话。第二执行者仅接独立工作，例如数据文件核查与协作工具审查；各有task_id、nonce、输出根，互不改对方结果。只有supervisor整合最终材料和维护公共脚本。两个会话占同一pane的不同tab时如实记拓扑，不称两个额外side split。共享Stata/Office/网盘仍服从原资源队列，executor数量不等于资源并发数。
+## 按独立待办选择执行者
 
-只有需要计划共识的工作才走既有共识流程；普通已授权的一次审阅不因此增加科研审轮。执行者仅在任务包授权目录写入；supervisor的安装权限另列且须来自用户，不能反向改写已经冻结的任务包。
+复用用户指定且携带上下文的会话。第二执行者仅接独立工作，例如数据链条
+核查与工具审查；各有 task_id、nonce、产物根和写入范围，共享代码只有一个
+整合写入者。同 pane 的不同 tab 如实记拓扑，UI 输入串行并重核 UUID。
+共享 Stata、Office 和网盘继续服从原资源队列。无独立待办可待命。
 
-明确retryable服务故障在原尝试结束后同会话有限重试、每次至少60秒；认证、欠费、额度失败不盲试。投递不确定也不能重贴。重试次数不证明失效：须按[失败窗口规则](collaboration-and-recovery.md)从首次真实API失败起连续至少300秒、阈值处有新鲜失败且当前尝试已终态，期间任一真实成功即重置；排队、静屏、未知投递和握手超时都不计入。满足后沿用户既有授权固定原终态、冻结executor写入并转solo_self_review，继续本机能做的工作。保留原会话，不clear、不新建替代。恢复协作在安全边界使用原UUID。
+只有需要计划共识的任务才走既有共识流程；普通已授权审阅不增加科研审轮。
+执行者只写任务包允许目录，主管安装权限单列且来自已有授权，不反向改写
+已冻结的任务包。
 
-## 双向发送铁律：原生全文回执才确认收到
+## 输入和核收都由共享 transport 执行
 
-supervisor→executor的prompt和executor→supervisor的callback都通过受保护bridge。每次粘贴/按键前重核caller、同workspace、指定目标UUID；首次输入前SHELL/UNKNOWN零输入；已有paste_intent后若识别失败，记为投递未确认，停止按键并核收原次，不能改判为从未发送。按键返回0、文字出现在旧转录块、marker消失或无关新工具输出均不能证明本次消息已消费。
+发送 prompt、状态或 callback 前，原 attempt 固定完整 payload/hash、
+task/nonce、适用的任务包/报告 SHA、workspace/surface/pane UUID，以及
+接收端原生 PID/birth/TTY/session UUID、认证后的 transcript path/device/inode。
+原 PASTE_INTENT 在真实输入前保存新鲜 EOF fence；不按 newest mtime、
+焦点、标题或 marker 搜索选择会话。原记录不可改，索引不能新建发送槽。
 
-输入前绑定接收方 UUID、进程、原生 session 和 transcript 追加边界，先持久化原 attempt 再粘贴一次。只读观察到自身完整 payload 与稳定 composer 后才按 Enter；等待预算耗尽不按键。确认必须来自原 transcript 在原边界后新增、全文精确相等的 user 记录。屏幕活动、ACK、空 composer、全局同 marker 或同目标其他调用均不能代替。动态参数未解析时保留未验证；正文示例和工具输出不能生成发送目标。
+共享 bridge 使用 `terminal.paste` 与 `submit_key=none`，只粘贴一次。
+完整原草稿逐字符未改且稳定后提交一次：忙碌 Codex 明示
+`tab to queue message` 且受支持结构和全文匹配时直接 Tab；
+其他清晰受支持状态 Enter。不得改走 `cmux send` 或 Ctrl+Enter。
+保留空格、Tab、空行和字面转义；折叠摘要、前缀或归一化不能证明完整草稿。
+SHELL/UNKNOWN、压缩、重连、外来草稿或未知结构在输入前拒绝；
+已有输入意图后，不能因识别失败改称零输入。
 
-Claude 原生 `queued_command` 可证明接收并排队，执行、报告完成和主管验收仍另列。完整 payload 卡在 composer 时沿原 controller 的 `--recover-stranded` 恢复；自动和显式恢复共用一次补 Enter 预算，`EXTRA_ENTER_INTENT` 落盘即消耗，按键失败也不重置。恢复先核迟到原生回执，再核身份、原完整草稿与稳定状态。不另走 Tab，不重贴、不换 nonce；未知、被改写、压缩、重连、排队和外来草稿均不按键。预算用完仍可只读核收。
+仅同一 workspace/surface/process/session/transcript，在原 PASTE_INTENT
+新鲜 EOF fence 后新增、全文精确相等的 native user 才为 NATIVE_RECEIVED。
+Claude `queued_command` 仍 pending；ACK、按键、空 composer、屏幕活动
+和队列横幅不证明收到。原生接收、执行、正式 receipt 和报告接受分别留证。
 
-## 回调日志与旧任务收尾
+## 只恢复原 attempt
 
-先保存固定报告，再调用`submit-completion-callback --task-pack /absolute/task-pack.json`。实际尝试目录与任务包的`completion_receipt`同目录，名称为回执stem加`-attempts/`。新版journal绑定任务包SHA、报告SHA、nonce、原executor UUID与目标，并先写PASTE_INTENT后输入；同inode锁避免两个进程重复回调。记录为零输入的失败最多另试一次；任何可能已粘贴的尝试禁止重贴。
+先沿原 controller 有界零输入核原生证据；已收到只结算，已排队不补键。
+自动和显式恢复共用最多一次补键；现场支持的 Enter 或 Tab 共用预算，
+意图落盘即耗用，崩溃、按键失败和重启不重置。原身份、binding/fence、
+完整未改且稳定的原草稿及全部历史门禁必须可核。UNKNOWN、压缩、排队、
+重连、结构变化或用户改稿均禁止补键；缺原绑定/fence 不追补，不重贴、
+不换 nonce、不删 journal，不因 pending 或旧格式另建一次发送。
 
-`--reconcile-only`只读取已有真实尝试和原生接收记录，终端输入为0；可以持久化本次观察，且仅在全文精确相等的原生证据满足原绑定时保存回执。不另发恢复消息。若旧`<receipt>.pending.json`存在，即使内容损坏也拒绝新发送和自动迁移，交supervisor按原证据结案。缺journal不能补造历史尝试，报告SHA出现在supervisor文件只能证明该报告被核查，不能自动生成transport receipt。原生文件被替换、截断或身份不可核验时保留未确认，不猜成功。
+当前 `--recover-stranded` 仅属于 `submit-text` 的原 NATIVE_PENDING、
+PASTE_INTENT/ENTER_SENT、未用共享预算及全部门禁；task/callback 仅支持
+原 controller 零输入 reconcile。不存在独立
+`cmux_native_delivery.py --attempt` CLI。封口后的只读诊断入口为
+`scripts/cmux_callback_diagnose.py --task-pack <原任务包绝对路径>`，
+诊断不发键、不造 receipt、不清 marker；核收仍由原 controller 沿原锁完成。
 
-旧任务若真实callback已经进入supervisor会话且报告已独立核收，可由supervisor保存原marker及核收依据后，仅`disarm --task-id`该已终态任务。明确记录正式bridge receipt缺失；不得伪造receipt、反复回调、全局禁用Stop hook或让已完成executor无限修复回调。Stop hook提供完成门禁，supervisor负责真实旧任务的有据结案。
+报告完成后沿原入口提交一次 callback，冻结报告、task pack 和既有记录。
+主管独立读取报告与产物，再按原证据分别核收通信、裁决业务及精确 disarm。
+没有正式 receipt 就保留未确认，不用报告哈希、屏幕 DONE 或 ACK 补造，
+不让执行者无限补测试、回调或索取“通知的 ACK”。
 
-## 安装、复测与版本
+## 同版运行与有界收尾
 
-协作仓安装器为两端注册 `cmux_native_delivery_guard.py` PostToolUse，doctor和harness检查漏注册。hook只核当前投递调用对应的原attempt；未确认exit 2并给原次恢复命令，不发键、不造回执、不扫描无关旧账，没有disable/advisory放行。发送器补Enter前仍须比较完整可见草稿；显示等价仅用于草稿保护，不能替代原生全文精确匹配。折叠粘贴摘要不能证明完整草稿，原回调账本及迟到ACK继续由原控制器处理。
+actual hooks、wrappers、bridge 与 journal readers 必须来自同一 immutable release。
+不能把新版 reader 单文件覆盖到旧 bridge；旧任务保持原固定控制器和证据。
+安装须备份并保留其他设置，分别核实际导入路径、真实 hook 调用和实机 receipt。
+配置写入不证明现役客户端重载，不为维护技能重启原会话。
+安装迁移与唯一写入者见[协作提效与收尾](collaboration-efficiency-and-closeout.md)；
+来源、版本和维护文件哈希先按[安装与回滚](runtime-validation.md#安装与回滚)比对。
 
-本包旧 `cmux_submit_confirmation_guard` 和 `cmux_send_proof_stop_guard` 注册退役，避免屏幕判据与Stop循环并存；foreign同名hook保留。原生读取器只处理原controller支持的固定attempt格式，遇到旧账本明确交回原控制器，不默认为“没有尝试”或迁移重发。通用实现只在协作仓维护，不在论文仓复制另一套发送器。
+共享 PostToolUse `cmux_native_delivery_guard.py` 只核当前投递的原 attempt，
+不扫描无关旧账、不发键、不造 receipt，也无 disable/advisory 绕过。
+旧格式交原控制器，不补 pins、不迁移重发，也不复制协作 hook。
+主管 PostToolUse `cmux_supervisor_report_guard.py` 经认证 active markers
+有界发现冻结报告并记 REPORT_DISCOVERED；发现不等于接收、接受或 disarm。
 
-Stop/SubagentStop重入只接受严格布尔`stop_hook_active is True`；数字1或字符串true不能绕过首次检查。重入成功退出仅结束递归，不产生completion receipt、不disarm、不表示论文完成。下一正常turn仍须校验原任务。不提高循环上限，也不让已接收的callback无限重发。
+Stop/SubagentStop 的严格布尔 `stop_hook_active is True` 只结束递归，
+不生成 completion receipt、不解除任务或授予论文通过。封口保留严格
+task-bound 诊断和原 controller reconcile；普通诚实说明可返回
+WAITING_SUPERVISOR、continue:false、suppressOutput:true，无唯一模板。
+缺失、在途或漂移证据不能伪装合法等待，无证据的 confirmed/共识仍拦截。
 
-维护源与实际安装两边都保留本文及对应入口。协作仓 `manage_install.py` 将可证明属于本包的旧wrapper整目录备份后链接到固定release；配置和资源逐次检查并发漂移，foreign目录保留。论文仓安装器沿 `mutation_locks` 与 `replace_bytes` 备份覆盖维护文件，保留章节资源；不复制协作hook。新任务启动器及hook须指向同一完整固定版本，不能先装新读取器再配旧bridge；历史任务沿原固定控制器。
+idle Stop 只记录一次状态并允许结束，未求派不阻止 Stop。显式
+`executor_ready.py ask`（旧拼写 request）同一 episode 至多一次；
+`persist` 仅读原请求、绑定 transcript 和精确 mailbox，默认 60 秒、
+上限 300 秒，重启不延长原期限或重置已用预算。主管答复必须到原 surface
+或原请求指定 mailbox；mailbox 包含原 loop record 的 episode_id、
+caller_surface_uuid、task_id，空 task_id 也保留。idle binding 的
+独立 episode_id 不能代替该 loop。任务/主管/transcript 改变保留原段并记
+UNRESOLVED_IDLE_EPISODE；损坏请求/停止记录保守终止，不重发。
+细节见[有界空闲核查](executor-closeout-enforcement.md#不许死等也不许重复)。
+CCC 等待有期限；native Goal 独立核验，不开无限 Stop/idle 催派循环。
 
-后置检查须读取发送器实际写入的原journal格式。消息使用message-dispatch-v1，任务使用task-dispatch-v1，正式回调使用completion_receipt旁的*-attempts。复核原任务/报告SHA、双方身份、原生session/追加边界及完整正文；只读恢复的input_operations为整数0。确认标志不能代替证据。格式不兼容时修原读取器，不重发原消息、不制造回执。源码测试、固定release安装、真实hook入口、客户端加载、消息收到和业务验收分别留证。
-
-安装完成、测试通过、新进程实际导入和旧客户端热加载是四件事；不为更新skill重启正在工作的应用。已冻结任务包保留旧pins，后继显式记录维护版本，不冒称旧输入未变。通用文档不含研究数据；本机维护patch另归档，无Git元数据不得声称已提交或发布。
-
-
-### Handshake detector recovery (2026-10-04)
-
-A `DELIVERY_UNVERIFIED_BY_DETECTOR` or `DELIVERY_QUEUED_AT_RECEIVER` result must not end the handshake before the configured ACK wait runs. Retain the dispatch error and original task/provider/nonce; use the existing strict assistant-response parser for a bounded read-only wait. Never resend text or Enter. A matching ACK may complete the handshake while the original transport uncertainty remains recorded; do not fabricate a dispatch-submitted timestamp. Compose-busy and never-submitted states still fail immediately. No matching ACK means failure, not permission to resend or proof of executor silence. This source change does not retroactively rewrite frozen receipts or prove live-client reload.
-
-### 当前Claude页脚识别（2026-10-05）
-真实边框、模型行和完整已知页脚同时满足时，允许识别计时行与运行中Bash状态行；未知尾行、shell提示或缺边框仍拒绝。识别为agent仅证明输入界面类型，不等于身份、空compose、任务可接收或消息已消费。不能因UNKNOWN重新握手或重贴未确认回调。
-
-
-## 完整消息的发送后确认（2026-10-05）
-
-旧helper PR3 e5fb9ec的429项离线测试只记录当时的显示判据，不能证明本版本送达。当前一律核原attempt绑定的新增原生全文记录；只有nonce、跨记录拼接、附带其他内容或正文空白被改写均不构成成功。只读核收不得发送文字或按键，终端空白归一化不能替代原生精确匹配。
-
-
-## 任务提示持久化（2026-10-05）
-
-supervisor的正式任务提示通过submit-task-pack记录原任务、完整文本SHA、任务包SHA及双方workspace/pane身份；粘贴意图先落盘，再执行输入。同任务提示变化不产生新发送槽，未知投递禁止重新粘贴，只有已记录零输入允许一次明确重试。原命令增加--reconcile-only仅观察并核收，不发送按键。delivery10旧记录仍交原控制器，禁止新控制器接管。对应helper PR3 05b638d，440项离线测试通过；尚未替换已安装运行时。
-
-## 配套版本与迟到握手核收
-
-实测旧bridge缺少新读取器要求的`_delivery_confirmed`接口，九项定向用例中混装出现两失败、三异常；完整候选九项通过。不能用宽泛旧套件“失败名称没有增加”代替接口兼容验证。安装后核实际导入根、启动器及hook正反例；这些结果仍不等于现役客户端重载、回调原生送达或论文验收。
-
-握手观察预算应满足阶段最低值。本方预算过短后收到原nonce的真实ACK，应保留旧超时与原投递错误，重核同workspace和原executor身份，用canonical解析器及回执写入器核收原次；不重发握手、不伪造提交时间。正式任务包定稿后，提示必须包含TASK_PACK、REQUIRED_SKILL、CALLBACK_TARGET、完成模板及READ_AND_OBEY_REQUIRED_SKILL_FIRST。输入前拒绝不算派发成功；实际Enter后的确认与最终报告核收继续分开记录。
+可重试 API 故障在原次终态后同会话有界重试，每次至少间隔 60 秒；认证、欠费
+或额度失败不盲试。按[连续失败规则](collaboration-and-recovery.md)裁定持续失效，
+静屏、排队、未知投递和超时不计入 API 失败时钟。满足条件后沿既有 SOLO 授权，
+固定原终态并确认无并发写入，由主管继续主线；自审标 `solo_self_review`。
+保留原会话，安全边界才恢复协作，不 clear、不新建替代、不重做已接受研究。

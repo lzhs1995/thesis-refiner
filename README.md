@@ -1,23 +1,44 @@
 # Thesis Refiner / 论文精炼助手
 
-Current source: **2026.10.09.1**. Read the [toolchain lessons](references/toolchain-retrospective.md) and [manifest/link contract](references/delivery-manifest.md) for result assembly, file identity and final delivery.
+This version documents the **receiver-bound delivery contract**. Verify the
+shared collaboration release's installation, actual client loading and live
+native receipts separately before claiming adoption by an active session.
 
-The [verified delivery contract](references/verified-compose-delivery.md) uses
-`multi-agent-collaboration` 0.2.0's single journaled sender and enforced native
-receipt checks. Enter, visible text and queue banners do not prove delivery.
-Keep an unconfirmed request on its original attempt; the executor's 60-second
-request loop must reconcile that attempt before creating another request.
-The shared hook installation, client loading and actual delivery are verified
-separately. This documentation update does not change a frozen thesis runtime.
+Current source: **2026.10.09.3**, retaining the delivery and installation
+requirements introduced in 2026.10.09.1. The [previous delivery entry](references/verified-compose-delivery.md)
+now routes to the authoritative receiver-bound contract. Read the
+[toolchain lessons](references/toolchain-retrospective.md) and
+[manifest/link contract](references/delivery-manifest.md) for result assembly,
+file identity and final delivery.
 
-The [six-repository version map](references/toolchain-versions.json) distinguishes
-skill releases from runtime compatibility and current-process loading. Install
+The [six-repository version map](references/toolchain-versions.json) is a historical
+release snapshot, not an installation selector for this version. Skill release,
+runtime compatibility and current-process loading remain separate. Install
 test dependencies in an isolated environment with `python -m pip install -r requirements-test.txt`;
 the suite includes synthetic loopback TLS probes and makes no NotebookLM requests.
 
 Evidence-led empirical manuscript refinement with interleaved local analysis tracing and NotebookLM review. The agent performs the work; deterministic tools check provenance, frozen versions, review coverage and completion receipts.
 
 Read [SKILL.md](SKILL.md) for the workflow. Python 3.10+ and Node.js 18+ are sufficient for offline checks. Native Word and statistical execution remain in their domain tools. Shared NLM execution requires the `multi-agent-collaboration` resource broker and an explicitly pinned existing transport; this project does not launch browsers or authenticate accounts.
+
+Agent messages use the shared [receiver-bound delivery contract](references/receiver-bound-delivery.md).
+The collaboration release binds the native receiver and transcript inode, then
+persists the original `PASTE_INTENT` with a fresh EOF fence before input. It pastes
+once via `terminal.paste` with `submit_key=none`. After the complete original
+composer is stable, a busy Codex with the verified `tab to queue message` hint
+receives Tab; other clearly supported states use Enter. There is no Ctrl+Enter route.
+Only a new native user record after that original fence, exactly equal to the
+full payload with all whitespace preserved, proves reception. A queue or Claude
+`queued_command` remains pending; it proves neither reception nor execution.
+Automatic and explicit recovery share at most one extra submit key, consumed
+when its intent is persisted. `--recover-stranded` belongs only to `submit-text`;
+task packs and callbacks reconcile read-only through their original controller.
+Missing original bindings or fences cannot be reconstructed. Unknown, queued,
+compacting or reconnecting states authorize no recovery key. Never repaste,
+change the nonce, delete a draft, or select a session by newest mtime.
+This repository does not maintain another sender. Actual hooks and wrappers
+must use the same immutable collaboration release; configuration writes do not
+prove that an active client reloaded.
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -27,6 +48,12 @@ python3 scripts/install.py --canonical /absolute/skills/thesis-refiner --codex-a
 ```
 
 Installation overlays only maintained files, backs up every replaced file and writes a hash manifest. It preserves existing research inputs and legacy private resources. It does not change hooks globally, restart Word/RStudio, configure an account or publish a manuscript. Bind the completion hook to a task checkpoint explicitly when required.
+
+Before applying an overlay, compare the source commit and file hashes with the
+current installation manifest. Preserve newer maintained content by integrating
+it into the source first; a metadata bump alone does not make an older checkout
+safe to install. The installer does not reject version downgrades automatically.
+See [installation and rollback](references/runtime-validation.md#安装与回滚).
 
 The 2026.09.26.9 increment adds [whole-thesis formatting retrospectives](references/full-thesis-format-retrospective.md):
 source-qualified institution rules, conditional section decisions, caption/footnote/bibliography checks,

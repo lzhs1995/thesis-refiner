@@ -10,6 +10,12 @@ python3 scripts/hook_doctor.py --config /absolute/current/settings.json --legacy
 
 实际客户端配置随产品与平台确定。序列化字符串包含 Windows 路径、旧 hooks.json 中有条目、脚本语法通过，都不足以证明 macOS 的当前客户端加载了 hook。不要为修诊断程序而无授权重写其他 hooks。安装器不自动注册全局 hook；显式任务编排可以直接调用当前入口。
 
+消息投递复用[共享接收端绑定契约](receiver-bound-delivery.md)。actual hooks、
+wrappers、bridge 与 reader 必须来自同一 immutable collaboration release，
+原 attempt、pending index、接收端 session/transcript inode 及完整原文保持绑定。
+Hook 每次只做有界原生核查，不构造无限 Stop/idle 或新消息循环。分别验证源码、
+独立安装、客户端实际加载及实机原生 receipt；本版本文档不证明其中任何一项。
+
 `a5-termination-auditor.js` 只处理显式 `workflow_checkpoint` / `THESIS_REFINER_CHECKPOINT` 和可选 `delivery_checkpoint` / `THESIS_REFINER_DELIVERY_CHECKPOINT`。两者都是绝对路径。未绑定任务原样放行；已绑定任务缺少回执则拒绝。复制 hook 到另一个运行目录时通过绝对 `THESIS_REFINER_ROOT` 指向同版 skill，或保留原目录结构；不要依赖复制后的 `../scripts` 恰好存在。`THESIS_PYTHON` 固定实际解释器。完成边界调用，不阻断普通中间工作。
 
 ## NLM 工作器的离线依赖预检
@@ -45,6 +51,13 @@ python3 scripts/hook_doctor.py --config /absolute/current/settings.json --legacy
 连接恢复维护优先使用可叠加的工具。`nlm_recovery_preflight.py` 兼容既有 JSON-only 健康入口，`nlm_tls_probe.py` 只处理诊断，不替换正在运行的 query transport。安装后核现役固定文件仍为原哈希；不要为修一个证据解析错误更改所有账号、共享代理、SDK或健康日志。新诊断工具的本地环回测试、旧故障真实回放、既有实际恢复和现役采用分别记录。
 
 ## 安装与回滚
+
+先比对待安装版本的 source commit、skill 版本和维护文件 SHA256，以及现役安装的
+来源记录、release manifest 与 `INSTALLED.json` 的 after 哈希。安装回执只能
+证明所列字节；缺失来源或哈希漂移须明确记录，不能仅凭版本字符串推断同源。
+若现役维护内容较新，先将其有效增量合入待安装维护源，再审阅覆盖计划；不导入无关
+私有历史资源。当前安装器不自动拒绝版本降级，把 metadata 升号不能防止旧
+正文覆盖新版，也不能代替来源与文件差异核对。
 
 沿 `scripts/install.py` 的 dry run 审阅维护文件差异，再执行本地已授权覆盖。原件和文件哈希保存在备份目录，历史私有资源保持。`INSTALLED.json` 是完成安装回执；`INCOMPLETE.json` 是部分失败，不能当已完成。
 

@@ -35,8 +35,10 @@ Word/Zotero继续使用原串行资源队列。可并行审查不表示可并行
 
 - 握手只核原身份、pending receipt、nonce和所需skill，立即返回准确ACK；不夹带科学审查。
   当前任务健康握手直接复用。观察期限不足、迟到ACK与API故障分别记录。
-- supervisor发prompt和executor回callback都走原受保护bridge。Enter后核完整payload、
-  当前UUID、compose/queue与真实后续活动；输入框残留不算发送，排队不算消费。
+- supervisor发prompt和executor回callback都走原受保护bridge，遵守[共享投递契约](receiver-bound-delivery.md)。
+  输入前绑定原生会话、transcript inode、日志边界与完整payload；整条原文稳定后按provider提交键。
+  仅原次之后绑定journal内的整条相等payload证明收到；Claude queued_command只证明客户端接受。
+  ACK、空输入框、屏幕活动与队列横幅不是送达证据；接收、执行与报告接受分列。
 - 自动检测未确认而实际消费已有证据时，仅对原次发送做只读核收；不再次粘贴、盲按Enter或Tab。
   当前固定版本没有只读恢复能力时，交supervisor保全原证据，不调用可能再发送的函数冒充观察。
 - 已写报告可以独立做内容裁决，但不能因此补造回调回执。报告接受、回调验证、监控解除、

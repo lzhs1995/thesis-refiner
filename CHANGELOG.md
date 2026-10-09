@@ -1,3 +1,18 @@
+# 2026.10.09.3
+
+Synchronize the maintained documentation with the canonical native-delivery and
+bounded-wait contract. The original PASTE_INTENT fixes the receiver, fresh EOF
+fence and complete payload. A verified busy Codex uses Tab; other supported
+states use Enter. Queues and Claude queued_command remain pending. Automatic and
+explicit recovery share one persisted extra-key budget; only submit-text exposes
+protected recovery, while task packs and callbacks reconcile their original attempt.
+
+Document finite idle observation, ordinary honest WAITING_SUPERVISOR exits and
+separate report discovery, native reception, formal receipts and acceptance.
+The public source includes the receiver-bound compatibility entry and a portable
+upstream contract link. Runtime modules, research acceptance rules and existing
+task bindings are preserved; source checks do not claim active-client adoption.
+
 # 2026.10.09.1
 
 Use the collaboration 0.2.0 delivery contract for prompts, task packs and

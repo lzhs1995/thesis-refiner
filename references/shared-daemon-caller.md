@@ -4,7 +4,12 @@ Codex managed daemon 可继承首个客户端的终端环境。这不必然代�
 
 传输、握手角色及 active-marker 必须消费同一个核实后的 caller。仅修发送入口而让任务注册继续使用后台环境，会导致回调或任务收尾再次错位。assembled runtime 必须覆盖这一接合，以及身份漂移和其他 workspace 的负控。
 
-报告完成后，回调只提交一次。compose、排队、原生消费、正式回执与报告接受分别记录。已排队的回调沿原次观察，不反复 Enter，不开秒级 watcher，不要求用户为通信手动换窗口。收到原生消息但缺回执时，固定原 task/report/nonce/controller，在原 journal 下零输入核收。旧控制器不原地覆盖。
+报告完成后，按[共享接收端绑定契约](receiver-bound-delivery.md)提交一次回调。
+发送前固定原生接收端及 transcript inode，整条原文稳定后才按 provider 提交键。
+compose、客户端接受、执行、正式回执与报告接受分别记录；Claude `queued_command`
+仅证明客户端接受。已排队的回调沿原次有界观察，不反复按键，不要求用户换窗口。
+仅原次之后绑定 journal 的完整相等 payload 可零输入核收；固定原 task/report/nonce/
+controller，不原地覆盖旧控制器，不用新 nonce 恢复。
 
 监督侧在等待期间继续独立工作。原任务达到安全终态后立即分派下一项有价值的任务；两个原执行者各用 task/nonce/目录，若同 pane 不同 tab 则 UI 输入串行。握手预算至少600秒，收到有效ACK即继续，不机械等待预算耗尽。持续失效者按用户已有授权转 SOLO，不新建替代会话。
 
@@ -41,10 +46,13 @@ or old title does not identify the supervisor; global dock panels are not
 workspace members. Recheck identity before mutations.
 
 Preflight failure before challenge dispatch is a supervisor tooling failure,
-not proof of an unreachable executor. Preserve its artifacts, disarm only that
-failed task and use a new task/nonce after repair. Cover the assembled path as
-well as identity helpers. Once an executor accepts useful work, continue the
-main product task instead of adding coordination-only reviews.
+not proof of an unreachable executor. Preserve its artifacts and establish
+zero input from the original journal. Repair the failing layer without minting
+a task/nonce to recover the same message. Any input or ambiguous evidence stays
+with its original attempt and controller. Disarm only an independently verified
+terminal task. Cover the assembled path as well as identity helpers. Once an
+executor accepts useful work, continue the main product task instead of adding
+coordination-only reviews.
 
 
 ## Compaction and delayed observation are separate from idle capacity
@@ -69,9 +77,9 @@ polling assignment merely to make the supervisor's detector catch up.
 任务标记，不能重新扫描后取第一个任务。错误提示会诱导执行者核错回执；
 修复提示归属不等于改变回调门禁或证明通信全链成功。
 
-任务提交后若被其他用户提示隔开，屏幕中的后续活动可能无法归属原任务。
-保留原 attempt，不能将未确认解释为未收到、叠加催促、重复派单，或放宽
-跨消息归属检查。报告完成后独立核收，正式传输回执另列；监督侧继续主线。
+任务提交后只核原 attempt 绑定的原生日志与输入前边界；屏幕中的后续活动
+不能证明原任务已收到。保留原 attempt，不能将未确认解释为未收到、叠加
+催促、重复派单或放宽整条相等要求。报告完成后独立核收，正式传输回执另列；监督侧继续主线。
 两执行者均有实际工作时不再派通信维护审轮。下一任务在安全终态后接续，
 执行者持续失效则沿既有授权冻结其写入并由监督侧接管。
 
