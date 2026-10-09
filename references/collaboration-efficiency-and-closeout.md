@@ -1,7 +1,7 @@
 # 论文任务中的协作提效与收尾
 
 本页补充[协作、租约与恢复](collaboration-and-recovery.md)；
-通用握手与发送实现仍由 multi-agent-collaboration 维护。
+通用握手与发送实现仍由 multi-agent-collaboration 维护；通信、恢复与等待遵循[统一合同](verified-compose-delivery.md)。
 
 哨兵 `SENTINEL_ROLE_MAP_REFUSED` 先按
 [协作 skill 的角色表兼容规则](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/efficiency-and-closeout.md#哨兵启动失败先核角色表格式)
@@ -25,10 +25,15 @@
   不在 ACK 前要求业务审计。使用 `--handshake-timeout 600` 或更长预算，
   不用泛化 `--timeout` 覆盖相位预算；有效 ACK 到达立即继续，
   同任务健康握手复用。预算不足或检测器漏观测不能归因 Claude 失效。
-- **prompt 与 callback 都核发送后证据。** 原 bridge 每次写入前核当前
-  workspace/surface UUID，Enter 后核完整消息与原 marker。compose、
-  queued、实际消费、正式 receipt、报告接受分列。unknown 只读核原 attempt，
-  不重贴、不循环按键、不删 journal。报告已读取不能伪造 callback receipt。
+- **prompt 与 callback 都核原生全文回执。** 原 PASTE_INTENT 固定同一
+  workspace/surface/process/session/transcript、新鲜 EOF fence 和完整正文。
+  只有原 fence 后新增的完整精确 native user 才为 NATIVE_RECEIVED，
+  不归一化空白；Claude queued_command 仍 pending。首次粘贴一次并等待
+  完整稳定草稿，忙碌 Codex 明示 tab-to-queue 且原文匹配时直接 Tab，
+  其他清晰受支持状态 Enter。自动/显式恢复共用一次补键，任务/callback
+  当前仅只读核收；详见[原次恢复规则](verified-compose-delivery.md)。
+  UNKNOWN、压缩、排队、重连、结构变化或缺原 binding/fence 不补键。
+  报告已读取不能伪造 callback receipt，未确认不重贴、不换 nonce。
 - **ACK 后及时交出具体业务。** 握手前备好研究范围、真实输入和验收条件，
   ACK 后补身份凭据并立即定稿、派单。握手已过而包仍是 draft 或尚未提交，
   属于 `SUPERVISOR_DISPATCH_PENDING`，不能称 Claude 停工或失效。
@@ -36,8 +41,9 @@
   不重握手，不重发已提交尝试。原任务核收后再衔接独立待办，正常执行或
   压缩中不叠加任务。本条是调度规则，不表示自动派单 hook 已实现。
 - **报告完成就沿原入口回调。** 不额外等待 supervisor 空闲，不建秒级
-  watcher；由原 bridge 判定输入区及既有补键条件。supervisor 可读固定
-  报告并推进不依赖传输回执的工作，回执缺失如实保留。
+  watcher；由原 bridge 执行首次受保护投递，可能已输入的原 callback
+  仅零输入核原次。supervisor 可读固定报告并推进不依赖传输回执的工作，
+  回执缺失如实保留。
 - **故障不拖住全篇。** 原生 reconnect/正常执行不打断；provider 可重试
   故障仅在原尝试终态后按既有上限恢复，认证/欠费不盲试。持续失效时
   沿已有接管授权保留原会话和证据、确认无并发写入，再由 Codex 继续。
@@ -47,9 +53,33 @@
   剩余论文主线另列。新改动只做相关增量核查，保留历史失败与纠正依据。
 
 GitHub 文档更新、安装、客户端实际加载和研究结果验收是不同完成轴。
+协作安装器按实际 ownership 处理 wrapper 与 hook：可证明属于本包的实体
+目录保留，备份被替换的 SKILL 入口后更新指向固定 release 的 wrapper，保留
+其他文件和 foreign 配置，不承诺整目录转 symlink。已有 symlink 依安装计划
+更新；owned wrapper 和同版 hook 路径由同一安装器管理。
+论文安装器只备份覆盖维护文件，保留章节与私有历史资源，不复制协作 hook。
+主管是唯一安装写入者，执行者审独立反例，不同时写共享配置；先按
+[安装与回滚](runtime-validation.md#安装与回滚)核来源、版本与哈希，核收后
+及时交回下一步或明确依赖，避免重复旧回调。
+
 报告及回调终态后的可执行约束见[有界收口运行规则](executor-closeout-enforcement.md)；
 该约束结束 executor 本轮扩展工作，不授论文通过、不补造投递回执。
 本页不授权重跑研究、重启会话、额外模型调用或绕过共享资源锁。
+
+## 报告发现与有界等待
+
+报告、任务包和原 attempt 既有记录冻结后，仍可沿严格 task-bound 诊断
+和原 controller reconcile 核原次。普通诚实 Stop 可返回
+WAITING_SUPERVISOR、continue:false、suppressOutput:true；不要求唯一模板，
+无证据的 confirmed/共识声明仍拦。主管 PostToolUse 的
+`cmux_supervisor_report_guard.py` 经认证 markers 有界发现冻结报告；
+REPORT_DISCOVERED 不等于原生接收、论文接受或 disarm。
+
+idle Stop 只记录一次状态并允许结束，未求派不阻止 Stop。显式
+`executor_ready.py persist` 默认 60 秒、硬上限 300 秒，保留原请求及
+原期限，不周期重贴、不因重启延长。主管答复须沿原 bridge 到原 surface
+或原请求指定 mailbox，绑定原 loop record。CCC 等待有期限；
+native Goal 和论文验收独立核证，通信等待不增加科研审轮。
 
 ## 双执行者审查的输入与收尾边界
 

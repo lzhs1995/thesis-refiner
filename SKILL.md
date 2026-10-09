@@ -4,10 +4,15 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.05.1"
+  version: "2026.10.09.3"
 ---
 
 # 论文精炼助手
+
+本次原生投递与有界等待修订纳入 **2026.10.09.3 版本契约**，保留原生核验与
+同版安装，空闲求派改为显式单次请求和有限等待。须分别验证共享协作 release
+的安装、客户端实际加载及 Claude → supervisor 原生 receipt；本文更新和
+离线检查不证明现役会话已采用。
 
 ## macOS 自动化故障：优先执行规则
 
@@ -71,8 +76,11 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 必须使用 `multi-agent-collaboration` 的 `cmux_workspace_guard.py`、现役 PreToolUse hook 和
 受保护的 `cmux_bridge`。harness 固定 `--expected-workspace-uuid` 与
 `--expected-executor-uuid`；bridge 在每次粘贴和按键前重核，并用双 UUID 发送。
-跨区、缺 UUID、旧绑定、面板移动或身份不明一律 fail-closed，零发送。裸 `cmux send/send-key`、
-`cmux-agent ask/broadcast` 被 hook 拒绝；不得借 STATUS、恢复授权、force、超时或 shell 环境绕过。
+跨区、缺 UUID、旧绑定、面板移动或身份不明一律 fail-closed，零发送。裸 `cmux send/send-key`
+被 hook 拒绝。普通消息可直接调用绝对可执行 helper 的 `ask/send/broadcast/reconcile`，
+但完整渲染字节、同版 adapter 与 Python 必须通过守卫核验；允许 `rtk`/`rtk proxy`
+前缀，拒绝 shell/env 包装、嵌套、重定向及替代发送器。helper 仍走唯一 guarded bridge，
+正式任务包与 callback 使用各自绑定专用入口；不得借 STATUS、force 或超时绕过。
 用户明确指定的目标可存于协作 skill 的 caller-scoped workspace-scope 文件，不因不可用自行撤销。
 
 跨工作区资源协调继续使用现有文件/队列回执，不借资源协调重新指定 executor。
@@ -84,8 +92,9 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)决定零、一或两个 executor，使用相位握手预算，及时结案已接受成果；通信维护不扩大为新科研审轮。
 
 交付后执行[有界收口运行规则](references/executor-closeout-enforcement.md)：
-协作 skill 的 PreToolUse 阻止报告及原回调终态后的额外工具调用，Stop 允许
-精确诚实交接。回调未确认交主管核原次；不能为回执反复追加测试或记忆。
+协作 skill 的 PreToolUse 冻结报告、task pack 和原 attempt，保留严格 task-bound
+只读诊断与原 controller reconcile；Stop 接受普通诚实 WAITING_SUPERVISOR
+说明，无须唯一精确 STATUS 模板。回调未确认交主管核原次；不能为回执追加测试。
 本 skill 复用同一实现，不复制第二套发送器或 hook。
 
 主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
@@ -99,11 +108,39 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 `AWAITING_EXECUTOR_ACK/PENDING`，不提前报FAIL。短探针仍逐键核身份、保留
 600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
 
-**双向发送铁律：粘贴成功不等于发送，Enter 返回不等于送达。** supervisor 的 prompt 和 executor 的 callback 都必须用受保护 bridge、实际小写 `enter` 和发送后读屏。原 marker 留在 compose 时不得报成功；进入队列则记录 pending 并观察原消息，不重贴、不循环 Enter。确认须绑定本次完整消息、原身份与原尝试，不能借同一目标的其他调用或无关活动确认。Stop hook 首次仍检查固定报告哈希和真实 completion receipt；Stop/SubagentStop 的布尔 `stop_hook_active is True` 仅终止 hook 递归，不授予完成、不清任务，下一正常 turn 继续核验。具体兼容边界见下方双向投递维护文档。
+**双向通信遵循[原生投递与有界等待](references/verified-compose-delivery.md)。**
+只有同一 workspace/surface/process/session/transcript，在原 PASTE_INTENT
+新鲜 EOF fence 后新增、全文完全相等的 native user 才为 NATIVE_RECEIVED；
+保留全部空白。Claude `queued_command` 仍 pending，屏幕、ACK、按键返回、
+队列和空输入区不证明收到。
 
-协作 bridge 的 callback pending journal 在发送前绑定原 task/nonce、报告与任务包 SHA、真实 workspace 身份。再次调用沿原 journal 只观察，不再次发键；报告或身份变化拒绝确认。旧版本无 journal 的历史失败保留原始证据，不能补造发送记录。导入模块必须来自 task pack 的 required_skill 同一安装，不能混用旧 Claude 路径和新版 release。
+首次只粘贴一次，完整草稿稳定后提交一次；忙碌 Codex 明示
+`tab to queue message` 且完整草稿匹配时直接 Tab，其他清晰受支持状态 Enter。
+原次恢复先核迟到原生记录，自动/显式恢复共用最多一次补键，意图落盘即耗用。
+当前 `--recover-stranded` 只用于 `submit-text` 的原 NATIVE_PENDING、
+PASTE_INTENT/ENTER_SENT 及未耗预算；任务/callback 只读 reconcile。
+未知、压缩、排队、重连或结构改变不补键，缺原 binding/fence 不追补、不重贴。
 
-若回调已进入 supervisor 原生 user 记录但回执缺失，沿协作技能的原 journal 接收端结算接口恢复：核真实会话与双方身份、原任务包/报告/尝试哈希及发送后完整消息，在原锁且 inode 未变时原子写入回执。禁止重贴回调、覆盖原回执或伪造尝试。只读验证、正式回执、executor 后续 Stop、产物核收和全局部署分别记账；不能由其中一项推定其余通过。旧任务保持原控制器，新版读取器不能单独覆盖到不兼容旧 bridge。
+协作 skill 的 `cmux_native_delivery_guard.py` 在 PostToolUse 只核当前投递，
+不扫无关旧账、不发键、不造 receipt，也无 disable/advisory 绕过。
+封口保留严格 task-bound 诊断与原 controller 核收；Stop 接受普通诚实
+WAITING_SUPERVISOR（continue:false、suppressOutput:true），保留 task/receipt，
+无证据的 confirmed/共识声明仍拦。Stop/SubagentStop 重入只认严格布尔
+`stop_hook_active is True`；不 disarm、不授论文完成，下一正常 turn 继续核验。
+
+主管通过认证 active markers 有界发现冻结报告（PostToolUse
+`cmux_supervisor_report_guard.py`，REPORT_DISCOVERED），再独立审读并裁决。
+发现、实际接收、正式 receipt、论文接受和 disarm 分别留证。
+idle Stop 只写一次持久状态并允许结束；未求派不能阻止 Stop。
+显式 `executor_ready.py persist` 默认 60 秒、硬上限 300 秒，不周期重贴，
+不因重启延长原期限。CCC 有限等待，native Goal 单独核验。
+主管回复沿原 bridge 到达原 surface，或写原请求指定 mailbox；
+回复要绑定 loop record 的原 episode_id、caller_surface_uuid 和 task_id。
+
+通用实现只在协作 skill 维护，本文不复制发送器或 hook。报告/pack/既有
+attempt 保留原字节，原锁下核收可追加观察及原子发布 receipt；旧任务沿原
+控制器，不把新模块单独覆盖到旧 runtime。源码、安装、实际 hook、客户端
+加载、原生接收及论文验收分列，不因通信维护重开科研审轮。
 
 两个用户指定的 Claude 可分别承担档案核查和工具审查等独立工作，各自任务包、nonce、产物目录和回调独立；共享代码由一个写入者维护。两个 executor 若同 pane 的不同 tab，则计算可并行，UI 输入须串行按 UUID 重新核验。健康 executor 不因另一位故障重启；持续失效者冻结写入后按已授权单 agent 模式接续，避免维护流程拖住论文交付。
 
@@ -148,7 +185,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 
 ## 双向投递与高效协作维护
 
-执行[高效握手、多执行者与双向投递](references/efficient-bidirectional-collaboration-20261004.md)：每次Enter后读回；输入框残留、排队与消费分别记录；可能已发送的回调仅只读核收，禁止重贴。
+执行[接收端绑定投递](references/receiver-bound-delivery.md)和[高效协作](references/efficient-bidirectional-collaboration-20261004.md)：完整原文稳定后按 provider 提交键，只在绑定原生日志核整条相等原消息；排队、运行、回执和论文接受分列，未知仅核原次。
 
 
 ## 归档双执行者现场经验（2026-10-05）
