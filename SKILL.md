@@ -4,15 +4,19 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.09.9"
+  version: "2026.10.10.1"
 ---
 
 # 论文精炼助手
 
-本次自动 hook 输出契约修订纳入 **2026.10.09.9 版本契约**，保留原生核验、
+本次配置与主动求派修订纳入 **2026.10.10.1 版本契约**，保留原生核验、
 同版安装及用户已授权的每60秒新 marker 主动求派。默认有界观察与该可选
 求派入口分别记录。共享协作 release 的安装、客户端实际加载、Claude →
 supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
+
+cc-switch 切换、全局 hook 与每60秒求派按
+[全局通信配置](references/global-communication-configuration.md)执行：复用协作
+skill 的唯一守护器，原消息未确认时走文件通道；每个工作区通过后立即回原任务。
 
 ## macOS 自动化故障：优先执行规则
 

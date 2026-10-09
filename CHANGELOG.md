@@ -1,3 +1,11 @@
+# 2026.10.10.1
+
+Link the shared collaboration 0.4.8 configuration guardian and strict inquiry
+lifecycle. Explain cc-switch restoration, Markdown versus executable hooks,
+60-second inquiries without replaying unconfirmed messages, exact supervisor
+replies and per-session automatic-hook evidence. Keep the original controllers,
+completed manuscript acceptance and one shared sender unchanged.
+
 # 2026.10.09.9
 
 Synchronize the maintained skill with collaboration 0.4.7: fresh input uses

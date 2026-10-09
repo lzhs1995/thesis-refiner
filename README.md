@@ -4,8 +4,11 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.09.9**, synchronized with the collaboration 0.4.7
+Current source: **2026.10.10.1**, synchronized with the collaboration 0.4.8
 single-line notice, native-reception and automatic-hook contracts. The
+[global configuration contract](references/global-communication-configuration.md)
+covers cc-switch hook restoration, strictly bound 60-second inquiries and
+per-session adoption without introducing a second sender. The
 [delivery entry](references/verified-compose-delivery.md)
 now routes to the authoritative receiver-bound contract. Read the
 [toolchain lessons](references/toolchain-retrospective.md) and
