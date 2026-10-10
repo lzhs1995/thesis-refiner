@@ -4,15 +4,15 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.10.4"
+  version: "2026.10.10.5"
 ---
 
 # 论文精炼助手
 
-本次配置与主动求派修订纳入 **2026.10.10.4 版本契约**，保留原生核验、
-同版安装及用户已授权的每60秒新 marker 主动求派。默认有界观察与该可选
-求派入口分别记录。共享协作 release 的安装、客户端实际加载、Claude →
-supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
+本次非阻断协作修订纳入 **2026.10.10.5 版本契约**，采用 multi-agent-collaboration
+0.4.19 的工作流观察入口与继任维护通信。共享 release 的安装、客户端实际加载、
+Claude → supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
+用户已授权的每60秒新 marker 主动求派仅经显式入口运行，不由 Stop hook 强迫续跑。
 
 cc-switch 切换、全局 hook 与每60秒求派按
 [全局通信配置](references/global-communication-configuration.md)执行：复用协作
@@ -21,7 +21,7 @@ skill 的唯一守护器，原消息未确认时走文件通道；每个工作�
 全局安装 skill/hook 不代表所有会话参加协作。普通新 Codex/Claude 会话的工具
 调用和结束无需 supervisor 批准；仅阅读或维护本 skill 也不算入组。明确启动协作
 后，任务按 workspace、surface、role 和当前 native session ID 绑定参与者，再
-执行相应任务门禁。同目录、旧面板、其他任务和继承环境不能约束新会话；规则
+记录相应任务状态；不得施加全会话封锁。同目录、旧面板、其他任务和继承环境不能约束新会话；规则
 与实现统一复用协作 skill 的 session enrollment，不复制第二套 hook。
 
 ## macOS 自动化故障：优先执行规则
@@ -76,36 +76,28 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 - 正式终验必须在最终 Word/Zotero、格式、实际 PDF 字体和视觉检查后，对同一冻结 PDF 完成连续两轮完整审查。没有新的本地确认问题，既有确认问题全部解决。三轮同一问题只触发专项裁决，不能自动通过。
 - HTTP 200、空控制帧、上传 READY、退出码 0、同事的 DONE 和模拟回答都不能单独表示审查完成。
 
-## 同 workspace 握手硬门禁（不可绕过）
+## 协作不得封锁会话
 
-只准与 **当前真实 caller 所属 workspace UUID 相同** 的独立 terminal pane 中的 agent 握手。
-每次先读 `cmux identify --json` 的 caller，再与实时 tree 的 UUID 对齐；focused、标题、旧摘要、
-历史 surface 编号和环境变量都不能代替身份。用户指定的 executor surface UUID 必须同时精确匹配。
-指定工作区与真实 caller 冲突即拒绝输入，不能回退旧 Claude、伪造身份、搬动面板或另开会话。
+协作工作流 hook 统一采用 0.4.19 非阻断 observer：旧任务、未结算 callback、
+身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
+原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
 
-必须使用 `multi-agent-collaboration` 的 `cmux_workspace_guard.py`、现役 PreToolUse hook 和
-受保护的 `cmux_bridge`。harness 固定 `--expected-workspace-uuid` 与
-`--expected-executor-uuid`；bridge 在每次粘贴和按键前重核，并用双 UUID 发送。
-跨区、缺 UUID、旧绑定、面板移动或身份不明一律 fail-closed，零发送。裸 `cmux send/send-key`
-被 hook 拒绝。普通消息可直接调用绝对可执行 helper 的 `ask/send/broadcast/reconcile`，
-但完整渲染字节、同版 adapter 与 Python 必须通过守卫核验；允许 `rtk`/`rtk proxy`
-前缀，拒绝 shell/env 包装、嵌套、重定向及替代发送器。helper 仍走唯一 guarded bridge，
-正式任务包与 callback 使用各自绑定专用入口；不得借 STATUS、force 或超时绕过。
-用户明确指定的目标可存于协作 skill 的 caller-scoped workspace-scope 文件，不因不可用自行撤销。
+当前身份使用 `cmux-agent self` 的原生 foreground resolver；raw cmux identify
+可能显示共享 daemon 的继承环境，不能据此认定当前 caller 在旧工作区。
 
-跨工作区资源协调继续使用现有文件/队列回执，不借资源协调重新指定 executor。
-安装后实测 hook 的 exit 2 与零输入；配置写入不等于运行中客户端重载，旧导入模块也不算自动更新。
-协作 skill 缺失或身份门禁未通过时，禁止发送；已授权的单 agent 离线工作可继续。
+任何已获用户授权的继任 supervisor 均可联系指定原 executor，包括跨 workspace。
+跨区维护握手使用协作技能的 successor-rebind-v2：固定用户授权正文及双方
+workspace/surface/pane UUID，无须故障旧主管批准或先结算旧任务。该通信不授予
+重放旧任务或接管共享文件写入。正式新工作另定范围。普通发送继续保护用户草稿、
+持久化原 attempt 并核对新原生全文；单次投递未确认时，其他授权工作照常继续。
 
 ## 执行模式和资源
 
 按[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)决定零、一或两个 executor，使用相位握手预算，及时结案已接受成果；通信维护不扩大为新科研审轮。
 
-交付后执行[有界收口运行规则](references/executor-closeout-enforcement.md)：
-协作 skill 的 PreToolUse 冻结报告、task pack 和原 attempt，保留严格 task-bound
-只读诊断与原 controller reconcile；Stop 接受普通诚实 WAITING_SUPERVISOR
-说明，无须唯一精确 STATUS 模板。回调未确认交主管核原次；不能为回执追加测试。
-本 skill 复用同一实现，不复制第二套发送器或 hook。
+交付后保留报告、task pack 和原 attempt；待核收状态不能冻结整个会话。
+诊断、继任握手及独立已授权工作均可继续；旧消息只能沿原次核收，不重复输入。
+全局 Stop/reask hook 不强迫无限续跑。显式发送器保留原生证据校验。
 
 主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
 正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久
@@ -119,7 +111,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
 
 **双向通信遵循[原生投递与有界等待](references/verified-compose-delivery.md)。**
-只有同一 workspace/surface/process/session/transcript，在原 PASTE_INTENT
+只有同一已授权绑定的 workspace/surface/process/session/transcript，在原 PASTE_INTENT
 新鲜 EOF fence 后新增、全文完全相等的 native user 才为 NATIVE_RECEIVED；
 保留全部空白。Claude `queued_command` 仍 pending，屏幕、ACK、按键返回、
 队列和空输入区不证明收到。
@@ -131,29 +123,23 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 PASTE_INTENT/ENTER_SENT 及未耗预算；任务/callback 只读 reconcile。
 未知、压缩、排队、重连或结构改变不补键，缺原 binding/fence 不追补、不重贴。
 
-自动 PostToolUse 成功结果按客户端官方 JSON schema 输出：只把完整核验结果放进
-hookSpecificOutput.additionalContext，hookEventName=PostToolUse；内部 action/results
-不得直接作为顶层输出。以活跃客户端的自动执行记录核收，不用手工运行、配置
-注册或离线测试替代。完整原生消息、真实 callback 与自动 hook 仍分别留证。
+自动 PreToolUse、PostToolUse 与 Stop 的协作工作流条目统一指向同版
+`cmux_workflow_advisory.py --hook <原检查器名>`，只记录实际调用的来源、版本、
+事件和父进程证据。它不执行旧检查器、不发送消息、不核收历史任务、不返回
+拒绝工具或阻止回合结束的控制结果。workspace/panel 的真实终端操作保护仍保留。
 
-协作 skill 的 `cmux_native_delivery_guard.py` 在 PostToolUse 只核当前投递，
-不扫无关旧账、不发键、不造 receipt，也无 disable/advisory 绕过。
-封口保留严格 task-bound 诊断与原 controller 核收；Stop 接受普通诚实
-WAITING_SUPERVISOR（continue:false、suppressOutput:true），保留 task/receipt，
-无证据的 confirmed/共识声明仍拦。Stop/SubagentStop 重入只认严格布尔
-`stop_hook_active is True`；不 disarm、不授论文完成，下一正常 turn 继续核验。
-
-主管通过认证 active markers 有界发现冻结报告（PostToolUse
-`cmux_supervisor_report_guard.py`，REPORT_DISCOVERED），再独立审读并裁决。
-发现、实际接收、正式 receipt、论文接受和 disarm 分别留证。
+原生投递和冻结报告由显式发送器、原 controller 的只读核收及主管主动审读处理。
+旧检查器可作显式诊断，其结果不得重新封锁整个会话。未证实的收到、共识或论文
+完成不得对用户宣称；这项真实性要求不依赖 Stop 阻断。观察记录、完整原生消息、
+真实 callback、论文接受和 disarm 分别留证。详见[非阻断协作恢复](references/nonblocking-collaboration.md)。
 空闲 executor 不得死等，也不能因 Codex 主管忙而中断论文任务（用户 2026-10-09 明令）：
 `executor_reask.py run` 每 60 秒用新 marker 主动求派，直到主管答复或新派发，无轮数上限；
 每轮记录已配置文件通道的实际写入，空 channels/错误不冒充送达；
 终端只在受保护输入条件成立时发送。新普通消息超过700 UTF-8字节或含任意 CR/LF/tab，
 由同版发送器固定完整正文并发送短通知，保留原 marker 与全部空白；
 通知收到不等于正文已读。正式 task/callback 保持专用绑定。
-可选 `cmux_executor_reask_stop_guard.py` 约束已授权等待段，
-主管答复、新派发或 operator stop 均可结束；不将未完成后继方案标成已部署。
+`cmux_executor_reask_stop_guard.py` 的全局注册仅作 advisory 观察；
+显式求派命令在主管答复、新派发或 operator stop 后结束，不将未完成后继方案标成已部署。
 默认 `executor_ready.py persist` 仅是单请求有界观察。CCC 与 native Goal 单独核验。
 主管回复沿原 bridge 到达原 surface，或写原请求指定 mailbox；
 回复要绑定 loop record 的原 episode_id、caller_surface_uuid 和 task_id。
@@ -163,7 +149,7 @@ bridge 在完整边框外识别；输入框内同样的文字仍保留为草稿�
 空输入不等于回合空闲，更不等于消息送达；沿原生接收证据结算。
 
 
-自动 hook 的嵌套核收保持同一原生 caller 采集来源，每次仍重新核验进程和 cmux 树；
+显式投递与嵌套核收保持同一原生 caller 采集来源，每次仍重新核验进程和 cmux 树；
 共享后台继承的 workspace 不得替代实际客户端。完整 Claude 边框成立时，报告及
 recap 中引用的历史 Compacting/Reconnecting 不代表当前状态；只核当前 activity。
 Codex steer queue 标题和已测 warnings 尾行按各自结构识别，真实压缩、重连与
@@ -241,15 +227,11 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 只有原接收端新增完整 native user 才证明收到；真实 callback 和活跃客户端
 自动hook分别留证，手动hook测试不冒充自动加载。验收后接回用户原任务。
 
-## 首次确实零输入时的唯一接续
+## 历史投递接续
 
-仅当原任务包、报告及原 attempt SHA 均未变，且 journal 只有 attempt-0001、
-phase=NO_INPUT、events=[]、无 receipt/pending，closeout hook 才允许执行一次
-任务包所固定的原 controller 同步 callback CLI（rtk proxy + 原 Python -B）；
-入口和参数必须完全匹配，不开放其他工具或替代发送器。原 controller 仍重核
-活跃身份、完整稳定草稿及最多两次 attempt 的预算。已输入、已排队、未知状态
-或第二次 attempt 均不适用，只能沿原证据核收。普通诚实 WAITING_SUPERVISOR
-仍可结束回合，不强迫重试。完整原生收到、真实 callback 与自动 hook 分别验收。
+原任务包、报告及原 attempt 保留不变。旧 controller 零输入 reconcile 与
+新主管维护握手分开：前者核原次，后者建立当前联系，不要求先修好旧主管。
+不要用新 nonce 重放已输入、排队或未知消息。未确认状态如实保留，普通工具开放。
 
 ## 继承业务会话与恢复协作
 

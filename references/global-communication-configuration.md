@@ -1,41 +1,40 @@
-# 全局通信配置与主动求派
+# 全局通信配置与显式主动求派
 
-本 skill 复用 multi-agent-collaboration 0.4.17 的
+本 skill 2026.10.10.5 复用 multi-agent-collaboration **0.4.19** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
 
-全局安装不是任务入组。普通新会话不受 supervisor 工具/结束门禁约束；只有明确
-参加协作并绑定当前 native session ID 的参与者才受任务门禁约束。先判作用范围，
-再认证 caller。已有绑定的任务仍严格验证身份、原始投递及 callback。旧 marker
-没有 native session 证据时只保留原记录，不用新会话补造绑定或把旧任务派给它。
+协作工作流 hook 全部使用非阻断 observer。普通工具与 Stop 不因旧任务、未结算
+回调、身份不明、等待主管或审查轮次不足被封锁；明确参加协作的会话也适用。
+全局安装不代表任务入组，任务绑定只描述责任与证据归属，不授予封锁整个会话的能力。
+冻结报告和原 attempt 保留；新诊断、已授权维护握手和独立工作照常继续。
 
-CLAUDE.md 和 skill 文档是规则入口，不能替代 JSON 中的 hook 注册。
-cc-switch 切换或导入配置后，由协作 skill 的唯一配置守护器修复自有 hook；
-不复制凭据、不切换 provider、不另造发送器，也不为每个会话创建 watcher。
-配置已修复、当前客户端自动执行 hook、完整原生日志接收和真实 callback 分别验收。
+CLAUDE.md 和 skill 文档不能替代 JSON 中的实际注册。cc-switch 切换或导入后，
+唯一配置守护器修复自有条目并保留 foreign hook、provider 与非 hook 字段。
+实际命令为同版 `cmux_workflow_advisory.py --hook <原检查器名>`；不自动运行旧 gate、
+求派循环或报告核收。真实终端操作的 workspace/panel 保护与显式发送器继续生效。
 
-用户明确授权后，executor 每60秒询问直到绑定的主管回复、新派发或用户停止。
-Stop hook 与命令共用一把锁；原终端消息未确认时只更新文件通道，禁止堆叠新 prompt。
-主管通过已有 PostToolUse hook 发现请求并按原 mailbox 模板回复；答复须精确绑定
-caller、supervisor、task、episode 和已发 marker，等待类答复必须有具体解除条件。
-询问次数、文件写入和实际送达分别计数。API 或客户端中断须报告，不能虚称仍在运行。
+使用 `cmux-agent self` 的原生 foreground resolver。共享 daemon 的 raw cmux identity
+可能包含继承环境，不能拿它代替当前线程的 caller。已获用户授权的继任 supervisor
+可用 `successor-rebind-v2` 联系指定原 executor，包括跨 workspace；固定授权正文与
+双方 workspace/surface/pane UUID，无须旧主管批准或先结算旧任务。维护通信本身不
+转移旧 callback、共享文件写入或科学任务责任。详见[非阻断恢复](nonblocking-collaboration.md)。
 
-queued follow-up inputs 是忙碌 Codex 的待处理状态，不能当成功接收，也不能据此重发。
-只按原接收端新追加的完整 native user 验证。跨工作区由原主管核其 executor；
-通过一个工作区就恢复其原论文任务，通信维护不新增科研验收轮。
+用户明确授权后，可显式运行 `executor_reask.py run`，每60秒以新 marker 询问，
+直到绑定主管回复、新派发或用户停止。Stop hook 不发起或强迫该循环。原终端消息
+未确认时仅更新已配置文件通道，不堆叠 prompt。主管主动检查原 mailbox，按原请求的
+caller、supervisor、task、episode 和 marker 回复；等待类回复写明解除条件。
+询问次数、文件写入、正文已读和实际送达分别计数；不能将已退出命令称为仍在运行。
 
-## 身份识别失败不得封锁会话
+新消息仅经共享受保护发送器输入。保留原文、原 PASTE_INTENT、接收端绑定与新鲜 EOF
+fence；只有其后新增、全文逐字相等的 native user 记录证明收到。queued follow-up、
+Claude queued_command、屏幕文字、按键返回或旧 ACK 不等于收到，未知状态不重发。
 
-协作 hook 无法识别当前 caller 时，不具备施加任务门禁的依据，必须放行普通
-工具和 Stop。已入组会话也能诊断、编辑修复、记录状态、执行已授权 SOLO 和
-诚实结束回合；不重复触发阻断。任务标记、冻结报告、原回调与投递预算原样保留，
-不能据此冒称收到、接受或多 agent 共识。恢复后下一次核验重新检查真实任务。
+配置修复、客户端实际自动调用、完整原生接收、真实 callback 与业务核收分别验收。
+advisory receipt 记录真实父进程，手动测试不能冒充自动客户端采用。源码或文档更新
+不能证明所有活跃客户端已加载；逐会话列出实际通过与待验项，不作整体假成功。
 
-新建、切换和接手的 Codex supervisor 均可按现有用户授权主动握手，使用当前
-原生 foreground thread、内核进程和 workspace/surface 证据；不要求固定的
-codex resume 命令，也不绑定旧主管会话号。终端发送仍核验真实双方。
-
-优先推进用户原任务，按独立交付物与当前容量使用零、一或两个 executor。
-本机通信入口故障不等于 Claude API 故障；经有限重试仍不可用时，按已有授权
-由 Codex 接管并标注 solo_self_review。原 Claude 恢复后只在安全边界重新接入；
-不为通信维护重开已接受的科研审轮，同 pane 两 tab 的终端输入保持串行。
+每个工作区恢复后立即接回原论文任务。通信维护不新增科研审轮；按独立未完成交付物
+与当前容量使用零、一或两个 executor。通信入口故障不是 Claude API 故障；按既有
+授权继续 Codex SOLO 并标记 `solo_self_review`，原 Claude 到安全边界后再恢复协作。
+两个 tab 可以并行计算；同 pane 的终端输入串行核验。

@@ -4,10 +4,13 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.10.4**, synchronized with the collaboration 0.4.17
-single-line notice, native-reception and automatic-hook contracts. The
+Current source: **2026.10.10.5**, synchronized with collaboration **0.4.19**.
+Workflow hooks observe their actual invocation without blocking ordinary tools or
+Stop. Authorized successor supervisors can contact designated existing executors
+through the successor-rebind-v2 maintenance route, including across workspaces.
+See [nonblocking collaboration](references/nonblocking-collaboration.md). The
 [global configuration contract](references/global-communication-configuration.md)
-covers cc-switch hook restoration, strictly bound 60-second inquiries and
+covers cc-switch observer restoration, explicitly started 60-second inquiries and
 per-session adoption without introducing a second sender. The
 [delivery entry](references/verified-compose-delivery.md)
 now routes to the authoritative receiver-bound contract. Read the
@@ -47,9 +50,10 @@ prove that an active client reloaded.
 New long or multiline ordinary messages use a bounded single-line notice for the
 SHA-pinned complete body. Formal packs use their dedicated notice and callbacks
 keep their exact task-bound line. A notice receipt does not prove body reading.
-Automatic PostToolUse output uses the official `hookSpecificOutput` envelope;
-observe its execution separately from manual hook checks. Preserve the original
-controller and evidence when reconciling an in-flight task.
+Automatic workflow hooks emit no denial or turn-control output; adoption records
+identify the original hook, advisory entrypoint and actual process provenance.
+A manual hook invocation is not automatic client adoption. Explicit native
+reconciliation preserves the original controller and evidence of an in-flight task.
 
 ```bash
 python3 -m unittest discover -s tests -v
