@@ -4,15 +4,20 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.10.5"
+  version: "2026.10.10.6"
 ---
 
 # 论文精炼助手
 
-本次非阻断协作修订纳入 **2026.10.10.5 版本契约**，采用 multi-agent-collaboration
-0.4.19 的工作流观察入口与继任维护通信。共享 release 的安装、客户端实际加载、
+本次非阻断协作修订纳入 **2026.10.10.6 版本契约**，采用 multi-agent-collaboration
+0.4.20 的工作流观察入口与继任维护通信。共享 release 的安装、客户端实际加载、
 Claude → supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
 用户已授权的每60秒新 marker 主动求派仅经显式入口运行，不由 Stop hook 强迫续跑。
+
+0.4.20 进一步修复现场发现的普通文档命令误拦与 Claude footer 兼容：heredoc、
+引号搜索中的命令示例不等于真实终端输入；完整边框后的模型/cwd/时间换行及工具
+计数 `+N more` 按已测结构识别。未知 footer、活跃工具或现有草稿仍保留，不能拿
+历史报告中的失败文字当当前运行状态。详见[现场修复经验](references/nonblocking-collaboration.md#普通文档命令与新-footer-的现场修复)。
 
 cc-switch 切换、全局 hook 与每60秒求派按
 [全局通信配置](references/global-communication-configuration.md)执行：复用协作
@@ -78,7 +83,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一采用 0.4.19 非阻断 observer：旧任务、未结算 callback、
+协作工作流 hook 统一采用 0.4.20 非阻断 observer：旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
 

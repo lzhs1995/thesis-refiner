@@ -4,7 +4,7 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.10.5**, synchronized with collaboration **0.4.19**.
+Current source: **2026.10.10.6**, synchronized with collaboration **0.4.20**.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
 Stop. Authorized successor supervisors can contact designated existing executors
 through the successor-rebind-v2 maintenance route, including across workspaces.
@@ -17,6 +17,12 @@ now routes to the authoritative receiver-bound contract. Read the
 [toolchain lessons](references/toolchain-retrospective.md) and
 [manifest/link contract](references/delivery-manifest.md) for result assembly,
 file identity and final delivery.
+
+Collaboration 0.4.20 also distinguishes literal document/search text from real
+terminal writes and recognizes measured wrapped Claude model/cwd/time footers
+and tool-count overflow. Existing drafts, active tools and unknown trailing rows
+remain protected. These parser checks are separate from actual client loading
+and a successful current-task handshake.
 
 The [six-repository version map](references/toolchain-versions.json) is a historical
 release snapshot, not an installation selector for this version. Skill release,

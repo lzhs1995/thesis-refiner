@@ -1,6 +1,6 @@
 # 全局通信配置与显式主动求派
 
-本 skill 2026.10.10.5 复用 multi-agent-collaboration **0.4.19** 的
+本 skill 2026.10.10.6 复用 multi-agent-collaboration **0.4.20** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
 
@@ -38,3 +38,9 @@ advisory receipt 记录真实父进程，手动测试不能冒充自动客户端
 与当前容量使用零、一或两个 executor。通信入口故障不是 Claude API 故障；按既有
 授权继续 Codex SOLO 并标记 `solo_self_review`，原 Claude 到安全边界后再恢复协作。
 两个 tab 可以并行计算；同 pane 的终端输入串行核验。
+
+0.4.20 的普通文档分类与 Claude footer 修复也属于共享实现：写 PR/HANDOFF 的
+字面 heredoc、搜索字符串中出现发送命令不得被当作执行；实际发送仍走受保护入口。
+模型与 cwd/时间换行、`+N more` 工具摘要只有完整已测布局才可识别；不清空用户
+草稿，也不以历史回顾的错误词推断当前状态。保留原失败证据、更新同版实现并实测，
+不能通过删 marker、改 nonce 或重发消息来修解析器。
