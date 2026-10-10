@@ -1,8 +1,13 @@
 # 全局通信配置与主动求派
 
-本 skill 复用 multi-agent-collaboration 0.4.8 的
+本 skill 复用 multi-agent-collaboration 0.4.14 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
+
+全局安装不是任务入组。普通新会话不受 supervisor 工具/结束门禁约束；只有明确
+参加协作并绑定当前 native session ID 的参与者才受任务门禁约束。先判作用范围，
+再认证 caller。已有绑定的任务仍严格验证身份、原始投递及 callback。旧 marker
+没有 native session 证据时只保留原记录，不用新会话补造绑定或把旧任务派给它。
 
 CLAUDE.md 和 skill 文档是规则入口，不能替代 JSON 中的 hook 注册。
 cc-switch 切换或导入配置后，由协作 skill 的唯一配置守护器修复自有 hook；

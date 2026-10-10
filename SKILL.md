@@ -4,12 +4,12 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.10.1"
+  version: "2026.10.10.2"
 ---
 
 # 论文精炼助手
 
-本次配置与主动求派修订纳入 **2026.10.10.1 版本契约**，保留原生核验、
+本次配置与主动求派修订纳入 **2026.10.10.2 版本契约**，保留原生核验、
 同版安装及用户已授权的每60秒新 marker 主动求派。默认有界观察与该可选
 求派入口分别记录。共享协作 release 的安装、客户端实际加载、Claude →
 supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
@@ -17,6 +17,12 @@ supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不
 cc-switch 切换、全局 hook 与每60秒求派按
 [全局通信配置](references/global-communication-configuration.md)执行：复用协作
 skill 的唯一守护器，原消息未确认时走文件通道；每个工作区通过后立即回原任务。
+
+全局安装 skill/hook 不代表所有会话参加协作。普通新 Codex/Claude 会话的工具
+调用和结束无需 supervisor 批准；仅阅读或维护本 skill 也不算入组。明确启动协作
+后，任务按 workspace、surface、role 和当前 native session ID 绑定参与者，再
+执行相应任务门禁。同目录、旧面板、其他任务和继承环境不能约束新会话；规则
+与实现统一复用协作 skill 的 session enrollment，不复制第二套 hook。
 
 ## macOS 自动化故障：优先执行规则
 
