@@ -4,15 +4,25 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.09.9"
+  version: "2026.10.10.4"
 ---
 
 # 论文精炼助手
 
-本次自动 hook 输出契约修订纳入 **2026.10.09.9 版本契约**，保留原生核验、
+本次配置与主动求派修订纳入 **2026.10.10.4 版本契约**，保留原生核验、
 同版安装及用户已授权的每60秒新 marker 主动求派。默认有界观察与该可选
 求派入口分别记录。共享协作 release 的安装、客户端实际加载、Claude →
 supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
+
+cc-switch 切换、全局 hook 与每60秒求派按
+[全局通信配置](references/global-communication-configuration.md)执行：复用协作
+skill 的唯一守护器，原消息未确认时走文件通道；每个工作区通过后立即回原任务。
+
+全局安装 skill/hook 不代表所有会话参加协作。普通新 Codex/Claude 会话的工具
+调用和结束无需 supervisor 批准；仅阅读或维护本 skill 也不算入组。明确启动协作
+后，任务按 workspace、surface、role 和当前 native session ID 绑定参与者，再
+执行相应任务门禁。同目录、旧面板、其他任务和继承环境不能约束新会话；规则
+与实现统一复用协作 skill 的 session enrollment，不复制第二套 hook。
 
 ## macOS 自动化故障：优先执行规则
 
@@ -240,3 +250,31 @@ phase=NO_INPUT、events=[]、无 receipt/pending，closeout hook 才允许执行
 活跃身份、完整稳定草稿及最多两次 attempt 的预算。已输入、已排队、未知状态
 或第二次 attempt 均不适用，只能沿原证据核收。普通诚实 WAITING_SUPERVISOR
 仍可结束回合，不强迫重试。完整原生收到、真实 callback 与自动 hook 分别验收。
+
+## 继承业务会话与恢复协作
+
+继承的业务 session、当前 thread 和当前原生客户端分别核实。新建或切换
+Codex 线程复用协作 skill 的原生 foreground 选择与内核/UUID 认证，不能
+借用旧 surface。主管身份识别失败不是 Claude API 故障；按已有 SOLO 授权
+继续独立正文、证据或排版工作。修通信不能重开已接受的科研审轮。
+
+恢复的原 Claude 仅承担独立未完成交付物；先接空闲者，另一位到安全边界后
+再派单。同 pane 不同 tab 只并行计算，输入串行。更新的原生成功、新回合和
+真人接管优先于历史错误。源码、安装、自动 hook、原生收到和业务核收分别
+记录；当前任务握手、派包与报告前不能声称 Claude 参与，SOLO 自审保持原标注。
+
+## 身份识别失败不得封锁会话
+
+协作 hook 无法识别当前 caller 时，不具备施加任务门禁的依据，必须放行普通
+工具和 Stop。已入组会话也能诊断、编辑修复、记录状态、执行已授权 SOLO 和
+诚实结束回合；不重复触发阻断。任务标记、冻结报告、原回调与投递预算原样保留，
+不能据此冒称收到、接受或多 agent 共识。恢复后下一次核验重新检查真实任务。
+
+新建、切换和接手的 Codex supervisor 均可按现有用户授权主动握手，使用当前
+原生 foreground thread、内核进程和 workspace/surface 证据；不要求固定的
+codex resume 命令，也不绑定旧主管会话号。终端发送仍核验真实双方。
+
+优先推进用户原任务，按独立交付物与当前容量使用零、一或两个 executor。
+本机通信入口故障不等于 Claude API 故障；经有限重试仍不可用时，按已有授权
+由 Codex 接管并标注 solo_self_review。原 Claude 恢复后只在安全边界重新接入；
+不为通信维护重开已接受的科研审轮，同 pane 两 tab 的终端输入保持串行。

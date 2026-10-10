@@ -1,3 +1,12 @@
+# 2026.10.10.4
+
+Task-hook caller discovery failures no longer lock ordinary tools or Stop.
+New and successor supervisors use the current native foreground thread without
+a fixed resume command. Preserve task evidence and verify live transport at
+input. Continue authorized solo work when the original executor is unavailable;
+return to one or two executors only at a safe boundary. Documents track
+multi-agent-collaboration 0.4.17 and require actual per-session hook adoption.
+
 # 2026.10.09.9
 
 Synchronize the maintained skill with collaboration 0.4.7: fresh input uses

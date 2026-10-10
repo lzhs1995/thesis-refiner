@@ -4,8 +4,11 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.09.9**, synchronized with the collaboration 0.4.7
+Current source: **2026.10.10.4**, synchronized with the collaboration 0.4.17
 single-line notice, native-reception and automatic-hook contracts. The
+[global configuration contract](references/global-communication-configuration.md)
+covers cc-switch hook restoration, strictly bound 60-second inquiries and
+per-session adoption without introducing a second sender. The
 [delivery entry](references/verified-compose-delivery.md)
 now routes to the authoritative receiver-bound contract. Read the
 [toolchain lessons](references/toolchain-retrospective.md) and
@@ -97,3 +100,19 @@ budgets, broker leases or paper acceptance. A private adapter must explicitly
 adopt it; installing these modules does not migrate active executors.
 
 For shared-account throughput, read [concurrency and READY scheduling](references/nlm-concurrency-and-scheduling.md). The optional `scripts/nlm_ready_scheduler.py` keeps a persistent fair queue and consumes original release evidence. It makes no network calls and does not alter a running pinned broker/runtime. A task adapter binds it to an already validated serial or two-query executor; local queue tests are separate from live parallel validation.
+
+## 身份识别失败不得封锁会话
+
+协作 hook 无法识别当前 caller 时，不具备施加任务门禁的依据，必须放行普通
+工具和 Stop。已入组会话也能诊断、编辑修复、记录状态、执行已授权 SOLO 和
+诚实结束回合；不重复触发阻断。任务标记、冻结报告、原回调与投递预算原样保留，
+不能据此冒称收到、接受或多 agent 共识。恢复后下一次核验重新检查真实任务。
+
+新建、切换和接手的 Codex supervisor 均可按现有用户授权主动握手，使用当前
+原生 foreground thread、内核进程和 workspace/surface 证据；不要求固定的
+codex resume 命令，也不绑定旧主管会话号。终端发送仍核验真实双方。
+
+优先推进用户原任务，按独立交付物与当前容量使用零、一或两个 executor。
+本机通信入口故障不等于 Claude API 故障；经有限重试仍不可用时，按已有授权
+由 Codex 接管并标注 solo_self_review。原 Claude 恢复后只在安全边界重新接入；
+不为通信维护重开已接受的科研审轮，同 pane 两 tab 的终端输入保持串行。
