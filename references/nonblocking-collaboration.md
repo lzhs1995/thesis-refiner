@@ -1,6 +1,6 @@
 # 非阻断协作恢复
 
-适用版本：论文技能 2026.10.10.6 / multi-agent-collaboration 0.4.20。
+适用版本：论文技能 2026.10.10.7 / multi-agent-collaboration 0.4.21。
 实现统一放在协作 skill；本文不复制 hook、发送器或身份解析器。
 
 旧实现把冻结报告、待核回调或无法解析的 caller 变成所有工具与 Stop 的拒绝条件，
@@ -49,3 +49,20 @@ Compacting、Reconnecting 或 callback 失败字样不能替代当前 activity�
 公开回归素材使用合成历史与相同的 footer 几何结构，不发布真实会话、任务路径或
 原生回执哈希。通过离线分类回归后，再单独实测当前客户端调用与新原生接收；
 不能把解析器通过、空输入框或完整旧 callback 当作继任握手成功。
+
+## shell exec 后的直接子进程身份
+
+现场出现过 helper self 与受保护发送器报告 thread selector 和 ancestry 不一致：
+shell 执行最后一个命令时可以被 exec 替换，使工具直接挂在 managed daemon 下，
+旧采集器只找父链中的工具 shell，因此漏掉当前工具自己的 selector。这是本地方向
+身份采集缺口，不能归因于 Claude API、旧主管未批准或 executor 拒绝继任者。
+
+0.4.21 只在确认当前工具直接属于实际 managed daemon 且没有中间 selector 时，
+读取当前进程内核证据；其 PID、父 PID、thread selector 与调用环境须相容。随后
+仍核原生 foreground、唯一活跃客户端、TTY、workspace/surface UUID，并在返回前
+重新读取进程出生时间、执行路径、父关系和 selector，漂移或真实冲突不能通过。
+不要求保留一层人为 wrapper，不接受仅由脚本自填的身份，也不要求旧 resume 命令。
+
+在实际调用方分别验证 self 和受保护投递；多工作区或另一进程形态通过不能代表
+本会话通过。新 native user、executor ACK 和任务接受仍分别留证。某个 caller 未通过
+时只暂停该次输入，继续其他授权工作，不把修复成功或源码测试扩大成全客户端恢复。

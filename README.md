@@ -4,7 +4,7 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.10.6**, synchronized with collaboration **0.4.20**.
+Current source: **2026.10.10.7**, synchronized with collaboration **0.4.21**.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
 Stop. Authorized successor supervisors can contact designated existing executors
 through the successor-rebind-v2 maintenance route, including across workspaces.
@@ -23,6 +23,12 @@ terminal writes and recognizes measured wrapped Claude model/cwd/time footers
 and tool-count overflow. Existing drafts, active tools and unknown trailing rows
 remain protected. These parser checks are separate from actual client loading
 and a successful current-task handshake.
+
+Collaboration 0.4.21 resolves tools that become direct children of the managed
+daemon after shell exec optimization. It reads the actual tool process selector,
+then retains native foreground, unique-client, TTY, UUID and process-drift checks.
+No wrapper process or historical resume command is required to authenticate the
+current caller. This identity fix does not establish a handshake by itself.
 
 The [six-repository version map](references/toolchain-versions.json) is a historical
 release snapshot, not an installation selector for this version. Skill release,

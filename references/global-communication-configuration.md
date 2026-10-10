@@ -1,6 +1,6 @@
 # 全局通信配置与显式主动求派
 
-本 skill 2026.10.10.6 复用 multi-agent-collaboration **0.4.20** 的
+本 skill 2026.10.10.7 复用 multi-agent-collaboration **0.4.21** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
 
@@ -19,6 +19,12 @@ CLAUDE.md 和 skill 文档不能替代 JSON 中的实际注册。cc-switch 切�
 可用 `successor-rebind-v2` 联系指定原 executor，包括跨 workspace；固定授权正文与
 双方 workspace/surface/pane UUID，无须旧主管批准或先结算旧任务。维护通信本身不
 转移旧 callback、共享文件写入或科学任务责任。详见[非阻断恢复](nonblocking-collaboration.md)。
+
+shell 可以通过 exec 优化替换自身，令实际工具成为 managed daemon 的直接子进程。
+0.4.21 在该结构下读取工具自身的内核 thread selector，并重核进程、原生 foreground、
+唯一客户端、TTY 和 UUID。不能因为少一个 shell/rtk 祖先就否认合法 caller，也不能
+以 caller 自填环境或共享 daemon 的旧 workspace 代替证据。真实冲突仍只拒绝该次
+终端输入；普通工具、诚实报告与已授权 SOLO 工作继续开放。
 
 用户明确授权后，可显式运行 `executor_reask.py run`，每60秒以新 marker 询问，
 直到绑定主管回复、新派发或用户停止。Stop hook 不发起或强迫该循环。原终端消息
