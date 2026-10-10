@@ -1,3 +1,7 @@
+# 2026.10.11.1
+
+- Document live split-footer recovery, prompt consumption, and exact zero-input formal-notice repair in collaboration 0.4.23. Configuration, native receipt and ACK remain separate acceptance facts.
+
 # 2026.10.10.4
 
 Task-hook caller discovery failures no longer lock ordinary tools or Stop.

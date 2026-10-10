@@ -1,6 +1,6 @@
 # 非阻断协作恢复
 
-适用版本：论文技能 2026.10.10.7 / multi-agent-collaboration 0.4.21。
+适用版本：论文技能 2026.10.11.1 / multi-agent-collaboration 0.4.23。
 实现统一放在协作 skill；本文不复制 hook、发送器或身份解析器。
 
 旧实现把冻结报告、待核回调或无法解析的 caller 变成所有工具与 Stop 的拒绝条件，
@@ -66,3 +66,23 @@ shell 执行最后一个命令时可以被 exec 替换，使工具直接挂在 m
 在实际调用方分别验证 self 和受保护投递；多工作区或另一进程形态通过不能代表
 本会话通过。新 native user、executor ACK 和任务接受仍分别留证。某个 caller 未通过
 时只暂停该次输入，继续其他授权工作，不把修复成功或源码测试扩大成全客户端恢复。
+
+## 排队请求与正式通知恢复
+
+主管在重要工具边界、长批次前和进展报告前，读取当前 surface 的 queued follow-up
+inputs，校验固定正文的 SHA/字节数并按原请求 mailbox 回件。相同 marker 去重，
+记录已消费和仍待办项；排队、正文已读、native user、ACK、报告接受分别报告。
+不因持续运行而让其他主管的维护请求长期不可见。
+
+0.4.22 已测支持完整边框外的模型、目录、计时三行 Claude footer；未知布局与
+现有草稿仍保护。0.4.23 在创建正式任务 journal 前校验单行和长度。新派单从
+finalized pack 生成 TASK_PACK_V2，不手写旧多行模板。旧 wire 格式若严格零输入
+（第一 attempt 为 NO_INPUT、events=[]），由原主管调用协作技能的
+repair_task_notice.py；先只读 READY_ZERO_INPUT，再执行一次 --apply。它验证
+并使用完整原 controller，原 pack/nonce/callback 和旧 attempt 不变，只追加
+唯一第二次尝试。未知、已贴、排队、已收到消息不得转换或重贴。其他情况保留
+未确认并继续独立正文/证据工作；健康握手不重跑，已接受科研审轮不重开。
+
+共享维护只有一个合并者。其余主管提交原证据与明确 reply_path 后继续主线；
+Claude、协作子 agent 或模型 API 不可用时，按已有授权转 SOLO。双 Claude
+仅接独立未完范围，同 pane 输入串行；恢复后在安全边界复用原上下文会话。

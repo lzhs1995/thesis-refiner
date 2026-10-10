@@ -1,6 +1,6 @@
 # 全局通信配置与显式主动求派
 
-本 skill 2026.10.10.7 复用 multi-agent-collaboration **0.4.21** 的
+本 skill 2026.10.11.1 复用 multi-agent-collaboration **0.4.23** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
 

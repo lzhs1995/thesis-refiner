@@ -4,7 +4,7 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.10.7**, synchronized with collaboration **0.4.21**.
+Current source: **2026.10.11.1**, synchronized with collaboration **0.4.23**.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
 Stop. Authorized successor supervisors can contact designated existing executors
 through the successor-rebind-v2 maintenance route, including across workspaces.
