@@ -4,15 +4,17 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.11.1"
+  version: "2026.10.12.1"
 ---
 
 # 论文精炼助手
 
-本次非阻断协作修订纳入 **2026.10.11.1 版本契约**，采用 multi-agent-collaboration
-0.4.23 的工作流观察入口与继任维护通信。共享 release 的安装、客户端实际加载、
+本次非阻断协作修订纳入 **2026.10.12.1 版本契约**，采用 multi-agent-collaboration
+0.4.25 的工作流观察入口与继任维护通信。共享 release 的安装、客户端实际加载、
 Claude → supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
 用户已授权的每60秒新 marker 主动求派仅经显式入口运行，不由 Stop hook 强迫续跑。
+明确余额不足按 BILLING 分类，即使同时出现 /login 或 403；未知投递与主管观察预算
+不足仍优先保留原分类。分类修正不代表 API 恢复，也不证明写者已冻结或 SOLO 边界成立。
 
 0.4.20 进一步修复现场发现的普通文档命令误拦与 Claude footer 兼容：heredoc、
 引号搜索中的命令示例不等于真实终端输入；完整边框后的模型/cwd/时间换行及工具
@@ -88,7 +90,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一采用 0.4.23 非阻断 observer：旧任务、未结算 callback、
+协作工作流 hook 统一采用 0.4.25 非阻断 observer：旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
 
@@ -290,3 +292,5 @@ repair_task_notice.py；先只读 READY_ZERO_INPUT，再执行一次 --apply。�
 共享维护只有一个合并者。其余主管提交原证据与明确 reply_path 后继续主线；
 Claude、协作子 agent 或模型 API 不可用时，按已有授权转 SOLO。双 Claude
 仅接独立未完范围，同 pane 输入串行；恢复后在安全边界复用原上下文会话。
+
+0.4.24 修复本地 SQLite 只读清单和磁盘空间统计的 Python heredoc 误判：字符串内分号后的 Claude 文字仍是正文，不是启动命令。原命令和输入原样保留，按实际 hook 复验；别通过改写关键词规避。相邻真实启动、执行代码与终端输入继续单独核验。

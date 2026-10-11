@@ -1,3 +1,12 @@
+# 2026.10.12.1
+
+- Synchronize collaboration 0.4.25: explicit insufficient-balance classification, advisory-only workflow hooks and explicit callback/reask supervision.
+- Preserve in-flight task controllers and keep installation, active-client adoption, native receipt and business acceptance separate.
+
+# 2026.10.11.2
+
+- Incorporate the measured SQLite/disk-inventory false-positive fix from collaboration 0.4.24; preserve task-specific peer scope in maintenance replies.
+
 # 2026.10.11.1
 
 - Document live split-footer recovery, prompt consumption, and exact zero-input formal-notice repair in collaboration 0.4.23. Configuration, native receipt and ACK remain separate acceptance facts.
