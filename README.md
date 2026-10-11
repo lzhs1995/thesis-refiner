@@ -4,9 +4,11 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.12.1**, synchronized with collaboration **0.4.25**.
+Current source: **2026.10.12.2**, synchronized with collaboration **0.4.26**.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
-Stop. Authorized successor supervisors can contact designated existing executors
+Stop. Supervisor PostToolUse also exposes authenticated file requests; it cannot
+wake an idle client or settle work. A bound mailbox reply lets the executor's
+explicit wait return before fresh dispatch. Authorized successor supervisors can contact designated existing executors
 through the successor-rebind-v2 maintenance route, including across workspaces.
 See [nonblocking collaboration](references/nonblocking-collaboration.md). The
 [global configuration contract](references/global-communication-configuration.md)
@@ -42,14 +44,17 @@ Read [SKILL.md](SKILL.md) for the workflow. Python 3.10+ and Node.js 18+ are suf
 
 Agent messages use the shared [receiver-bound delivery contract](references/receiver-bound-delivery.md).
 The collaboration release binds the native receiver and transcript inode, then
-persists the original `PASTE_INTENT` with a fresh EOF fence before input. It pastes
-once via `terminal.paste` with `submit_key=none`. After the complete original
-composer is stable, a busy Codex with the verified `tab to queue message` hint
-receives Tab; other clearly supported states use Enter. There is no Ctrl+Enter route.
+persists the original input intent with a fresh EOF fence before input. New
+Codex-bound messages and callbacks use `NATIVE_INPUT_INTENT` and the authenticated
+control socket: one active-turn steer or idle-turn start on the original thread,
+without setting overrides, composer operations or the Tab queue. RPC acceptance
+is not reception; uncertainty permits observation only, never a resend or terminal
+fallback. Claude-bound input retains `PASTE_INTENT`, one protected paste and one
+submit key after the complete original draft is stable.
 Only a new native user record after that original fence, exactly equal to the
 full payload with all whitespace preserved, proves reception. A queue or Claude
 `queued_command` remains pending; it proves neither reception nor execution.
-Automatic and explicit recovery share at most one extra submit key, consumed
+Historical terminal automatic and explicit recovery share at most one extra submit key, consumed
 when its intent is persisted. `--recover-stranded` belongs only to `submit-text`;
 task packs and callbacks reconcile read-only through their original controller.
 Missing original bindings or fences cannot be reconstructed. Unknown, queued,

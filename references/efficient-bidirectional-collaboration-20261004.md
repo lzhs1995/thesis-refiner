@@ -35,23 +35,28 @@
 发送 prompt、状态或 callback 前，原 attempt 固定完整 payload/hash、
 task/nonce、适用的任务包/报告 SHA、workspace/surface/pane UUID，以及
 接收端原生 PID/birth/TTY/session UUID、认证后的 transcript path/device/inode。
-原 PASTE_INTENT 在真实输入前保存新鲜 EOF fence；不按 newest mtime、
+原输入意图在真实输入前保存新鲜 EOF fence；不按 newest mtime、
 焦点、标题或 marker 搜索选择会话。原记录不可改，索引不能新建发送槽。
 
-共享 bridge 使用 `terminal.paste` 与 `submit_key=none`，只粘贴一次。
-完整原草稿逐字符未改且稳定后提交一次：忙碌 Codex 明示
-`tab to queue message` 且受支持结构和全文匹配时直接 Tab；
-其他清晰受支持状态 Enter。不得改走 `cmux send` 或 Ctrl+Enter。
+新 Codex 输入由同版共享 bridge 使用已认证 control socket，先保存
+NATIVE_INPUT_INTENT。原轮运行中调用一次 turn/steer 并绑定 expectedTurnId，
+空闲原会话调用一次 turn/start，不覆盖设置。不读写 composer、不发 Enter/Tab，
+不进入 queued follow-up。RPC 超时或异常只读核原记录，不能重试或降级排队。
+Claude 终端仍用 `terminal.paste` 与 `submit_key=none`，只粘贴一次；
+完整原草稿逐字符未改且稳定后在受支持状态提交一次。不得另造裸键发送器。
 保留空格、Tab、空行和字面转义；折叠摘要、前缀或归一化不能证明完整草稿。
 SHELL/UNKNOWN、压缩、重连、外来草稿或未知结构在输入前拒绝；
 已有输入意图后，不能因识别失败改称零输入。
 
-仅同一 workspace/surface/process/session/transcript，在原 PASTE_INTENT
+仅同一 workspace/surface/process/session/transcript，在原输入意图的
 新鲜 EOF fence 后新增、全文精确相等的 native user 才为 NATIVE_RECEIVED。
 Claude `queued_command` 仍 pending；ACK、按键、空 composer、屏幕活动
 和队列横幅不证明收到。原生接收、执行、正式 receipt 和报告接受分别留证。
 
 ## 只恢复原 attempt
+
+历史排队 callback 不经 native 入口重放。新 NATIVE_INPUT_INTENT 只有
+零输入核收，不适用下述终端补键规则。
 
 先沿原 controller 有界零输入核原生证据；已收到只结算，已排队不补键。
 自动和显式恢复共用最多一次补键；现场支持的 Enter 或 Tab 共用预算，
@@ -81,17 +86,13 @@ actual hooks、wrappers、bridge 与 journal readers 必须来自同一 immutabl
 安装迁移与唯一写入者见[协作提效与收尾](collaboration-efficiency-and-closeout.md)；
 来源、版本和维护文件哈希先按[安装与回滚](runtime-validation.md#安装与回滚)比对。
 
-共享 PostToolUse `cmux_native_delivery_guard.py` 只核当前投递的原 attempt，
-不扫描无关旧账、不发键、不造 receipt，也无 disable/advisory 绕过。
+全局 PreToolUse/PostToolUse/Stop 通过同版 cmux_workflow_advisory.py，
+记录实际调用并放行，不调用旧 checker、不发输入、不造 receipt，也不以
+旧任务或等待状态封锁普通工具和结束回合。旧检查器仅用于显式诊断；
 旧格式交原控制器，不补 pins、不迁移重发，也不复制协作 hook。
-主管 PostToolUse `cmux_supervisor_report_guard.py` 经认证 active markers
-有界发现冻结报告并记 REPORT_DISCOVERED；发现不等于接收、接受或 disarm。
-
-Stop/SubagentStop 的严格布尔 `stop_hook_active is True` 只结束递归，
-不生成 completion receipt、不解除任务或授予论文通过。封口保留严格
-task-bound 诊断和原 controller reconcile；普通诚实说明可返回
-WAITING_SUPERVISOR、continue:false、suppressOutput:true，无唯一模板。
-缺失、在途或漂移证据不能伪装合法等待，无证据的 confirmed/共识仍拦截。
+主管 PostToolUse 提供已认证且去重的文件请求上下文；报告仍由主管显式发现
+和审读，发现不等于接收、接受或 disarm，无工具事件不能唤醒空闲主管。
+封口保留原证据与 task-bound 只读核收；未确认如实报告，不输出虚假共识。
 
 idle Stop 只记录一次状态并允许结束，未求派不阻止 Stop。显式
 `executor_ready.py ask`（旧拼写 request）同一 episode 至多一次；

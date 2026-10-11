@@ -1,3 +1,9 @@
+# 2026.10.12.2
+
+- Route new Codex-bound input and callbacks directly to the original native thread through collaboration 0.4.26, without composer or Tab-queue operations. Require the original native intent/fence and exact received record; observe uncertainty without resending historical callbacks. Remove obsolete blocking-hook instructions from delivery references.
+- Synchronize collaboration 0.4.26: measured clipped git-footer recognition and nonblocking, authenticated supervisor file-request context.
+- Document exact mailbox reply before fresh dispatch, the explicit runner's 540-second polling budget (synchronous I/O can extend wall time) and the lack of idle-supervisor wakeup. Preserve old pending attempts and separate historical receipt proof from live reconciliation.
+
 # 2026.10.12.1
 
 - Synchronize collaboration 0.4.25: explicit insufficient-balance classification, advisory-only workflow hooks and explicit callback/reask supervision.

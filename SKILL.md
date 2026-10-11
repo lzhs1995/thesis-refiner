@@ -4,13 +4,16 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.12.1"
+  version: "2026.10.12.2"
 ---
 
 # 论文精炼助手
 
-本次非阻断协作修订纳入 **2026.10.12.1 版本契约**，采用 multi-agent-collaboration
-0.4.25 的工作流观察入口与继任维护通信。共享 release 的安装、客户端实际加载、
+本次非阻断协作修订纳入 **2026.10.12.2 版本契约**，采用 multi-agent-collaboration
+0.4.26 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
+直接进入原 supervisor 会话：运行中 steer、空闲时 start，不操作 composer、不入 Tab 队列。
+主管 PostToolUse 增加已认证文件请求提示；
+窄窗格状态栏的 git 分支省略号只在完整边框外的物理行尾识别。共享 release 的安装、客户端实际加载、
 Claude → supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
 用户已授权的每60秒新 marker 主动求派仅经显式入口运行，不由 Stop hook 强迫续跑。
 明确余额不足按 BILLING 分类，即使同时出现 /login 或 403；未知投递与主管观察预算
@@ -90,7 +93,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一采用 0.4.25 非阻断 observer：旧任务、未结算 callback、
+协作工作流 hook 统一采用 0.4.26 非阻断 observer：旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
 
@@ -123,21 +126,24 @@ workspace/surface/pane UUID，无须故障旧主管批准或先结算旧任务�
 600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
 
 **双向通信遵循[原生投递与有界等待](references/verified-compose-delivery.md)。**
-只有同一已授权绑定的 workspace/surface/process/session/transcript，在原 PASTE_INTENT
+只有同一已授权绑定的 workspace/surface/process/session/transcript，在原输入意图的
 新鲜 EOF fence 后新增、全文完全相等的 native user 才为 NATIVE_RECEIVED；
 保留全部空白。Claude `queued_command` 仍 pending，屏幕、ACK、按键返回、
 队列和空输入区不证明收到。
 
-首次只粘贴一次，完整草稿稳定后提交一次；忙碌 Codex 明示
-`tab to queue message` 且完整草稿匹配时直接 Tab，其他清晰受支持状态 Enter。
-原次恢复先核迟到原生记录，自动/显式恢复共用最多一次补键，意图落盘即耗用。
+新 Codex 输入先持久化 NATIVE_INPUT_INTENT，通过同版共享入口调用原会话的
+一次 turn/steer 或 turn/start。RPC 接受不证明收到；超时或异常只读核原次，
+不重发、不退回 Enter/Tab。历史 queued callback 保留原控制器，不能原生重放。
+Claude 终端输入仍只粘贴一次，完整草稿稳定后提交一次；旧终端恢复先核迟到
+原生记录，自动/显式恢复共用最多一次补键，意图落盘即耗用。
 当前 `--recover-stranded` 只用于 `submit-text` 的原 NATIVE_PENDING、
 PASTE_INTENT/ENTER_SENT 及未耗预算；任务/callback 只读 reconcile。
 未知、压缩、排队、重连或结构改变不补键，缺原 binding/fence 不追补、不重贴。
 
 自动 PreToolUse、PostToolUse 与 Stop 的协作工作流条目统一指向同版
-`cmux_workflow_advisory.py --hook <原检查器名>`，只记录实际调用的来源、版本、
-事件和父进程证据。它不执行旧检查器、不发送消息、不核收历史任务、不返回
+`cmux_workflow_advisory.py --hook <原检查器名>`，记录实际调用的来源、版本、
+事件和父进程证据。主管 PostToolUse 另读取已认证的文件请求并去重，以原生支持的
+additionalContext 提示；不执行旧检查器、不发送消息、不核收历史任务、不返回
 拒绝工具或阻止回合结束的控制结果。workspace/panel 的真实终端操作保护仍保留。
 
 原生投递和冻结报告由显式发送器、原 controller 的只读核收及主管主动审读处理。
@@ -145,13 +151,18 @@ PASTE_INTENT/ENTER_SENT 及未耗预算；任务/callback 只读 reconcile。
 完成不得对用户宣称；这项真实性要求不依赖 Stop 阻断。观察记录、完整原生消息、
 真实 callback、论文接受和 disarm 分别留证。详见[非阻断协作恢复](references/nonblocking-collaboration.md)。
 空闲 executor 不得死等，也不能因 Codex 主管忙而中断论文任务（用户 2026-10-09 明令）：
-`executor_reask.py run` 每 60 秒用新 marker 主动求派，直到主管答复或新派发，无轮数上限；
+显式 `executor_reask.py run` 每 60 秒用新 marker 主动求派，每5秒查答复，单次轮询预算最多540秒；同步 I/O 可延长实际耗时。
+退出后原 episode 可保持 WAITING_REPLY，需要时显式续同一段，不能把落盘等待称为仍在运行。
 每轮记录已配置文件通道的实际写入，空 channels/错误不冒充送达；
 终端只在受保护输入条件成立时发送。新普通消息超过700 UTF-8字节或含任意 CR/LF/tab，
 由同版发送器固定完整正文并发送短通知，保留原 marker 与全部空白；
 通知收到不等于正文已读。正式 task/callback 保持专用绑定。
 `cmux_executor_reask_stop_guard.py` 的全局注册仅作 advisory 观察；
-显式求派命令在主管答复、新派发或 operator stop 后结束，不将未完成后继方案标成已部署。
+主管先按原 caller/supervisor/task/episode/marker 写精确 mailbox 答复，让显式等待返回，
+再做新鲜 live preflight 与正式派包；TASK 答复本身不是派包。旧新派发出口依赖 idle
+binding，现役 advisory hook 不更新该绑定，不能宣称写了新包就会自动退出求派。
+operator stop 保留；不将未完成后继方案标成已部署。主管无工具事件时，文件请求
+提示也不会运行，不能称为已唤醒空闲主管。旧接收进程退出时保留原 pending，不改绑或重贴。
 默认 `executor_ready.py persist` 仅是单请求有界观察。CCC 与 native Goal 单独核验。
 主管回复沿原 bridge 到达原 surface，或写原请求指定 mailbox；
 回复要绑定 loop record 的原 episode_id、caller_surface_uuid 和 task_id。

@@ -1,6 +1,6 @@
 # 全局通信配置与显式主动求派
 
-本 skill 2026.10.12.1 复用 multi-agent-collaboration **0.4.25** 的
+本 skill 2026.10.12.2 复用 multi-agent-collaboration **0.4.26** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
 
@@ -12,7 +12,9 @@
 CLAUDE.md 和 skill 文档不能替代 JSON 中的实际注册。cc-switch 切换或导入后，
 唯一配置守护器修复自有条目并保留 foreign hook、provider 与非 hook 字段。
 实际命令为同版 `cmux_workflow_advisory.py --hook <原检查器名>`；不自动运行旧 gate、
-求派循环或报告核收。真实终端操作的 workspace/panel 保护与显式发送器继续生效。
+求派循环或报告核收。主管 PostToolUse 另做已认证、有限且去重的文件请求发现，
+通过支持的 hookSpecificOutput/additionalContext 提示。遥测失败不跳过该次发现，
+发现失败也返回0；不回复、不派包、不结算。真实终端操作的 workspace/panel 保护与显式发送器继续生效。
 
 使用 `cmux-agent self` 的原生 foreground resolver。共享 daemon 的 raw cmux identity
 可能包含继承环境，不能拿它代替当前线程的 caller。已获用户授权的继任 supervisor
@@ -27,14 +29,25 @@ shell 可以通过 exec 优化替换自身，令实际工具成为 managed daemo
 终端输入；普通工具、诚实报告与已授权 SOLO 工作继续开放。
 
 用户明确授权后，可显式运行 `executor_reask.py run`，每60秒以新 marker 询问，
-直到绑定主管回复、新派发或用户停止。Stop hook 不发起或强迫该循环。原终端消息
+每5秒查答复，单次轮询预算最多540秒，同步 I/O 可延长实际耗时；原 episode 可在命令退出后继续等待，按既有授权显式
+续同一段。绑定主管回复或用户停止可结束等待。新派发自动出口依赖旧 idle binding，
+现役 advisory hook 不写该绑定，不能凭新包存在宣称自动结束。Stop hook 不发起或强迫该循环。原终端消息
 未确认时仅更新已配置文件通道，不堆叠 prompt。主管主动检查原 mailbox，按原请求的
 caller、supervisor、task、episode 和 marker 回复；等待类回复写明解除条件。
 询问次数、文件写入、正文已读和实际送达分别计数；不能将已退出命令称为仍在运行。
 
-新消息仅经共享受保护发送器输入。保留原文、原 PASTE_INTENT、接收端绑定与新鲜 EOF
-fence；只有其后新增、全文逐字相等的 native user 记录证明收到。queued follow-up、
-Claude queued_command、屏幕文字、按键返回或旧 ACK 不等于收到，未知状态不重发。
+主管先写原请求精确 mailbox 答复，让 executor 的显式等待返回，再核实时输入边界
+和正式派单；TASK 回复本身不是任务包。文件请求提示只在主管实际 PostToolUse 时
+运行，不能唤醒完全空闲的客户端。原接收进程退出时保留旧 pending、controller 与
+原生证据，不冒造新绑定、清 pending 或重开 episode；独立核出的历史原生收到与
+官方回执结算分列。沿原邮箱答复可以结束等待，无须重放旧消息。
+
+新消息仅经共享受保护发送器输入。Codex 接收端直接走原生 control socket：
+运行中 turn/steer、空闲时 turn/start，固定原 thread 和 NATIVE_INPUT_INTENT，
+不改变设置、不读写 composer、不入 Tab 队列。Claude 终端保留 PASTE_INTENT。
+两路均保存原文、接收端绑定与新鲜 EOF fence；只有其后新增、全文逐字相等的
+native user 证明收到。RPC 接受、queued follow-up、Claude queued_command、屏幕、
+按键或旧 ACK 均不能代替。异常只读核原次，不重试，不转发历史 queued callback。
 
 配置修复、客户端实际自动调用、完整原生接收、真实 callback 与业务核收分别验收。
 advisory receipt 记录真实父进程，手动测试不能冒充自动客户端采用。源码或文档更新

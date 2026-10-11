@@ -1,6 +1,6 @@
 # 非阻断协作恢复
 
-适用版本：论文技能 2026.10.12.1 / multi-agent-collaboration 0.4.25。
+适用版本：论文技能 2026.10.12.2 / multi-agent-collaboration 0.4.26。
 实现统一放在协作 skill；本文不复制 hook、发送器或身份解析器。
 
 余额不足即使带 /login 或 403 也归为 BILLING；普通 401/403 仍为 AUTH。未知投递
@@ -12,6 +12,12 @@
 consensus、lease、idle、reask、PostToolUse 投递和报告条目改成非阻断观察入口。
 观察失败也正常返回；不执行旧 gate，不输出 deny/block/continue:false，不自动续跑。
 旧检查器只供显式诊断，不能恢复为全局会话锁。
+
+0.4.26 在主管 PostToolUse 增加已认证文件请求发现，只输出支持的 additionalContext。
+不结算报告、不发终端消息；遥测或发现出错都不阻断工具。主管无工具事件时不会
+自动看到提示。先回原 mailbox，再让显式求派返回，最后做新鲜预检和正式派包；
+单次求派的轮询预算最多540秒，同步 I/O 可延长实际耗时；episode 落盘不证明命令仍运行。旧 pending 不靠换进程绑定、
+重开 episode 或重贴来解除，历史原生收到独核与官方回执仍分别记录。
 
 共享 daemon 可能沿用启动时的 workspace 环境。当前 caller 由原生 foreground
 thread 和实际 kernel/cmux UUID 证据确定，不要求特定 `codex resume` 命令或旧主管
@@ -49,6 +55,10 @@ footer 只在完整 composer 边框外按已测字段结构识别。工具计数
 摘要；模型、cwd、时间和上下文字段不完整时保留 UNKNOWN。输入框内长得像 footer
 的文字仍是原草稿，活动工具和新增未知尾行不能被闲置状态覆盖。旧报告中的
 Compacting、Reconnecting 或 callback 失败字样不能替代当前 activity。
+
+0.4.26 识别窄窗格把 git 分支截为省略号且缺右括号的实测形态，仅允许在物理行尾、
+匹配的完整边框之外。省略号后仍有同一行字段、破损边框、真实草稿及未知尾行继续
+保护；不能把重建回归素材说成完整原始屏幕记录。
 
 公开回归素材使用合成历史与相同的 footer 几何结构，不发布真实会话、任务路径或
 原生回执哈希。通过离线分类回归后，再单独实测当前客户端调用与新原生接收；
