@@ -4,13 +4,33 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.09.9**, synchronized with the collaboration 0.4.7
-single-line notice, native-reception and automatic-hook contracts. The
+Current source: **2026.10.12.4**, synchronized with collaboration **0.4.28**.
+Workflow hooks observe their actual invocation without blocking ordinary tools or
+Stop. Supervisor PostToolUse also exposes authenticated file requests; it cannot
+wake an idle client or settle work. A bound mailbox reply lets the executor's
+explicit wait return before fresh dispatch. Authorized successor supervisors can contact designated existing executors
+through the successor-rebind-v2 maintenance route, including across workspaces.
+See [nonblocking collaboration](references/nonblocking-collaboration.md). The
+[global configuration contract](references/global-communication-configuration.md)
+covers cc-switch observer restoration, explicitly started 60-second inquiries and
+per-session adoption without introducing a second sender. The
 [delivery entry](references/verified-compose-delivery.md)
 now routes to the authoritative receiver-bound contract. Read the
 [toolchain lessons](references/toolchain-retrospective.md) and
 [manifest/link contract](references/delivery-manifest.md) for result assembly,
 file identity and final delivery.
+
+Collaboration 0.4.20 also distinguishes literal document/search text from real
+terminal writes and recognizes measured wrapped Claude model/cwd/time footers
+and tool-count overflow. Existing drafts, active tools and unknown trailing rows
+remain protected. These parser checks are separate from actual client loading
+and a successful current-task handshake.
+
+Collaboration 0.4.21 resolves tools that become direct children of the managed
+daemon after shell exec optimization. It reads the actual tool process selector,
+then retains native foreground, unique-client, TTY, UUID and process-drift checks.
+No wrapper process or historical resume command is required to authenticate the
+current caller. This identity fix does not establish a handshake by itself.
 
 The [six-repository version map](references/toolchain-versions.json) is a historical
 release snapshot, not an installation selector for this version. Skill release,
@@ -24,14 +44,17 @@ Read [SKILL.md](SKILL.md) for the workflow. Python 3.10+ and Node.js 18+ are suf
 
 Agent messages use the shared [receiver-bound delivery contract](references/receiver-bound-delivery.md).
 The collaboration release binds the native receiver and transcript inode, then
-persists the original `PASTE_INTENT` with a fresh EOF fence before input. It pastes
-once via `terminal.paste` with `submit_key=none`. After the complete original
-composer is stable, a busy Codex with the verified `tab to queue message` hint
-receives Tab; other clearly supported states use Enter. There is no Ctrl+Enter route.
+persists the original input intent with a fresh EOF fence before input. New
+Codex-bound messages and callbacks use `NATIVE_INPUT_INTENT` and the authenticated
+control socket: one active-turn steer or idle-turn start on the original thread,
+without setting overrides, composer operations or the Tab queue. RPC acceptance
+is not reception; uncertainty permits observation only, never a resend or terminal
+fallback. Claude-bound input retains `PASTE_INTENT`, one protected paste and one
+submit key after the complete original draft is stable.
 Only a new native user record after that original fence, exactly equal to the
 full payload with all whitespace preserved, proves reception. A queue or Claude
 `queued_command` remains pending; it proves neither reception nor execution.
-Automatic and explicit recovery share at most one extra submit key, consumed
+Historical terminal automatic and explicit recovery share at most one extra submit key, consumed
 when its intent is persisted. `--recover-stranded` belongs only to `submit-text`;
 task packs and callbacks reconcile read-only through their original controller.
 Missing original bindings or fences cannot be reconstructed. Unknown, queued,
@@ -44,9 +67,10 @@ prove that an active client reloaded.
 New long or multiline ordinary messages use a bounded single-line notice for the
 SHA-pinned complete body. Formal packs use their dedicated notice and callbacks
 keep their exact task-bound line. A notice receipt does not prove body reading.
-Automatic PostToolUse output uses the official `hookSpecificOutput` envelope;
-observe its execution separately from manual hook checks. Preserve the original
-controller and evidence when reconciling an in-flight task.
+Automatic workflow hooks emit no denial or turn-control output; adoption records
+identify the original hook, advisory entrypoint and actual process provenance.
+A manual hook invocation is not automatic client adoption. Explicit native
+reconciliation preserves the original controller and evidence of an in-flight task.
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -97,3 +121,19 @@ budgets, broker leases or paper acceptance. A private adapter must explicitly
 adopt it; installing these modules does not migrate active executors.
 
 For shared-account throughput, read [concurrency and READY scheduling](references/nlm-concurrency-and-scheduling.md). The optional `scripts/nlm_ready_scheduler.py` keeps a persistent fair queue and consumes original release evidence. It makes no network calls and does not alter a running pinned broker/runtime. A task adapter binds it to an already validated serial or two-query executor; local queue tests are separate from live parallel validation.
+
+## 身份识别失败不得封锁会话
+
+协作 hook 无法识别当前 caller 时，不具备施加任务门禁的依据，必须放行普通
+工具和 Stop。已入组会话也能诊断、编辑修复、记录状态、执行已授权 SOLO 和
+诚实结束回合；不重复触发阻断。任务标记、冻结报告、原回调与投递预算原样保留，
+不能据此冒称收到、接受或多 agent 共识。恢复后下一次核验重新检查真实任务。
+
+新建、切换和接手的 Codex supervisor 均可按现有用户授权主动握手，使用当前
+原生 foreground thread、内核进程和 workspace/surface 证据；不要求固定的
+codex resume 命令，也不绑定旧主管会话号。终端发送仍核验真实双方。
+
+优先推进用户原任务，按独立交付物与当前容量使用零、一或两个 executor。
+本机通信入口故障不等于 Claude API 故障；经有限重试仍不可用时，按已有授权
+由 Codex 接管并标注 solo_self_review。原 Claude 恢复后只在安全边界重新接入；
+不为通信维护重开已接受的科研审轮，同 pane 两 tab 的终端输入保持串行。

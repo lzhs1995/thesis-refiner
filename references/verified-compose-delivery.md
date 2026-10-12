@@ -5,23 +5,28 @@ prompt、任务包、callback、封口与 idle/CCC 等待使用协作 skill 的
 该页是唯一详细权威；论文 skill 不复制发送实现、重试器或 hook。
 实际执行使用原 task pack 固定的完整相容版本，不迁移在途任务。
 
-- 只认同一 workspace/surface/process/session/transcript，在原
-  PASTE_INTENT 新鲜 EOF fence 后新增、与完整正文（含全部空白）精确相等
+- 只认同一 workspace/surface/process/session/transcript，在原输入意图的
+  新鲜 EOF fence 后新增、与完整正文（含全部空白）精确相等
   的 native user。Claude `queued_command` 是 pending，不是 NATIVE_RECEIVED。
-- 首次完整稳定草稿只提交一次：忙碌 Codex 明示 `tab to queue message`
-  且原文匹配时直接 Tab；其他清晰受支持状态 Enter。所有恢复共用最多
-  一次补键，意图落盘即耗用。当前显式补键仅属于 `submit-text` 的受保护
-  恢复分支，任务/callback 只读核原次。缺原绑定/fence 不追补。
+- 新 Codex 消息、任务包和 callback 经原生 control socket 回原会话，先固定
+  NATIVE_INPUT_INTENT 及 EOF fence；运行中一次 turn/steer，空闲时一次
+  turn/start，不改变设置、不操作 composer、不发 Enter/Tab。RPC 接受不是
+  原生收到，异常只读观察原次，不重试或退回队列。历史 queued callback 不重放。
+- Claude 终端首次完整稳定草稿只提交一次。旧终端恢复共用最多一次补键，
+  意图落盘即耗用；显式补键仅属于 submit-text 的受保护恢复分支。
+  任务/callback 及新 native attempt 只读核原次。缺原绑定/fence 不追补。
 - 封口冻结报告、task pack 与旧 attempt 记录，保留严格 task-bound 诊断
-  和原 controller reconcile。普通诚实等待可结束于 WAITING_SUPERVISOR
-  （continue:false、suppressOutput:true）；无证据的确认/共识仍拦截。
+  和原 controller reconcile。普通诚实等待可以正常结束；现役工作流 hook
+  只经 advisory observer，不输出 deny、block 或 continue:false，不调用旧 gate。
+  无证据保留未确认，不能冒称共识或业务接受。
 - 主管经认证 active markers 有界发现报告；REPORT_DISCOVERED 不等于
   收到、接受或 disarm。报告可先独立核收，不为通信重跑既有研究。
 - 默认 idle Stop 只记录一次状态并放行；executor_ready 的显式 persist 默认
   60秒、最多300秒，原期限不因重启延长。另保留用户明确授权的可选
-  executor_reask：每60秒用新 marker 求派，直到主管答复、新派发或 operator
-  stop；已配置文件通道结果明确记录，绝不重放旧消息。配套 Stop hook 仅用于
-  该已授权段，未完成的生命周期后继方案不视为已安装。CCC 与 native Goal
+  executor_reask：显式运行期间每60秒用新 marker 求派，单次轮询预算最多
+  540秒，同步 I/O 可延长实际耗时；退出后的 WAITING_REPLY 不证明进程仍在运行。
+  原未确认输入仅核原次，后继使用已配置文件通道；Stop 不启动或强迫循环。
+  主管先回原精确 mailbox，再进行新鲜派发。CCC 与 native Goal
   独立核验。主管答复绑定原请求，不能把别的线程回复算作当前等待的答复。
 - 新普通消息超过700 UTF-8字节或带尾换行时，使用同版固定SHA正文＋短通知；
   这是保守 wire 预算，不是通用700字阈值。通知 receipt 的

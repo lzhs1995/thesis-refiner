@@ -1,3 +1,47 @@
+## 2026.10.12.4
+
+- 正常继任握手默认允许；同步 ASCII footer 误报修复与无关旧 pending 的独立保存，不再阻塞新任务联络。
+
+- 同步继任握手迟到ACK的原次核收、主管延迟归因、同pane原生Codex限定通道与至少20GB主动空间管理；不重放历史任务。
+
+- Adopt collaboration0.4.28 explicitly authorized continuing inquiries, exact reply consumption and task reservation boundaries.
+- Preserve ordinary finite waits, original controllers, nonblocking hooks and separate research acceptance.
+
+# 2026.10.12.3
+
+- Synchronize collaboration 0.4.27: preserve actual root/child hook identity, fair bounded file reminders and cursor updates after successful context output. Inherited root identity cannot give a child the supervisor inbox.
+- Document the separate explicitly enrolled 60-second file scheduler and its finite sweep/capacity limits. Installation, enrollment, actual execution, file exposure and body reading are distinct; no idle-model wakeup or legacy-controller migration is implied.
+- Remove remaining active instructions to use the Codex Tab queue or blocking closeout hooks. New Codex callbacks use the original native thread once; uncertain and historical attempts are observed without resending. Retain ordinary tool/Stop access and original research ownership.
+- Explain executable-argument checks for Python heredocs so subprocess imports do not turn document prose into a CLI launch. Shared code remains solely in multi-agent-collaboration.
+
+# 2026.10.12.2
+
+- Route new Codex-bound input and callbacks directly to the original native thread through collaboration 0.4.26, without composer or Tab-queue operations. Require the original native intent/fence and exact received record; observe uncertainty without resending historical callbacks. Remove obsolete blocking-hook instructions from delivery references.
+- Synchronize collaboration 0.4.26: measured clipped git-footer recognition and nonblocking, authenticated supervisor file-request context.
+- Document exact mailbox reply before fresh dispatch, the explicit runner's 540-second polling budget (synchronous I/O can extend wall time) and the lack of idle-supervisor wakeup. Preserve old pending attempts and separate historical receipt proof from live reconciliation.
+
+# 2026.10.12.1
+
+- Synchronize collaboration 0.4.25: explicit insufficient-balance classification, advisory-only workflow hooks and explicit callback/reask supervision.
+- Preserve in-flight task controllers and keep installation, active-client adoption, native receipt and business acceptance separate.
+
+# 2026.10.11.2
+
+- Incorporate the measured SQLite/disk-inventory false-positive fix from collaboration 0.4.24; preserve task-specific peer scope in maintenance replies.
+
+# 2026.10.11.1
+
+- Document live split-footer recovery, prompt consumption, and exact zero-input formal-notice repair in collaboration 0.4.23. Configuration, native receipt and ACK remain separate acceptance facts.
+
+# 2026.10.10.4
+
+Task-hook caller discovery failures no longer lock ordinary tools or Stop.
+New and successor supervisors use the current native foreground thread without
+a fixed resume command. Preserve task evidence and verify live transport at
+input. Continue authorized solo work when the original executor is unavailable;
+return to one or two executors only at a safe boundary. Documents track
+multi-agent-collaboration 0.4.17 and require actual per-session hook adoption.
+
 # 2026.10.09.9
 
 Synchronize the maintained skill with collaboration 0.4.7: fresh input uses
