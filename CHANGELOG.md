@@ -1,5 +1,7 @@
 ## 2026.10.12.4
 
+- 正常继任握手默认允许；同步 ASCII footer 误报修复与无关旧 pending 的独立保存，不再阻塞新任务联络。
+
 - 同步继任握手迟到ACK的原次核收、主管延迟归因、同pane原生Codex限定通道与至少20GB主动空间管理；不重放历史任务。
 
 - Adopt collaboration0.4.28 explicitly authorized continuing inquiries, exact reply consumption and task reservation boundaries.
