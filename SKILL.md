@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.13.1"
+  version: "2026.10.13.2"
 ---
 
 # 论文精炼助手
@@ -13,8 +13,8 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-本次非阻断协作修订纳入 **2026.10.13.1 版本契约**，采用 multi-agent-collaboration
-0.4.30 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
+本次非阻断协作修订纳入 **2026.10.13.2 版本契约**，采用 multi-agent-collaboration
+0.4.31 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
 直接进入原 supervisor 会话：运行中 steer、空闲时 start，不操作 composer、不入 Tab 队列。
 主管 PostToolUse 按真实root/child身份每次最多提示8条文件请求，公平轮转，
 未回复至少60秒再提示，成功flush后更新游标；child不能冒用继承的root消费收件箱。
@@ -46,6 +46,13 @@ shell/rtk 祖先不代表 caller 非法，沿工具自身的内核进程证据�
 cc-switch 切换、全局 hook 与每60秒求派按
 [全局通信配置](references/global-communication-configuration.md)执行：复用协作
 skill 的唯一守护器，原消息未确认时走文件通道；每个工作区通过后立即回原任务。
+
+Claude 已排队的合法继任通知若被旧主管等待循环饿死，使用协作 skill 0.4.31
+的显式原次登记与非阻塞 PostToolUse 正文提示；不另写发送器或工作流门禁。
+原会话在工具边界读取完整原正文，反馈真实在途写入和 reservation，业务包由继任主管
+另派。提示曝光、正文已读、原生 user 接收与业务接受分别留证；旧 callback 不重放。
+没有登记的会话不受影响，Stop 不强迫续跑。详见协作 skill 的
+`references/nonblocking-recovery.md#queued-claude-maintenance`。
 
 全局安装 skill/hook 不代表所有会话参加协作。普通新 Codex/Claude 会话的工具
 调用和结束无需 supervisor 批准；仅阅读或维护本 skill 也不算入组。明确启动协作

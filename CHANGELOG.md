@@ -111,3 +111,10 @@ changes frozen thesis tasks or claims Word/NLM live validation.
 Imports the verified 2026.09.26.9 maintenance source and adds compound result keys, checked optional reference sizes, idempotent reference identity, exact manifest/ZIP checks and generated chat links. All runtime recovery operations remain explicit; installation does not rebind active tasks.
 
 The 2026.09.26.9 predecessor covers whole-thesis format decisions, original NLM returns and native synthetic fixtures. Historical task evidence is not shipped.
+# 2026.10.13.2
+
+- Reuse collaboration 0.4.31 for explicit recovery of a Claude successor notice
+  starved by repeated old-supervisor waits. Its original full body is exposed at
+  a tool boundary without repasting, blocking tools, resetting context or
+  changing native receipts. The executor replies with its actual safe-boundary
+  state; the successor remains responsible for business dispatch.
