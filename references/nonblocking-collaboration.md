@@ -1,6 +1,6 @@
 # 非阻断协作恢复
 
-适用版本：论文技能 2026.10.12.2 / multi-agent-collaboration 0.4.26。
+适用版本：论文技能 2026.10.12.3 / multi-agent-collaboration 0.4.27。
 实现统一放在协作 skill；本文不复制 hook、发送器或身份解析器。
 
 余额不足即使带 /login 或 403 也归为 BILLING；普通 401/403 仍为 AUTH。未知投递
@@ -13,7 +13,7 @@ consensus、lease、idle、reask、PostToolUse 投递和报告条目改成非阻
 观察失败也正常返回；不执行旧 gate，不输出 deny/block/continue:false，不自动续跑。
 旧检查器只供显式诊断，不能恢复为全局会话锁。
 
-0.4.26 在主管 PostToolUse 增加已认证文件请求发现，只输出支持的 additionalContext。
+0.4.27 在主管 PostToolUse 增加已认证文件请求发现，只输出支持的 additionalContext。
 不结算报告、不发终端消息；遥测或发现出错都不阻断工具。主管无工具事件时不会
 自动看到提示。先回原 mailbox，再让显式求派返回，最后做新鲜预检和正式派包；
 单次求派的轮询预算最多540秒，同步 I/O 可延长实际耗时；episode 落盘不证明命令仍运行。旧 pending 不靠换进程绑定、
@@ -56,7 +56,7 @@ footer 只在完整 composer 边框外按已测字段结构识别。工具计数
 的文字仍是原草稿，活动工具和新增未知尾行不能被闲置状态覆盖。旧报告中的
 Compacting、Reconnecting 或 callback 失败字样不能替代当前 activity。
 
-0.4.26 识别窄窗格把 git 分支截为省略号且缺右括号的实测形态，仅允许在物理行尾、
+0.4.27 识别窄窗格把 git 分支截为省略号且缺右括号的实测形态，仅允许在物理行尾、
 匹配的完整边框之外。省略号后仍有同一行字段、破损边框、真实草稿及未知尾行继续
 保护；不能把重建回归素材说成完整原始屏幕记录。
 
@@ -102,3 +102,16 @@ Claude、协作子 agent 或模型 API 不可用时，按已有授权转 SOLO。
 仅接独立未完范围，同 pane 输入串行；恢复后在安全边界复用原上下文会话。
 
 0.4.24 修复本地 SQLite 只读清单和磁盘空间统计的 Python heredoc 误判：字符串内分号后的 Claude 文字仍是正文，不是启动命令。原命令和输入原样保留，按实际 hook 复验；别通过改写关键词规避。相邻真实启动、执行代码与终端输入继续单独核验。
+
+## 文件提醒的线程与输出边界
+
+0.4.27修复public proof遗漏foreground.thread_id导致真实主管漏看收件箱的问题；
+同时区分actual child、inherited root与已认证parent，不让child冒用主管身份。
+自动文件提示最多8条、公平轮转，未答至少60秒再提示，成功flush后才提交游标。
+独立文件scheduler仅消费显式认证登记，容量256、单次10秒、每60秒；不读转录、
+不操作终端/native、不唤醒模型。旧episode/controller不自动迁移，UNKNOWN与原pending保留。
+测试、安装、登记、自动运行、文件提示、正文读取和业务接受各自留证。
+
+含subprocess等import的Python文档heredoc仍按AST区分字面正文与可执行参数；
+import本身不能使字符串分号后的Claude文字变成shell启动。实际argv、简单别名、
+拼接、下标与shell包装分别检查；用原命令经真实hook分类复验，不改业务文字规避。

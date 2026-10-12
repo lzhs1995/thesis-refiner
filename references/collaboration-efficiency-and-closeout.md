@@ -25,15 +25,15 @@
   不在 ACK 前要求业务审计。使用 `--handshake-timeout 600` 或更长预算，
   不用泛化 `--timeout` 覆盖相位预算；有效 ACK 到达立即继续，
   同任务健康握手复用。预算不足或检测器漏观测不能归因 Claude 失效。
-- **prompt 与 callback 都核原生全文回执。** 原 PASTE_INTENT 固定同一
-  workspace/surface/process/session/transcript、新鲜 EOF fence 和完整正文。
-  只有原 fence 后新增的完整精确 native user 才为 NATIVE_RECEIVED，
-  不归一化空白；Claude queued_command 仍 pending。首次粘贴一次并等待
-  完整稳定草稿，忙碌 Codex 明示 tab-to-queue 且原文匹配时直接 Tab，
-  其他清晰受支持状态 Enter。自动/显式恢复共用一次补键，任务/callback
-  当前仅只读核收；详见[原次恢复规则](verified-compose-delivery.md)。
-  UNKNOWN、压缩、排队、重连、结构变化或缺原 binding/fence 不补键。
-  报告已读取不能伪造 callback receipt，未确认不重贴、不换 nonce。
+- **prompt 与 callback 都核原生全文回执。** 固定同一接收进程/session、
+  transcript、新鲜EOF fence和完整正文。新Codex用NATIVE_INPUT_INTENT及
+  原thread的一次native steer/start，不读写composer、不按Enter/Tab、不入
+  follow-up队列；异常或未知仅观察原次，不重发。Claude终端保留PASTE_INTENT，
+  完整原文和结构连续两次稳定后一次提交。只有原fence后新增、逐字相等的
+  native user证明收到；RPC接受、Claude queued_command和正文已读不代替。
+  历史queued callback保留原controller，不经native重放；详见
+  [原次恢复规则](verified-compose-delivery.md)。UNKNOWN、压缩、草稿改变或
+  缺原binding/fence不能补键；报告读取不伪造receipt、不换nonce。
 - **ACK 后及时交出具体业务。** 握手前备好研究范围、真实输入和验收条件，
   ACK 后补身份凭据并立即定稿、派单。握手已过而包仍是 draft 或尚未提交，
   属于 `SUPERVISOR_DISPATCH_PENDING`，不能称 Claude 停工或失效。
@@ -68,12 +68,13 @@ GitHub 文档更新、安装、客户端实际加载和研究结果验收是不�
 
 ## 报告发现与有界等待
 
-报告、任务包和原 attempt 既有记录冻结后，仍可沿严格 task-bound 诊断
-和原 controller reconcile 核原次。普通诚实 Stop 可返回
-WAITING_SUPERVISOR、continue:false、suppressOutput:true；不要求唯一模板，
-无证据的 confirmed/共识声明仍拦。主管 PostToolUse 的
-`cmux_supervisor_report_guard.py` 经认证 markers 有界发现冻结报告；
-REPORT_DISCOVERED 不等于原生接收、论文接受或 disarm。
+报告、任务包和原attempt保留后，沿显式task-bound诊断和原controller
+reconcile核原次。所有全局workflow hook均为非阻断observer，不执行旧gate，
+不返回deny/block/continue:false。诚实Stop及普通工具始终开放，不据此宣称
+未证实的收到或共识。`cmux_supervisor_report_guard.py`供显式冻结报告诊断；
+自动PostToolUse只按实际root/child身份提示最多8条文件请求，公平轮转并在
+成功flush后更新游标。child不能消费parent收件箱；提示不等于正文已读、
+原生接收、论文接受或disarm。
 
 idle Stop 只记录一次状态并允许结束，未求派不阻止 Stop。显式
 `executor_ready.py persist` 默认 60 秒、硬上限 300 秒，保留原请求及

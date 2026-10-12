@@ -4,18 +4,20 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.12.2"
+  version: "2026.10.12.3"
 ---
 
 # 论文精炼助手
 
-本次非阻断协作修订纳入 **2026.10.12.2 版本契约**，采用 multi-agent-collaboration
-0.4.26 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
+本次非阻断协作修订纳入 **2026.10.12.3 版本契约**，采用 multi-agent-collaboration
+0.4.27 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
 直接进入原 supervisor 会话：运行中 steer、空闲时 start，不操作 composer、不入 Tab 队列。
-主管 PostToolUse 增加已认证文件请求提示；
+主管 PostToolUse 按真实root/child身份每次最多提示8条文件请求，公平轮转，
+未回复至少60秒再提示，成功flush后更新游标；child不能冒用继承的root消费收件箱。
 窄窗格状态栏的 git 分支省略号只在完整边框外的物理行尾识别。共享 release 的安装、客户端实际加载、
 Claude → supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
-用户已授权的每60秒新 marker 主动求派仅经显式入口运行，不由 Stop hook 强迫续跑。
+用户已授权的每60秒新 marker 求派经显式入口运行，也可在认证登记后由独立文件
+调度持续更新；不由 Stop 强迫续跑，安装不等于登记或实际执行，文件调度不唤醒空闲模型。
 明确余额不足按 BILLING 分类，即使同时出现 /login 或 403；未知投递与主管观察预算
 不足仍优先保留原分类。分类修正不代表 API 恢复，也不证明写者已冻结或 SOLO 边界成立。
 
@@ -93,7 +95,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一采用 0.4.26 非阻断 observer：旧任务、未结算 callback、
+协作工作流 hook 统一采用 0.4.27 非阻断 observer：旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
 
@@ -152,7 +154,10 @@ additionalContext 提示；不执行旧检查器、不发送消息、不核收�
 真实 callback、论文接受和 disarm 分别留证。详见[非阻断协作恢复](references/nonblocking-collaboration.md)。
 空闲 executor 不得死等，也不能因 Codex 主管忙而中断论文任务（用户 2026-10-09 明令）：
 显式 `executor_reask.py run` 每 60 秒用新 marker 主动求派，每5秒查答复，单次轮询预算最多540秒；同步 I/O 可延长实际耗时。
-退出后原 episode 可保持 WAITING_REPLY，需要时显式续同一段，不能把落盘等待称为仍在运行。
+退出后原 episode 可保持 WAITING_REPLY，不能把落盘等待称为runner仍在运行。
+0.4.27 的独立文件scheduler按显式start的认证登记继续每60秒求派，最多256个登记，
+单次sweep最多10秒；不迁移旧controller、不读转录、不发送输入，只保留绑定文件请求。
+安装、登记、实际执行、工具边界提示、正文读取分别留证；未登记旧episode不自动接管。
 每轮记录已配置文件通道的实际写入，空 channels/错误不冒充送达；
 终端只在受保护输入条件成立时发送。新普通消息超过700 UTF-8字节或含任意 CR/LF/tab，
 由同版发送器固定完整正文并发送短通知，保留原 marker 与全部空白；
@@ -226,7 +231,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 
 ## 双向投递与高效协作维护
 
-执行[接收端绑定投递](references/receiver-bound-delivery.md)和[高效协作](references/efficient-bidirectional-collaboration-20261004.md)：完整原文稳定后按 provider 提交键，只在绑定原生日志核整条相等原消息；排队、运行、回执和论文接受分列，未知仅核原次。
+执行[接收端绑定投递](references/receiver-bound-delivery.md)和[高效协作](references/efficient-bidirectional-collaboration-20261004.md)：新Codex消息及callback经原会话native steer/start一次输入，不操作composer或Enter/Tab队列。Claude终端仍核完整稳定原文后提交一次。只有原fence后新增、全文相等的native user证明收到；RPC接受、正文已读、执行与论文接受分列，未知仅观察原次，不重放历史callback。
 
 
 ## 归档双执行者现场经验（2026-10-05）

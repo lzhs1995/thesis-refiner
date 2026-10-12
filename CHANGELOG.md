@@ -1,3 +1,10 @@
+# 2026.10.12.3
+
+- Synchronize collaboration 0.4.27: preserve actual root/child hook identity, fair bounded file reminders and cursor updates after successful context output. Inherited root identity cannot give a child the supervisor inbox.
+- Document the separate explicitly enrolled 60-second file scheduler and its finite sweep/capacity limits. Installation, enrollment, actual execution, file exposure and body reading are distinct; no idle-model wakeup or legacy-controller migration is implied.
+- Remove remaining active instructions to use the Codex Tab queue or blocking closeout hooks. New Codex callbacks use the original native thread once; uncertain and historical attempts are observed without resending. Retain ordinary tool/Stop access and original research ownership.
+- Explain executable-argument checks for Python heredocs so subprocess imports do not turn document prose into a CLI launch. Shared code remains solely in multi-agent-collaboration.
+
 # 2026.10.12.2
 
 - Route new Codex-bound input and callbacks directly to the original native thread through collaboration 0.4.26, without composer or Tab-queue operations. Require the original native intent/fence and exact received record; observe uncertainty without resending historical callbacks. Remove obsolete blocking-hook instructions from delivery references.

@@ -1,6 +1,6 @@
 # 全局通信配置与显式主动求派
 
-本 skill 2026.10.12.2 复用 multi-agent-collaboration **0.4.26** 的
+本 skill 2026.10.12.3 复用 multi-agent-collaboration **0.4.27** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
 
@@ -63,3 +63,16 @@ advisory receipt 记录真实父进程，手动测试不能冒充自动客户端
 模型与 cwd/时间换行、`+N more` 工具摘要只有完整已测布局才可识别；不清空用户
 草稿，也不以历史回顾的错误词推断当前状态。保留原失败证据、更新同版实现并实测，
 不能通过删 marker、改 nonce 或重发消息来修解析器。
+
+## 独立文件求派与真实线程（0.4.27）
+
+显式授权的executor_reask start认证当前双方后登记独立文件scheduler，按
+原task、purpose、workspace、supervisor和完整controller固定episode。
+launchd每60秒运行，容量256、单次10秒、非阻塞锁；不读转录或旧idle binding，
+不发送消息、不迁移旧episode、不唤醒空闲模型。保留UNKNOWN与terminal_pending，
+只归档真实episode转换。安装job、登记、实际sweep和收到绑定回复分别核验。
+
+PostToolUse保留已认证foreground.thread_id，actual/inherited/parent分列，
+child不能把继承root当自己或消费parent收件箱。每次最多8条文件提示，公平轮转，
+未答至少60秒再提示，输出成功flush后才更新游标。提示后主管核正文并回精确mailbox；
+文件存在不证明已读，TASK答复不证明派包。详细实现及命令只在协作skill维护。
