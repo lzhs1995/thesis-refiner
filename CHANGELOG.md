@@ -1,3 +1,8 @@
+## 2026.10.12.4
+
+- Adopt collaboration0.4.28 explicitly authorized continuing inquiries, exact reply consumption and task reservation boundaries.
+- Preserve ordinary finite waits, original controllers, nonblocking hooks and separate research acceptance.
+
 # 2026.10.12.3
 
 - Synchronize collaboration 0.4.27: preserve actual root/child hook identity, fair bounded file reminders and cursor updates after successful context output. Inherited root identity cannot give a child the supervisor inbox.

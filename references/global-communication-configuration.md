@@ -76,3 +76,14 @@ PostToolUse保留已认证foreground.thread_id，actual/inherited/parent分列�
 child不能把继承root当自己或消费parent收件箱。每次最多8条文件提示，公平轮转，
 未答至少60秒再提示，输出成功flush后才更新游标。提示后主管核正文并回精确mailbox；
 文件存在不证明已读，TASK答复不证明派包。详细实现及命令只在协作skill维护。
+
+## 0.4.28：显式持续求派
+
+持续模式仅由用户明确授权后，原执行者显式 `start --continuing`，固定总任务、
+授权正文、原控制器及双方身份。WAITING 回件必须包含责任人、触发条件、期限和
+next_due；ANSWERED 不等于消费。原执行者实读完整正文后用精确SHA执行 consume，
+记录检测与消费时间，再按不早于60秒及next_due续询。正式harness任务预留暂停
+求派，精确子任务解除后按总授权恢复；TASK邮箱文字不证明派发。Stop、总任务
+完成、撤权及授权到期停止；未知原投递不重发，不迁移旧controller。实现统一在
+multi-agent-collaboration，文件scheduler不发输入、不唤醒模型、不阻断Stop。
+安装、登记、实际sweep、正文消费及两轮现场采用分别核验。

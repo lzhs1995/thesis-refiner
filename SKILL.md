@@ -4,13 +4,13 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.12.3"
+  version: "2026.10.12.4"
 ---
 
 # 论文精炼助手
 
-本次非阻断协作修订纳入 **2026.10.12.3 版本契约**，采用 multi-agent-collaboration
-0.4.27 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
+本次非阻断协作修订纳入 **2026.10.12.4 版本契约**，采用 multi-agent-collaboration
+0.4.28 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
 直接进入原 supervisor 会话：运行中 steer、空闲时 start，不操作 composer、不入 Tab 队列。
 主管 PostToolUse 按真实root/child身份每次最多提示8条文件请求，公平轮转，
 未回复至少60秒再提示，成功flush后更新游标；child不能冒用继承的root消费收件箱。
@@ -95,7 +95,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一采用 0.4.27 非阻断 observer：旧任务、未结算 callback、
+协作工作流 hook 统一采用 0.4.28 非阻断 observer：旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
 
@@ -155,7 +155,7 @@ additionalContext 提示；不执行旧检查器、不发送消息、不核收�
 空闲 executor 不得死等，也不能因 Codex 主管忙而中断论文任务（用户 2026-10-09 明令）：
 显式 `executor_reask.py run` 每 60 秒用新 marker 主动求派，每5秒查答复，单次轮询预算最多540秒；同步 I/O 可延长实际耗时。
 退出后原 episode 可保持 WAITING_REPLY，不能把落盘等待称为runner仍在运行。
-0.4.27 的独立文件scheduler按显式start的认证登记继续每60秒求派，最多256个登记，
+0.4.28 的独立文件scheduler按显式start的认证登记继续每60秒求派，最多256个登记，
 单次sweep最多10秒；不迁移旧controller、不读转录、不发送输入，只保留绑定文件请求。
 安装、登记、实际执行、工具边界提示、正文读取分别留证；未登记旧episode不自动接管。
 每轮记录已配置文件通道的实际写入，空 channels/错误不冒充送达；
