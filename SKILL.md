@@ -310,3 +310,7 @@ Claude、协作子 agent 或模型 API 不可用时，按已有授权转 SOLO。
 仅接独立未完范围，同 pane 输入串行；恢复后在安全边界复用原上下文会话。
 
 0.4.24 修复本地 SQLite 只读清单和磁盘空间统计的 Python heredoc 误判：字符串内分号后的 Claude 文字仍是正文，不是启动命令。原命令和输入原样保留，按实际 hook 复验；别通过改写关键词规避。相邻真实启动、执行代码与终端输入继续单独核验。
+
+按用户最新至少20GB要求主动备份与核验终态缓存，空间不足仍推进独立工作。
+继任握手、迟到ACK及同pane原生Codex限定通信见
+[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)。

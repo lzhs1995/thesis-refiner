@@ -1,5 +1,7 @@
 ## 2026.10.12.4
 
+- 同步继任握手迟到ACK的原次核收、主管延迟归因、同pane原生Codex限定通道与至少20GB主动空间管理；不重放历史任务。
+
 - Adopt collaboration0.4.28 explicitly authorized continuing inquiries, exact reply consumption and task reservation boundaries.
 - Preserve ordinary finite waits, original controllers, nonblocking hooks and separate research acceptance.
 
