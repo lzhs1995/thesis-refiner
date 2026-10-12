@@ -4,7 +4,7 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.12.5**, synchronized with collaboration **0.4.29**.
+Current source: **2026.10.13.1**, synchronized with collaboration **0.4.30**.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
 Stop. Supervisor PostToolUse also exposes authenticated file requests; it cannot
 wake an idle client or settle work. A bound mailbox reply lets the executor's
@@ -31,6 +31,13 @@ daemon after shell exec optimization. It reads the actual tool process selector,
 then retains native foreground, unique-client, TTY, UUID and process-drift checks.
 No wrapper process or historical resume command is required to authenticate the
 current caller. This identity fix does not establish a handshake by itself.
+
+Collaboration 0.4.30 also handles a reused PID retaining a previous process's
+optional foreground file. A trusted, stable record predating a never-observed
+current process is treated as absent; its old thread is never adopted. Required
+observers and current-process, unique-client and native-delivery checks remain.
+The shared resolver is the only implementation, with installation and live hook
+adoption verified separately from source tests.
 
 The [six-repository version map](references/toolchain-versions.json) is a historical
 release snapshot, not an installation selector for this version. Skill release,
