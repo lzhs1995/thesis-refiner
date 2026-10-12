@@ -4,7 +4,7 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.13.1**, synchronized with collaboration **0.4.30**.
+Current source: **2026.10.13.2**, synchronized with collaboration **0.4.31**.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
 Stop. Supervisor PostToolUse also exposes authenticated file requests; it cannot
 wake an idle client or settle work. A bound mailbox reply lets the executor's
