@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.12.5"
+  version: "2026.10.13.1"
 ---
 
 # 论文精炼助手
@@ -13,8 +13,8 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-本次非阻断协作修订纳入 **2026.10.12.5 版本契约**，采用 multi-agent-collaboration
-0.4.28 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
+本次非阻断协作修订纳入 **2026.10.13.1 版本契约**，采用 multi-agent-collaboration
+0.4.30 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
 直接进入原 supervisor 会话：运行中 steer、空闲时 start，不操作 composer、不入 Tab 队列。
 主管 PostToolUse 按真实root/child身份每次最多提示8条文件请求，公平轮转，
 未回复至少60秒再提示，成功flush后更新游标；child不能冒用继承的root消费收件箱。
@@ -34,6 +34,12 @@ Claude → supervisor 原生 receipt 和正文已读分别核验；文档与离�
 shell/rtk 祖先不代表 caller 非法，沿工具自身的内核进程证据取 thread selector，
 再核原生 foreground、唯一客户端、TTY 与 UUID，收尾重核进程漂移。身份读取失败
 只影响该次输入，不得封锁其他已授权工作；不要通过添加虚假环境或固定旧 resume 修复。
+
+0.4.30 修复无关 legacy 客户端复用 PID 时遗留 foreground 文件导致的全局身份
+误判：仅完整可信、双读稳定、早于当前进程出生且当前进程从未成功观察过选择的
+可选旧记录可按缺失处理，不采用旧 thread。必需 observer、当前选择退回旧记录、
+非法或变化记录、多个 live client 仍拒绝输入。实现和回归检查复用协作 skill，
+不复制身份检测器；不删旧记录、不冒用 daemon 环境，也不重放论文包或 callback。
 
 cc-switch 切换、全局 hook 与每60秒求派按
 [全局通信配置](references/global-communication-configuration.md)执行：复用协作
