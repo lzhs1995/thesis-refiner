@@ -37,3 +37,7 @@ prompt、任务包、callback、封口与 idle/CCC 等待使用协作 skill 的
 独立的 `cmux_native_delivery.py --attempt` CLI。通用实现、完整固定版本
 安装、真实 hook 执行、现役客户端加载、原生入站和论文验收分别留证。
 旧验证记录继续保留其时间与版本范围，不能由文案推定运行时已通过。
+
+## 自动续跑与派单共用输入框
+
+遵循协作[终端发送冲突与原次恢复](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/input-collisions.md)。0.4.29握手探针也使用既有pane/target互斥。后台自动续跑须采用同一锁和完整草稿保护；安装共享skill不证明后台实际加载。混合入站保持原记录及未确认回执，沿原执行者核包实读和审稿产物，不重贴、不换nonce、不删除续跑草稿。定向静默须从运行健康记录确认，只涉及原受影响会话。
