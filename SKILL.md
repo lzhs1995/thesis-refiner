@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.13.3"
+  version: "2026.10.14.1"
 ---
 
 # 论文精炼助手
@@ -13,9 +13,12 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.13.3**对齐 multi-agent-collaboration **0.4.32**：跨版纯文件
-求派、登记事务、正式归属屏障、单引号 launch 误判、显式零输入恢复与原控制器
-迟到 ACK 核收。最终源码验证见 CHANGELOG；安装与活跃客户端采用分别取证。
+**2026.10.14.1**对齐 multi-agent-collaboration **0.4.34**：沿用完整核验的
+原控制器，识别与严格结构的 reasoning 块共存的唯一精确文本 ACK；原 nonce、
+通知接收和业务接受分别核验。同步 0.4.33 的上下文统计 footer、特定已贴未提交
+握手的迟到 ACK 入口及 0.4.32/0.4.33 文件协议兼容。最终源码验证见 CHANGELOG；
+安装与活跃客户端采用分别取证。2026.10.13.3 / 0.4.32 的求派、登记事务、
+正式归属屏障、launch 分类与显式零输入恢复继续保留。
 
 已发布的 **2026.10.13.2 / 协作 0.4.31** 基线保留原生 Codex 投递、非阻塞
 工作流观察和已登记 Claude 维护通知正文提示，不作为本次新增修复。新消息与 callback
@@ -393,6 +396,12 @@ source，`--surface` 指原 executor，`--task-pack` 和 `--text-file` 指原 pa
 `scripts/reconcile_handshake_ack.py` 先只读预览，再显式 apply，以原控制器的
 writer/validator 核收原 nonce；共享维护者不能代原主管执行。
 queued 附件与真实 ACK 不冒充完整 native user，未证通知接收继续未证。
+
+0.4.33 另支持原 REJECTED / DRAFT_NOT_READY / STRANDED_IN_COMPOSE 握手，
+须核完整原 PASTE_INTENT、PASTED 和 DRAFT_OBSERVATION 且没有提交记录；
+草稿、原通知接收状态及发送历史保留。0.4.34 允许唯一精确 text ACK 与严格结构的
+thinking / redacted_thinking 块共存，不输出 reasoning 内容；额外文本、工具块、
+畸形块、nonce 或空白差异均拒绝。不用全局 strip/rstrip 修复 composer 差异。
 
 共享维护只有一个合并者。其余主管提交原证据与明确 reply_path 后继续主线；
 Claude、协作子 agent 或模型 API 不可用时，按已有授权转 SOLO。双 Claude

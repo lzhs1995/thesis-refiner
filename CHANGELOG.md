@@ -1,3 +1,20 @@
+## 2026.10.14.1
+
+- 将 SKILL metadata、当前版本说明与 README 统一对齐协作 0.4.34；旧版本记录保留。
+- 同步 0.4.34 精确 ACK 解析：唯一 text ACK 可与严格结构的 thinking /
+  redacted_thinking 共存，不输出其内容；额外文本、工具、畸形块及任何 nonce /
+  空白差异仍拒绝。composer 的空白归属未知时保留原次，不作全局 strip/rstrip。
+- 同步 0.4.33 特定 REJECTED / DRAFT_NOT_READY / STRANDED_IN_COMPOSE 原握手
+  的迟到 ACK 核收，须完整证明原粘贴历史且未提交；只由原主管先预览再显式 apply，
+  使用原 writer/validator，不补键、不重贴、不将 ACK 当作完整通知原生接收。
+- 同步完整 composer 边框外的上下文输入/缓存统计 footer 识别，以及经完整 manifest
+  与成员核验的 0.4.32/0.4.33 v3 state/v2 enrollment 文件协议兼容。原 controller、
+  pending、reservation 和 consume 权限保持原归属。
+
+本次只改文档，协作实现仍由共享 skill 提供；协作 0.4.34 本机完整回归 1,912 项通过，
+0 failures/errors。论文实现未变，复用此前 203 项通过的本地验证，精确提交由 CI 检查。
+安装、scheduler 实际执行、活跃客户端自动 hook、ACK 与正文接受仍须独立现场证据。
+
 ## 2026.10.13.3
 
 - 同步调度预算耗尽后的游标保留与分阶段诊断：先读轮转游标，再完整验证版本；
