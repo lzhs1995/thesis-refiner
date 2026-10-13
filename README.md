@@ -4,7 +4,11 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.13.2**, synchronized with collaboration **0.4.31**.
+Current source: **2026.10.13.3**, synchronized with collaboration **0.4.32**.
+The shared release adds reviewed cross-release file scheduling, recoverable
+registration and explicit recovery after proven zero-input preflight exhaustion.
+Formal reservations pause new inquiries while allowing the original executor to
+read and consume its bound reply; only the matching release clears the pause.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
 Stop. Supervisor PostToolUse also exposes authenticated file requests; it cannot
 wake an idle client or settle work. A bound mailbox reply lets the executor's

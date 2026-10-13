@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.13.2"
+  version: "2026.10.13.3"
 ---
 
 # 论文精炼助手
@@ -13,8 +13,12 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-本次非阻断协作修订纳入 **2026.10.13.2 版本契约**，采用 multi-agent-collaboration
-0.4.31 的原生 Codex 投递、工作流观察入口与继任维护通信。新消息与 callback
+**2026.10.13.3**对齐 multi-agent-collaboration **0.4.32**：跨版纯文件
+求派、登记事务、正式归属屏障、单引号 launch 误判、显式零输入恢复与原控制器
+迟到 ACK 核收。最终源码验证见 CHANGELOG；安装与活跃客户端采用分别取证。
+
+已发布的 **2026.10.13.2 / 协作 0.4.31** 基线保留原生 Codex 投递、非阻塞
+工作流观察和已登记 Claude 维护通知正文提示，不作为本次新增修复。新消息与 callback
 直接进入原 supervisor 会话：运行中 steer、空闲时 start，不操作 composer、不入 Tab 队列。
 主管 PostToolUse 按真实root/child身份每次最多提示8条文件请求，公平轮转，
 未回复至少60秒再提示，成功flush后更新游标；child不能冒用继承的root消费收件箱。
@@ -171,12 +175,56 @@ additionalContext 提示；不执行旧检查器、不发送消息、不核收�
 旧检查器可作显式诊断，其结果不得重新封锁整个会话。未证实的收到、共识或论文
 完成不得对用户宣称；这项真实性要求不依赖 Stop 阻断。观察记录、完整原生消息、
 真实 callback、论文接受和 disarm 分别留证。详见[非阻断协作恢复](references/nonblocking-collaboration.md)。
+
+主管推进下一包的主链为 callback → 独立核收/精确 disarm → 预备下一包 →
+fresh live preflight → 受保护派送。60秒求派仅作兜底，文件定时器不能唤醒模型；
+ANSWERED 只表示已检测答复，须由原认证 executor 经原 controller 精确 consume，
+未消费不重复派单、不替换现业务 episode。同主管正式 reservation 只暂停新请求，
+仍发现原绑定答复；ANSWERED/consume不解除暂停，只有精确 RELEASE 解除。
+提效指标采用有效覆盖（去重核收项/明确范围）、有证据的问题关闭，以及按实际匹配
+时间戳分阶段统计的 latency p50/p95；同时报告样本数、观察窗口和未完成/缺失样本，
+不奖励 ask_count，也不把执行测试数量直接当覆盖。reply_detected → consumed、
+callback 收到 → 核收/disarm、下一包就绪 → 精确 native 收到分别统计；
+检测到消费的时长不能直接称为纯空闲或延迟因果，需另核业务活动和归属证据。
+
 空闲 executor 不得死等，也不能因 Codex 主管忙而中断论文任务（用户 2026-10-09 明令）：
 显式 `executor_reask.py run` 每 60 秒用新 marker 主动求派，每5秒查答复，单次轮询预算最多540秒；同步 I/O 可延长实际耗时。
 退出后原 episode 可保持 WAITING_REPLY，不能把落盘等待称为runner仍在运行。
-0.4.28 的独立文件scheduler按显式start的认证登记继续每60秒求派，最多256个登记，
-单次sweep最多10秒；不迁移旧controller、不读转录、不发送输入，只保留绑定文件请求。
-安装、登记、实际执行、工具边界提示、正文读取分别留证；未登记旧episode不自动接管。
+0.4.27 引入的独立文件 scheduler 按显式 start 的认证登记继续每60秒求派，
+最多256个登记，单次 sweep 最多10秒。0.4.32 由已批准的 CURRENT 自身解释
+审查过的旧 v2 文件协议：核可信只读完整 MANIFEST、全部实际只读成员、六个 controller
+成员和 issuer scheduler pin 的完整组合；已列入的原 release 为0.4.28、0.4.30、
+0.4.31，版本号、descriptor 或规范路径本身不授兼容。未知旧来源及历史 v3 不支持；
+CURRENT 自身状态仍走当前审批。存在 continuation 就必须合法且 controller 完整相等，
+旧 v2 缺顶层 controller 时只能由一致的原登记/continuation 证明，不能补成 CURRENT。
+不 import/执行旧模块，不读 Tail/转录或 idle binding，不 transport、consume、唤醒模型
+或更新 terminal_pending。首次跨版写前保留一次完整原 state/enrollment 字节；
+controller、UNKNOWN、pending、旧 journal 与原询问证据保留。
+
+start 在活动 state/channel 变更前预检 CURRENT、认证 live pair、容量、绑定、
+授权和正式占用。PREPARING 不是登记成功；原 intent/INDEX/五成员快照与
+registration token 绑定，live state 替换是 commit 点。提交前失败显示
+REGISTRATION_UNCOMMITTED；替换后 fsync 或收尾失败显示 COMMITTED_RECOVERY_REQUIRED，
+由 sweep 幂等完成原事务，不新建 episode、不回滚可见 commit、不覆盖新 episode
+channel。首次提交前失败可恢复原 ABSENT enrollment，不能凭 PREPARING 创建 state。
+原 executor 前台认证后可显式 `enroll-existing --episode ID --enrollment-sha256 SHA`；
+SHA 绑定原登记字节，仅真实缺失可用 ABSENT。保存旧记录后替换登记，原 controller/
+UNKNOWN 不变，不新 episode/tick/consume。新 episode 与旧错误主管登记不自动迁移；
+SHA、绑定、授权改变，正式占用或已停止/终结时拒绝补登记。
+
+正式 reservation 屏障独立于协议兼容和 continuation，旧0.4.27普通 WAITING 也受保护。
+属于原 caller/workspace 的同主管有效 reservation 暂停求派；合法新主管晚于 episode
+的 reservation 持久写 STOPPED / FORMAL_OWNER_CHANGED，结束旧主管求派，不迁移
+controller 或转交旧 callback。只有精确 RELEASE 移除对应暂停；marker 消失、TTL、
+heartbeat 不释放，也不授继任。无关/非法或更早的外主管 reservation 无效；
+noncontinuing ANSWERED/CONSUMED 及 STOPPED 不复活。CURRENT marker/reservation
+共用 caller 锁，heartbeat 非阻塞重读、不重建已 disarm marker；普通工具和 Stop 不阻断。
+兼容解释器不得消费旧 reply；除 operator stop 外，controller 不同须在任何授权、
+receipt/state 写前返回 ORIGINAL_CONTROLLER_REQUIRED。
+显式 start --file-only 与 transcript 通道互斥。安装、登记、scheduler真实执行、
+活跃客户端自动hook、正文完整读取分别留证；两轮真实continuing须由原执行者和
+主管完成request→reply→全文读取→精确SHA consume→rearm，其他会话不能代消费。
+未登记旧 episode 不自动接管，文件tick不证明模型被唤醒。
 每轮记录已配置文件通道的实际写入，空 channels/错误不冒充送达；
 终端只在受保护输入条件成立时发送。新普通消息超过700 UTF-8字节或含任意 CR/LF/tab，
 由同版发送器固定完整正文并发送短通知，保留原 marker 与全部空白；
@@ -324,11 +372,38 @@ repair_task_notice.py；先只读 READY_ZERO_INPUT，再执行一次 --apply。�
 唯一第二次尝试。未知、已贴、排队、已收到消息不得转换或重贴。其他情况保留
 未确认并继续独立正文/证据工作；健康握手不重跑，已接受科研审轮不重开。
 
+2026.10.13.3 另采用协作 `scripts/resume_task_no_input.py`，用于原 Claude
+正式派发连续零输入预检耗尽后的显式恢复。默认只读；`--controller` 指原不可变
+source，`--surface` 指原 executor，`--task-pack` 和 `--text-file` 指原 pack 与
+精确 notice。计划返回完整连续 attempt 清单的 `history_sha256`；执行必须
+`--apply --history-sha256 SHA` 精确匹配该原清单。
+全部历史须为 NO_INPUT、events=[]，且只因 COMPOSE_OCCUPIED 或 RECEIVER_COMPACTING
+退出；原身份、完整 native binding、锁、pack/payload/nonce 不变，当前 composer 空且
+可输入，才保留全部原字节并通过完整原 controller 追加一次 attempt。
+任一 PASTE_INTENT、native input intent、UNKNOWN、队列、receipt 或历史改变即拒绝；
+再次遇草稿仍保留，不清空。普通自动预检仍最多两次；零输入不等于实际发送预算耗尽，
+此入口只解除经完整证据确认的预检死锁，不重发未知输入。安装及实际采用分别核验。
+
+原握手迟到ACK使用协作 `scripts/observe_handshake_ack.py` 有界只读观察：固定原
+不可变controller、超时receipt及SHA、dispatch attempt及SHA、精确notice。
+另写观察证据，原task/nonce/超时回执/发送日志保留，不输入或核收旧次；短通知原生
+收到、完整正文读取、真实ACK和业务接受分别报告。
+
+在原 harness 已退出且完整超时证据保留后，原主管可使用
+`scripts/reconcile_handshake_ack.py` 先只读预览，再显式 apply，以原控制器的
+writer/validator 核收原 nonce；共享维护者不能代原主管执行。
+queued 附件与真实 ACK 不冒充完整 native user，未证通知接收继续未证。
+
 共享维护只有一个合并者。其余主管提交原证据与明确 reply_path 后继续主线；
 Claude、协作子 agent 或模型 API 不可用时，按已有授权转 SOLO。双 Claude
 仅接独立未完范围，同 pane 输入串行；恢复后在安全边界复用原上下文会话。
 
 0.4.24 修复本地 SQLite 只读清单和磁盘空间统计的 Python heredoc 误判：字符串内分号后的 Claude 文字仍是正文，不是启动命令。原命令和输入原样保留，按实际 hook 复验；别通过改写关键词规避。相邻真实启动、执行代码与终端输入继续单独核验。
+
+0.4.32 补齐单引号消息中 `; Codex alone` 的残余 launch 误判：按 shell 代码与
+literal 数据边界识别，不改写原消息规避。真实相邻 agent CLI、可执行嵌套 substitution
+及 wrapper 命令仍检查。以原命令的零输入 `--check-command` 和真实 hook 入口作离线
+回归；此前0.4.24/0.4.27的 literal/heredoc 修复不重复记为新增。
 
 按用户最新至少20GB要求主动备份与核验终态缓存，空间不足仍推进独立工作。
 继任握手、迟到ACK及同pane原生Codex限定通信见
