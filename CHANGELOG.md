@@ -1,3 +1,40 @@
+## 2026.10.13.3
+
+- 对齐协作0.4.32，由 CURRENT 自身解释审查过的旧 v2 纯文件协议；完整核验
+  原 MANIFEST、所有实际成员、controller 与 issuer scheduler pins。保留原 controller、
+  UNKNOWN、pending、journal 及首次跨版写前的完整旧证据，不在后台执行旧代码或输入。
+- 同步 PREPARING/token 登记事务与原 SHA 绑定的显式 enroll-existing。提交前失败保留
+  原 state/channel；提交后故障幂等恢复原事务，不能新建 episode 或覆盖后来的 channel。
+  新 episode 与旧错误主管登记不自动迁移；已停止、终结或正式占用不补登记复活。
+- 正式 reservation 不再依赖 continuation 或协议兼容：同主管暂停，属于原 caller/
+  workspace、晚于 episode 的合法新主管 reservation 结束旧求派。精确 RELEASE 才
+  移除暂停；TTL、heartbeat、marker 消失不授释放或继任。旧0.4.27普通 WAITING 也适用。
+- 同步单引号 `; Codex alone` 的残余 launch 误判修复：保留原消息，区分 literal
+  与 shell 代码，继续检查真实相邻 CLI、嵌套执行和 wrappers；不复制协作检测器。
+- 采用显式 `resume_task_no_input.py` 入口：默认只读，指定原不可变 controller、
+  executor、pack、精确 notice；apply 必须绑定计划的完整 history_sha256。仅连续全
+  NO_INPUT/events=[] 且 COMPOSE_OCCUPIED 或 RECEIVER_COMPACTING、原身份/native/锁/
+  pack/payload/nonce 不变、当前 composer 空时，通过原 controller 追加一次 attempt。
+  原字节保留，输入意图/UNKNOWN/队列/receipt/历史改变均拒绝，草稿不清理。普通自动
+  预检仍限两次，零输入不冒充实际发送预算耗尽；不重发未知消息。
+- 正式 reservation 只暂停新请求，仍发现原绑定 reply；ANSWERED 和精确 consume
+  都不解除 reservation，须原匹配 RELEASE。仅原认证 executor 经原 controller
+  消费；显式 start --file-only 与 transcript 通道互斥。
+- 同步原迟到握手 ACK 的有界只读观察入口：固定原 controller、超时 receipt、
+  dispatch attempt 及精确 notice，独立留证而不改原回执、不输入；收到短通知、
+  全文读取、ACK 与业务接受分别报告。
+- 明确主管主链 callback → 核收/disarm → 预备下一包 → fresh preflight → 派送。
+  60秒求派仅兜底，文件定时器不能唤醒模型；ANSWERED 未 consume 不重复派单或
+  替换现业务 episode。按去重核收的有效覆盖、问题关闭和真实分阶段 latency p50/p95
+  衡量成效，列明样本数/窗口/缺失样本，不奖励 ask_count。历史检测到消费时长
+  不当作纯空闲、因果或本版现场采用证据。
+
+协作全套回归1846项通过、0失败、0错误。论文回归使用requirements-test.txt，
+跨仓验证显式绑定兼容的真实resource_broker.py。登记、scheduler真实执行、自动hook、
+正文完整读取及两轮真实continuing request/reply/consume/rearm分别需要现场证据。
+协作0.4.31 / 论文2026.10.13.2的维护通知正文提示、原生投递、非阻塞hook及不重发
+规则继续保留。版本文档和离线结果不证明活跃客户端已经采用。
+
 ## 2026.10.13.1
 
 - 同步协作0.4.30的PID复用修复：可信且早于当前进程的可选旧foreground记录不再拖垮无关caller发现；不采用旧thread、不削弱必需observer和当前身份校验。
