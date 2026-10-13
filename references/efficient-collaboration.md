@@ -33,6 +33,23 @@ Word/Zotero继续使用原串行资源队列。可并行审查不表示可并行
 
 ## 握手和回调不能演变成无界研究
 
+每单在开始时固定必要检查和报告停止条件。足以回答原问题后先交可核收报告；
+仅在新修改、失败或具体未决风险出现时补测。等待最终报告不重开已接受的增量。
+到本单约定预算仍未完成时，提交已验证结论、剩余问题和下一步的阶段报告，
+保留原范围，不把数小时反复全量回归当作交付。
+
+绑定回复在原执行者的下一个实际工具边界全文读取并精确 SHA 消费；主管不得
+代 consume。ANSWERED 未消费与正式 reservation 期间不再重复求派或自行
+唤醒。原生 Goal、用户 /loop 和各 hook 的时序分开取证；未派发的新业务、旧
+callback 和共享维护发布不自动成为强迫当前研究回合循环的理由。两轮 consume
+及 rearm 通过仍需报告检测到消费的延迟，不等于60秒推进目标达成。
+
+排查文件求派时，分别核对登记、原 episode 的实际 last_execution、issued marker、
+主管读件与执行者 consume。登记时的 execution_proven=false 不否定后续执行。
+调度器预算耗尽须保留轮转游标；用 phase/phase_seconds、单 episode 耗时和
+pending_enrollment 定位停点。file_posts_complete=false 表示计数可能不完整，
+不能因 file_posts=0 判定本轮没有提交任何文件，也不能因后来恢复而抹去历史延迟。
+
 - 握手只核原身份、pending receipt、nonce和所需skill，立即返回准确ACK；不夹带科学审查。
   当前任务健康握手直接复用。观察期限不足、迟到ACK与API故障分别记录。
 - supervisor发prompt和executor回callback都走原受保护bridge，遵守[共享投递契约](receiver-bound-delivery.md)。

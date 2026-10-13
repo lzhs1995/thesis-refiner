@@ -14,8 +14,8 @@ metadata:
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
 **2026.10.13.3**对齐 multi-agent-collaboration **0.4.32**：跨版纯文件
-求派、登记事务、正式归属屏障、单引号 launch 误判与显式零输入恢复。协作完整回归
-1846项通过、0失败、0错误；安装与活跃客户端采用须分别取得现场证据。
+求派、登记事务、正式归属屏障、单引号 launch 误判、显式零输入恢复与原控制器
+迟到 ACK 核收。最终源码验证见 CHANGELOG；安装与活跃客户端采用分别取证。
 
 已发布的 **2026.10.13.2 / 协作 0.4.31** 基线保留原生 Codex 投递、非阻塞
 工作流观察和已登记 Claude 维护通知正文提示，不作为本次新增修复。新消息与 callback
@@ -388,6 +388,11 @@ source，`--surface` 指原 executor，`--task-pack` 和 `--text-file` 指原 pa
 不可变controller、超时receipt及SHA、dispatch attempt及SHA、精确notice。
 另写观察证据，原task/nonce/超时回执/发送日志保留，不输入或核收旧次；短通知原生
 收到、完整正文读取、真实ACK和业务接受分别报告。
+
+在原 harness 已退出且完整超时证据保留后，原主管可使用
+`scripts/reconcile_handshake_ack.py` 先只读预览，再显式 apply，以原控制器的
+writer/validator 核收原 nonce；共享维护者不能代原主管执行。
+queued 附件与真实 ACK 不冒充完整 native user，未证通知接收继续未证。
 
 共享维护只有一个合并者。其余主管提交原证据与明确 reply_path 后继续主线；
 Claude、协作子 agent 或模型 API 不可用时，按已有授权转 SOLO。双 Claude

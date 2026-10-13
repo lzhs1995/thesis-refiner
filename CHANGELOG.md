@@ -1,5 +1,19 @@
 ## 2026.10.13.3
 
+- 同步调度预算耗尽后的游标保留与分阶段诊断：先读轮转游标，再完整验证版本；
+  游标读取超时保留原 STATUS，另写 LAST-ERROR。中断时 file_posts 只是部分计数，
+  不把0当作完全未执行；4项定点通过，实际求派及消费时效另取现场证据。
+- 同步consume可区分结果：新控制器成功返回receipt、正文SHA和消费时间；未消费
+  返回consumed=false及非零码。continuing回到WAITING_REPLY与本次消费结果分列；
+  原预留不解除，旧控制器沿用原语义并独核真实receipt，不把rc=0当作消费证明。
+- Claude的queue remove/queued_command仍是客户端队列证据，不保证随后出现
+  native user；派单边界减少竞争性自唤醒，Goal、loop、advisory分别核证。
+- 对齐原控制器迟到 ACK 核收入口：原主管先只读预览，原 harness 退出后显式
+  apply，保留超时、原 nonce/attempt 和未证通知接收，用原 writer/validator
+  重算握手；不重握手、不代派包。协作入口28项行为测试及原完整0.4.31兼容通过。
+- 固定审查问题、必要检查和及时报告边界；已接受范围不因等待最终报告重开。
+  两轮 continuing 功能闭环与60秒消费目标分别验收，主管不代消费或制造唤醒。
+
 - 对齐协作0.4.32，由 CURRENT 自身解释审查过的旧 v2 纯文件协议；完整核验
   原 MANIFEST、所有实际成员、controller 与 issuer scheduler pins。保留原 controller、
   UNKNOWN、pending、journal 及首次跨版写前的完整旧证据，不在后台执行旧代码或输入。
@@ -29,7 +43,8 @@
   衡量成效，列明样本数/窗口/缺失样本，不奖励 ask_count。历史检测到消费时长
   不当作纯空闲、因果或本版现场采用证据。
 
-协作全套回归1846项通过、0失败、0错误。论文回归使用requirements-test.txt，
+协作全套回归1885项通过、0失败、0错误；论文全套203项通过、0跳过。
+论文回归使用requirements-test.txt，
 跨仓验证显式绑定兼容的真实resource_broker.py。登记、scheduler真实执行、自动hook、
 正文完整读取及两轮真实continuing request/reply/consume/rearm分别需要现场证据。
 协作0.4.31 / 论文2026.10.13.2的维护通知正文提示、原生投递、非阻塞hook及不重发
