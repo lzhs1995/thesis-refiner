@@ -4,9 +4,14 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.13.3**, synchronized with collaboration **0.4.32**.
-The shared release adds reviewed cross-release file scheduling, recoverable
-registration and explicit recovery after proven zero-input preflight exhaustion.
+Current source: **2026.10.14.1**, synchronized with collaboration **0.4.34**.
+The shared release recognizes one exact text ACK alongside strictly validated
+thinking or redacted-thinking blocks without exposing their contents. It retains
+the original controller, nonce and notice-reception evidence. The 0.4.33 support
+for context-token footers and a narrowly proven pasted-but-unsubmitted handshake
+also applies, with reviewed 0.4.32/0.4.33 file-protocol compatibility.
+Cross-release file scheduling, recoverable registration and explicit recovery
+after proven zero-input preflight exhaustion remain available.
 Formal reservations pause new inquiries while allowing the original executor to
 read and consume its bound reply; only the matching release clears the pause.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
