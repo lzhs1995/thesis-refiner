@@ -1,3 +1,21 @@
+## 2026.10.17.1
+
+- 对齐协作0.4.35的新投递30秒确认窗、有限0至60秒选项及默认一次只读reconcile；
+  保留原RPC诊断与controller来源，不把超时或turn abort当成消息丢失或重发权限。
+- 同步从上一条原生确认后至少60秒起算的终端求派、独立文件节奏及runner返回边界；
+  返回不停止episode、不改Goal、不证明终端空闲，正式派单仍核新鲜preflight。
+- 同步原ANSWERED全文与consume入口、待ACK/超时提示及独立CALLBACK_SETTLEMENT。
+  提示不代正文读取、ACK、论文核收或精确RELEASE；不增加下一任务ask_count。
+- 对齐精确reservation复用、终态RELEASE清理、有界公平发现和0.4.34历史文件协议。
+  仅reask scheduler采用Standard，配置守护器仍Background；实测Monitor/Goal与
+  padding不授权全局strip/rstrip、清草稿或额外补键。原controller与旧证据保留。
+- 更新全局通信、投递和收尾参考；协作恢复后接原论文待办，不新增科研审轮。
+
+本次只改文档，运行实现由共享协作skill提供。双仓14份变更文档检查通过；
+协作0.4.35本地完整回归2,108项、定向321项及adapter33项通过，0 failures/errors，
+adapter现场输入0、原证据未变。历史203项论文测试未重跑，不记成本次验证。
+原会话独审、CI、不可变安装、真实自动hook、正文读取与native receipt分别核验。
+
 ## 2026.10.14.1
 
 - 将 SKILL metadata、当前版本说明与 README 统一对齐协作 0.4.34；旧版本记录保留。
