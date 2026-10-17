@@ -50,6 +50,15 @@
   下一任务ask_count、不发输入、不代业务裁决。runner在待消费、正式预留或
   观察期限返回，不证明终端空闲或Goal改变；主管核实际边界后接回原论文待办。
   终端续询从上一条原生确认后至少60秒起算，原未确认输入保持只读核原次。
+- **正式预留期保留已授权的文件询问。** 0.4.35 新 episode 可由原执行者显式
+  `start --continuing --reservation-inquiries`，同时固定总任务、授权文件和
+  当前 controller；预留中每60秒写文件 `RESERVATION_STATUS`，携带精确预留，
+  询问任务、依赖或回调状态及下一动作/时间。终端输入仍暂停，旧 pending 保留。
+  原执行者读完整回复并按SHA消费后才重启该轮；询问不等于派单、接受或RELEASE。
+  安装、旧controller和修改既有episode不能追加此权限；未启用者仍按旧规则暂停。
+  `run`仍返回 `FORMAL_RESERVATION_WAIT`，文件定时器不唤醒模型；`NO_EPISODE`
+  仍不提供预留者、年龄和包状态。普通和continuing的新controller消费均核原生
+  执行者及精确回复SHA；真实两轮与自动hook另留验收证据。
 - **故障不拖住全篇。** 原生 reconnect/正常执行不打断；provider 可重试
   故障仅在原尝试终态后按既有上限恢复，认证/欠费不盲试。持续失效时
   沿已有接管授权保留原会话和证据、确认无并发写入，再由 Codex 继续。
