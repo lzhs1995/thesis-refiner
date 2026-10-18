@@ -4,7 +4,11 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.18.4**, synchronized with collaboration **0.4.46**.
+Current source: **2026.10.19.1**, synchronized with collaboration **0.4.47**.
+Peer checks bind source hashes and byte scope. Export comparisons retain raw
+character differences separately from whitespace-normalized and layout checks;
+old specification failures remain immutable. See
+[evidence reuse and integration](references/evidence-reuse-and-integration.md).
 Send ready prompts through the supported shared entrypoints during active work;
 native Goal and automatic continuation do not require pausing or waiting for idle.
 Receivers schedule their own work, while shared writes retain explicit ownership.
@@ -38,7 +42,8 @@ or research review round. Validation status is recorded in CHANGELOG.
 Cross-release file scheduling, recoverable registration and explicit recovery
 after proven zero-input preflight exhaustion remain available.
 Formal reservations pause inquiries by default. Explicitly enrolled reservation
-status inquiries remain file-only; terminal input stays paused. The original
+status inquiries remain file-only; the automatic runner's terminal inquiries stay
+paused. Independent ready messages may still use the supported sender. The original
 executor may read and consume its bound reply, without implying exact RELEASE.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
 Stop. Supervisor PostToolUse also exposes authenticated file requests; it cannot
