@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.19.2"
+  version: "2026.10.19.3"
 ---
 
 # 论文精炼助手
@@ -13,7 +13,7 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.19.2**对齐 multi-agent-collaboration **0.4.48**。共享运行时修复
+**2026.10.19.3**对齐 multi-agent-collaboration **0.4.48**。共享运行时修复
 Claude 页脚剩余上下文百分比提示的误判，保留完整输入框与原字符检查。
 核包 SHA 不等于任务接受；接受时点、预算起点、文件独审、精确 RELEASE 与
 callback 收件分别留证，见[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)。
@@ -154,7 +154,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一使用同版非阻断 observer；当前新任务对齐 0.4.46，在途任务保留原控制器。
+协作工作流 hook 统一使用同版非阻断 observer；当前新任务采用本页顶部声明的协作版本，在途任务保留原控制器。
 旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
