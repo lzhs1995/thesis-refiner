@@ -4,7 +4,11 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.19.1**, synchronized with collaboration **0.4.47**.
+Current source: **2026.10.19.2**, synchronized with collaboration **0.4.48**.
+The shared runtime recognizes a measured remaining-context footer hint without
+changing the composer. Pack integrity, explicit acceptance and its evidenced
+timestamp remain separate; file review and exact RELEASE do not prove callback
+delivery. See [collaboration closeout](references/collaboration-efficiency-and-closeout.md).
 Peer checks bind source hashes and byte scope. Export comparisons retain raw
 character differences separately from whitespace-normalized and layout checks;
 old specification failures remain immutable. See
