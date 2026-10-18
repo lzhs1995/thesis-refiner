@@ -4,9 +4,12 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.19.3**, synchronized with collaboration **0.4.48**.
-The shared runtime recognizes a measured remaining-context footer hint without
-changing the composer. Pack integrity, explicit acceptance and its evidenced
+Current source: **2026.10.19.4**, synchronized with collaboration **0.4.49**.
+An authenticated original executor can explicitly re-enroll a stopped inquiry
+while retaining formal reservations and pending input. Registration clears the
+previous stop only after commit; reservation inquiries require explicit continuing
+authorization. Installation does not upgrade an old episode or replay its messages.
+Pack integrity, explicit acceptance and its evidenced
 timestamp remain separate; file review and exact RELEASE do not prove callback
 delivery. See [collaboration closeout](references/collaboration-efficiency-and-closeout.md).
 Peer checks bind source hashes and byte scope. Export comparisons retain raw

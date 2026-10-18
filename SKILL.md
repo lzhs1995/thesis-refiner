@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.19.3"
+  version: "2026.10.19.4"
 ---
 
 # 论文精炼助手
@@ -13,8 +13,10 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.19.3**对齐 multi-agent-collaboration **0.4.48**。共享运行时修复
-Claude 页脚剩余上下文百分比提示的误判，保留完整输入框与原字符检查。
+**2026.10.19.4**对齐 multi-agent-collaboration **0.4.49**。原执行者显式
+停止旧求派 episode 后，可用 `--resume-stopped` 登记新 episode；事务提交前
+保留旧 stop，正式任务预留与未确认消息全程保留。预留期间的持续文件询问须
+显式授权，安装新版本不自动升级旧 episode，也不重放原消息。
 核包 SHA 不等于任务接受；接受时点、预算起点、文件独审、精确 RELEASE 与
 callback 收件分别留证，见[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)。
 原控制 socket 缺失仍单独诊断，配置已写入不等于活跃客户端已加载。
