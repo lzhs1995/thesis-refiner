@@ -4,7 +4,10 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.18.2**, synchronized with collaboration **0.4.40**.
+Current source: **2026.10.18.3**, synchronized with collaboration **0.4.41**.
+This documentation patch corrects the capacity rule: retain at least 10GB after
+installation and rollback costs; below 20GB, start proactive space management.
+The 20GB management trigger is not an installation floor. Runtime is unchanged.
 File scheduling reuses complete release verification within one sweep, rechecking
 every verified member and parent for changes before reuse. Task and authorization
 state remain live. A read-only validation benchmark does not prove production
@@ -106,9 +109,9 @@ reconciliation preserves the original controller and evidence of an in-flight ta
 
 ```bash
 python3 -m unittest discover -s tests -v
-python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.2/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.2/adapter
+python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.3/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.3/adapter
 # Review the dry-run plan, then install into those fresh version paths:
-python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.2/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.2/adapter --apply
+python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.3/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.3/adapter --apply
 ```
 
 Installation writes maintained files into a fresh version directory and records their hashes. Different existing maintained bytes, including an existing adapter, are refused before installation writes; identical reinstalls are allowed. Existing research inputs and private resources are preserved. It does not change hooks globally, restart applications, configure an account or publish a manuscript.
