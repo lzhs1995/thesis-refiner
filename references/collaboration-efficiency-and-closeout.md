@@ -8,6 +8,16 @@
 当前新握手不运行强制探针，详见协作仓的
 [忙碌时双向通信](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/busy-bidirectional-communication.md)。
 
+核包 SHA 只证明完整性，不是 `TASK_ACCEPTED`。执行者自报接受时间时须同时保留
+对应原生记录和完整接受陈述；未发送接受陈述就如实记录，不拿核包或写报告时间
+替代。原生收件、完整正文已读与明确接受分别记账。
+
+预算只从任务指定且有证据的起点计算；起点未知时截止时间也保持未知，不因此
+停止独立授权工作。callback 原控制 socket 缺失时，主管可按已有授权独立审查
+实际产物并精确 RELEASE，保留原 callback 失败；文件独审、释放资源都不等于
+callback 已送达。共享发送、页脚识别和历史文件协议统一复用协作 0.4.48，
+不复制实现、不为补通信证据重开已接受科研审轮。
+
 哨兵 `SENTINEL_ROLE_MAP_REFUSED` 先按
 [协作 skill 的角色表兼容规则](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/efficiency-and-closeout.md#哨兵启动失败先核角色表格式)
 核 `surface_ref`/`identity` 与单个/多个执行者的实际格式。复用该仓的唯一解析器，
