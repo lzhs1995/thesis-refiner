@@ -4,10 +4,17 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.18.3**, synchronized with collaboration **0.4.41**.
-This documentation patch corrects the capacity rule: retain at least 10GB after
+Current source: **2026.10.18.4**, synchronized with collaboration **0.4.46**.
+Send ready prompts through the supported shared entrypoints during active work;
+native Goal and automatic continuation do not require pausing or waiting for idle.
+Receivers schedule their own work, while shared writes retain explicit ownership.
+Fresh preflight omits the optional bridge probe and records `NOT_RUN` with null
+clear fields. Existing failed probes and in-flight controllers retain their evidence.
+See [busy bidirectional communication](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/busy-bidirectional-communication.md).
+This repository updates the instructions; the collaboration repository owns the
+sender, hook and handshake implementation. Retain at least 10GB after
 installation and rollback costs; below 20GB, start proactive space management.
-The 20GB management trigger is not an installation floor. Runtime is unchanged.
+The 20GB management trigger is not an installation floor.
 File scheduling reuses complete release verification within one sweep, rechecking
 every verified member and parent for changes before reuse. Task and authorization
 state remain live. A read-only validation benchmark does not prove production
@@ -109,9 +116,9 @@ reconciliation preserves the original controller and evidence of an in-flight ta
 
 ```bash
 python3 -m unittest discover -s tests -v
-python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.3/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.3/adapter
+python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.4/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.4/adapter
 # Review the dry-run plan, then install into those fresh version paths:
-python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.3/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.3/adapter --apply
+python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.4/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.4/adapter --apply
 ```
 
 Installation writes maintained files into a fresh version directory and records their hashes. Different existing maintained bytes, including an existing adapter, are refused before installation writes; identical reinstalls are allowed. Existing research inputs and private resources are preserved. It does not change hooks globally, restart applications, configure an account or publish a manuscript.
@@ -172,5 +179,5 @@ codex resume 命令，也不绑定旧主管会话号。终端发送仍核验真�
 
 优先推进用户原任务，按独立交付物与当前容量使用零、一或两个 executor。
 本机通信入口故障不等于 Claude API 故障；经有限重试仍不可用时，按已有授权
-由 Codex 接管并标注 solo_self_review。原 Claude 恢复后只在安全边界重新接入；
+由 Codex 接管并标注 solo_self_review。原 Claude 恢复后及时联络，共享写入在明确交接后恢复；
 不为通信维护重开已接受的科研审轮，同 pane 两 tab 的终端输入保持串行。

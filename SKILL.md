@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.18.3"
+  version: "2026.10.18.4"
 ---
 
 # 论文精炼助手
@@ -13,9 +13,16 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.18.3**对齐 multi-agent-collaboration **0.4.41**。本次仅纠正文档中的
-磁盘规则：保留至少10GB，低于20GB主动管理；安装与回滚预算另计，20GB不是安装底线。
-运行实现沿用已验证的0.4.40。文件调度在单轮内
+**2026.10.18.4**对齐 multi-agent-collaboration **0.4.46**。双方 prompt 准备好后
+立即通过共享支持入口发送；正常工作、原生 `/goal` 或自动续轮不构成通信禁令，
+不要求先暂停 Goal 或等待空闲。接收方自行安排回应和任务顺序；共享文件写入仍按
+明确范围和单写者交接。新 preflight 不再强制执行 `bridge-test`，未运行探针的
+回执记录 `NOT_RUN` 和空清理字段，不冒称已清空；旧失败探针保留原证据与控制器。
+详见[忙碌时双向通信](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/busy-bidirectional-communication.md)。
+本仓只同步规则，通用发送器、hook 和握手实现由协作仓唯一维护。
+
+保留至少10GB，低于20GB主动管理；安装与回滚预算另计，20GB不是安装底线。
+文件调度在单轮内
 复用完整版本验证，每次复用仍核全部成员及父目录是否变化，任务与授权状态实时读取；
 新一轮重新验证。只读提速样本不代表实机发现延迟、正文已读或回调已核收。
 新版本允许实际派生于嵌入式 Codex TUI 的工具与 hook 在完整身份核验后认证；
@@ -140,7 +147,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一采用 0.4.41 非阻断 observer（实现与0.4.40相同）；在途任务保留原控制器。
+协作工作流 hook 统一使用同版非阻断 observer；当前新任务对齐 0.4.46，在途任务保留原控制器。
 旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
@@ -168,7 +175,8 @@ workspace/surface/pane UUID，无须故障旧主管批准或先结算旧任务�
 
 握手只做身份与通道验证：首条消息直接给出 pending receipt 的绝对路径，executor 读固定文件后回精确 ACK；不在握手期间查全盘、审论文或做三轮共识。健康的同任务握手复用；短观察窗口耗尽不能冒称 executor 失联，迟到 ACK 按原 nonce 只读核收，不重复发送。
 
-探针全文消失不能证明输入区已空；残留前缀、暂时缺prompt glyph和外来文字按
+新握手默认不运行探针，也不等待空闲窗口。以下清理要求仅适用于显式诊断探针
+及其原次恢复：探针全文消失不能证明输入区已空；残留前缀、暂时缺prompt glyph和外来文字按
 协作harness的有界清理后置条件处理。正常ACK等待及原nonce恢复记录为
 `AWAITING_EXECUTOR_ACK/PENDING`，不提前报FAIL。短探针仍逐键核身份、保留
 600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
@@ -358,8 +366,9 @@ Codex 线程复用协作 skill 的原生 foreground 选择与内核/UUID 认证�
 借用旧 surface。主管身份识别失败不是 Claude API 故障；按已有 SOLO 授权
 继续独立正文、证据或排版工作。修通信不能重开已接受的科研审轮。
 
-恢复的原 Claude 仅承担独立未完成交付物；先接空闲者，另一位到安全边界后
-再派单。同 pane 不同 tab 只并行计算，输入串行。更新的原生成功、新回合和
+恢复的原 Claude 仅承担独立未完成交付物；prompt 就绪即联络原会话，忙碌时也
+可握手和派送，接收方自主排程。涉及共享写入时先明确交接，不把写入边界变成
+通信禁令。同 pane 不同 tab 可并行计算，输入串行。更新的原生成功、新回合和
 真人接管优先于历史错误。源码、安装、自动 hook、原生收到和业务核收分别
 记录；当前任务握手、派包与报告前不能声称 Claude 参与，SOLO 自审保持原标注。
 
@@ -376,7 +385,7 @@ codex resume 命令，也不绑定旧主管会话号。终端发送仍核验真�
 
 优先推进用户原任务，按独立交付物与当前容量使用零、一或两个 executor。
 本机通信入口故障不等于 Claude API 故障；经有限重试仍不可用时，按已有授权
-由 Codex 接管并标注 solo_self_review。原 Claude 恢复后只在安全边界重新接入；
+由 Codex 接管并标注 solo_self_review。原 Claude 恢复后及时联络，共享写入在明确交接后恢复；
 不为通信维护重开已接受的科研审轮，同 pane 两 tab 的终端输入保持串行。
 
 ## 排队请求与正式通知恢复
@@ -425,7 +434,7 @@ thinking / redacted_thinking 块共存，不输出 reasoning 内容；额外文�
 
 共享维护只有一个合并者。其余主管提交原证据与明确 reply_path 后继续主线；
 Claude、协作子 agent 或模型 API 不可用时，按已有授权转 SOLO。双 Claude
-仅接独立未完范围，同 pane 输入串行；恢复后在安全边界复用原上下文会话。
+仅接独立未完范围，同 pane 输入串行；恢复后及时联络原上下文会话，共享写入单独交接。
 
 0.4.24 修复本地 SQLite 只读清单和磁盘空间统计的 Python heredoc 误判：字符串内分号后的 Claude 文字仍是正文，不是启动命令。原命令和输入原样保留，按实际 hook 复验；别通过改写关键词规避。相邻真实启动、执行代码与终端输入继续单独核验。
 
