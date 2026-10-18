@@ -15,8 +15,15 @@
 预算只从任务指定且有证据的起点计算；起点未知时截止时间也保持未知，不因此
 停止独立授权工作。callback 原控制 socket 缺失时，主管可按已有授权独立审查
 实际产物并精确 RELEASE，保留原 callback 失败；文件独审、释放资源都不等于
-callback 已送达。共享发送、页脚识别和历史文件协议统一复用协作 0.4.48，
+callback 已送达。共享发送、页脚识别和历史文件协议统一复用本技能顶部声明的协作版本，
 不复制实现、不为补通信证据重开已接受科研审轮。
+
+旧求派 episode 不因安装新版本获得预留期询问权限。确需采用时，由原执行者
+在已有授权下显式停止旧 episode，再经共享入口用 `--resume-stopped`、
+`--continuing --reservation-inquiries` 登记新 episode；事务提交前保留旧 stop，
+同一 caller、主管和工作区的正式任务预留继续有效。原状态、登记和 stop 留存，
+未确认终端消息不重放。实际登记、文件询问、主管看到正文、读取和消费回件分别
+验收，不把隔离测试或安装成功写成实机采用成功。
 
 哨兵 `SENTINEL_ROLE_MAP_REFUSED` 先按
 [协作 skill 的角色表兼容规则](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/efficiency-and-closeout.md#哨兵启动失败先核角色表格式)
