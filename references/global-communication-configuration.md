@@ -66,7 +66,8 @@ advisory receipt 记录真实父进程，手动测试不能冒充自动客户端
 
 每个工作区恢复后立即接回原论文任务。通信维护不新增科研审轮；按独立未完成交付物
 与当前容量使用零、一或两个 executor。通信入口故障不是 Claude API 故障；按既有
-授权继续 Codex SOLO 并标记 `solo_self_review`，原 Claude 到安全边界后再恢复协作。
+授权继续 Codex SOLO 并标记 `solo_self_review`，原 Claude 恢复后立即通过支持入口
+交换就绪信息，不要求暂停 Goal 或等待空闲；变更共享文件写者前单独核实写入交接。
 两个 tab 可以并行计算；同 pane 的终端输入串行核验。
 
 0.4.20 的普通文档分类与 Claude footer 修复也属于共享实现：写 PR/HANDOFF 的
