@@ -4,13 +4,15 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.18.1**, synchronized with collaboration **0.4.37**.
+Current source: **2026.10.18.2**, synchronized with collaboration **0.4.40**.
 File scheduling reuses complete release verification within one sweep, rechecking
 every verified member and parent for changes before reuse. Task and authorization
 state remain live. A read-only validation benchmark does not prove production
-detection latency, body reading or callback reception. The 0.4.36 embedded Codex
-identity path remains limited to the original supervisor's late ACK recovery;
-it does not authenticate ordinary messages or automatic hooks.
+detection latency, body reading or callback reception. Actual tools and hooks
+descending from an embedded Codex TUI can now authenticate through the shared
+resolver; intervening model clients and unknown wrappers cannot borrow its
+identity. The historical 0.4.36 ACK entrypoint remains limited to the original
+supervisor's late ACK recovery. Native socket availability is checked separately.
 New input observes native reception for 30 seconds by default; reconciliation
 defaults to one read-only observation. Pending input and interrupted turns never
 authorize a resend. Terminal reasks wait at least 60 seconds after the previous
@@ -104,18 +106,20 @@ reconciliation preserves the original controller and evidence of an in-flight ta
 
 ```bash
 python3 -m unittest discover -s tests -v
-python3 scripts/install.py --canonical /absolute/skills/thesis-refiner --codex-adapter /absolute/codex/skills/thesis-refiner
-# Review the dry-run plan, then apply that maintained-file overlay:
-python3 scripts/install.py --canonical /absolute/skills/thesis-refiner --codex-adapter /absolute/codex/skills/thesis-refiner --apply
+python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.2/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.2/adapter
+# Review the dry-run plan, then install into those fresh version paths:
+python3 scripts/install.py --canonical /absolute/releases/thesis-refiner-2026.10.18.2/source --codex-adapter /absolute/releases/thesis-refiner-2026.10.18.2/adapter --apply
 ```
 
-Installation overlays only maintained files, backs up every replaced file and writes a hash manifest. It preserves existing research inputs and legacy private resources. It does not change hooks globally, restart Word/RStudio, configure an account or publish a manuscript. Bind the completion hook to a task checkpoint explicitly when required.
+Installation writes maintained files into a fresh version directory and records their hashes. Different existing maintained bytes, including an existing adapter, are refused before installation writes; identical reinstalls are allowed. Existing research inputs and private resources are preserved. It does not change hooks globally, restart applications, configure an account or publish a manuscript.
 
-Before applying an overlay, compare the source commit and file hashes with the
-current installation manifest. Preserve newer maintained content by integrating
-it into the source first; a metadata bump alone does not make an older checkout
-safe to install. The installer does not reject version downgrades automatically.
-See [installation and rollback](references/runtime-validation.md#安装与回滚).
+Keep every old task's pinned source and adapter at their original paths. A backup
+or changing an alias does not preserve a task that pinned mutable alias bytes.
+New tasks resolve the chosen source path and pin its SKILL.md SHA256. This public
+installer does not switch aliases or seal a complete repository: a release manager
+must separately freeze the complete source and verify its manifest before routing
+new tasks to it. Existing v2 receipts retain explicit rollback support.
+See [version installation and in-flight tasks](references/runtime-validation.md#版本安装与在途任务).
 
 The 2026.09.26.9 increment adds [whole-thesis formatting retrospectives](references/full-thesis-format-retrospective.md):
 source-qualified institution rules, conditional section decisions, caption/footnote/bibliography checks,

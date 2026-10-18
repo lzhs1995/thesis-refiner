@@ -1,8 +1,16 @@
 # 全局通信配置与显式主动求派
 
-本 skill 2026.10.18.1 对齐 multi-agent-collaboration **0.4.37** 的
+本 skill 2026.10.18.2 对齐 multi-agent-collaboration **0.4.40** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
+
+论文 skill 也按独立版本目录安装。旧中文目录与旧 adapter 若已被任务固定，保留其
+原路径和字节；新任务经明确路由读取新源码的真实路径并固定 SHA256。更新 alias
+本身不保护固定了 alias 的旧任务。公共安装器拒绝覆盖不同的已存在受管文件。
+0.4.40 对通过完整协议核验的历史 episode 保留既有预留询问授权；未曾显式登记
+的 episode 仍暂停，不补权限、不迁移 controller。工具与自动 hook 可认证实际
+嵌入式 Codex TUI，须核真实 ancestry、foreground、内核身份、UUID、TTY和稳定复读；
+中间模型 CLI 或未知包装器均拒绝。身份认证不代表 control socket 或投递已经恢复。
 
 协作工作流 hook 全部使用非阻断 observer。普通工具与 Stop 不因旧任务、未结算
 回调、身份不明、等待主管或审查轮次不足被封锁；明确参加协作的会话也适用。
