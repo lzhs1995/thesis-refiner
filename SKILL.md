@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.18.1"
+  version: "2026.10.18.2"
 ---
 
 # 论文精炼助手
@@ -13,12 +13,19 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.18.1**对齐 multi-agent-collaboration **0.4.37**。文件调度在单轮内
+**2026.10.18.2**对齐 multi-agent-collaboration **0.4.40**。文件调度在单轮内
 复用完整版本验证，每次复用仍核全部成员及父目录是否变化，任务与授权状态实时读取；
 新一轮重新验证。只读提速样本不代表实机发现延迟、正文已读或回调已核收。
-0.4.36 的嵌入式 Codex 身份恢复仅限原主管迟到 ACK，不授予普通发送或 hook 认证。
-完整核验的历史文件协议保留原控制器及既有预留询问权限。详见
+新版本允许实际派生于嵌入式 Codex TUI 的工具与 hook 在完整身份核验后认证；
+中间模型 CLI、未知包装器或继承的 root 变量不能取得父线程权限。原生 control socket
+是否可用仍单独核验。0.4.36 的旧入口仍只处理原主管迟到 ACK。
+完整核验的历史文件协议保留原控制器及原已显式登记的预留询问权限，不补授权限。详见
 [协作提效与收尾](references/collaboration-efficiency-and-closeout.md)。
+
+升级使用独立版本目录，保留在途任务固定的旧目录及 adapter 原字节。
+新任务固定解析后的完整源码路径和 SKILL.md SHA256，不把可切换 alias 当不可变路径。
+公共安装器拒绝覆盖不同的已存在文件；备份不代表旧路径哈希仍有效。详见
+[版本安装边界](references/runtime-validation.md#版本安装与在途任务)。
 
 新提交默认观察
 原生收件30秒，reconcile默认一次只读观察；窗口耗尽或turn abort不授权重发。
@@ -131,7 +138,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一采用 0.4.37 非阻断 observer；在途任务保留原控制器。
+协作工作流 hook 统一采用 0.4.40 非阻断 observer；在途任务保留原控制器。
 旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。

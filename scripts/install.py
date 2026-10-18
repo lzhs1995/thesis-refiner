@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Backed-up maintained-file overlay. No global hooks, application or account changes."""
+"""Install into a fresh version path; refuse changes to already pinned file bytes.
+
+Existing schema-v2 receipts remain readable for explicit rollback. A backup does
+not preserve an in-flight task's path/hash, so upgrades must use a new directory.
+No global hooks, application or account changes.
+"""
 from __future__ import annotations
 import argparse
 import datetime as dt
@@ -119,12 +124,15 @@ def _install(canonical, adapter, *, apply):
         if target.is_symlink():
             raise ValueError("SYMLINKED_MAINTAINED_FILE_REQUIRES_EXPLICIT_MIGRATION: " + str(target))
         old = target.read_bytes() if target.exists() else None
+        if old is not None and old != content:
+            raise ValueError("PINNED_SKILL_OVERWRITE_REFUSED: use a new version directory; " + str(target))
         records.append({"path": str(target), "backup": str(backup_root / relative) if old is not None else None,
                         "before_sha256": sha(old) if old is not None else None,
                         "after_sha256": sha(content), "changed": old != content})
     plan = {"schema_version": 2, "applied": apply, "canonical": str(canonical),
             "codex_adapter": str(adapter) if adapter else None, "backup_root": str(backup_root),
             "source": str(ROOT), "files": records, "global_hooks_changed": False,
+            "upgrade_contract": "fresh_version_path_or_identical_bytes; pin_resolved_skill_path_and_sha256",
             "concurrency_contract": "cooperating_writers_use_mutation_locks; staging_and_postwrite_byte_checks",
             "applications_restarted": False, "live_acceptance": "NOT_CLAIMED"}
     if not apply:

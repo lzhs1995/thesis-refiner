@@ -13,7 +13,54 @@ installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)
 
 
+def historical_overlay_receipt(canonical, adapter=None):
+    """Build a completed old-v2 fixture, not a production overwrite entrypoint."""
+    targets = [canonical / p.relative_to(installer.ROOT)
+               for p in installer.maintained_files(installer.ROOT)]
+    if adapter:
+        targets.append(adapter / "SKILL.md")
+    previous = {str(p): p.read_bytes() for p in targets if p.exists()}
+    for name in previous:
+        Path(name).unlink()
+    plan = installer.install(canonical, adapter, apply=True)
+    for index, record in enumerate(plan["files"]):
+        if record["path"] in previous:
+            old = previous[record["path"]]
+            backup = Path(plan["backup_root"]) / ("legacy-" + str(index))
+            backup.write_bytes(old)
+            record.update(before_sha256=installer.sha(old), backup=str(backup), changed=True)
+    Path(plan["manifest"]).write_text(json.dumps(plan))
+    return plan
+
+
 class InstallTests(unittest.TestCase):
+    def test_changed_canonical_or_adapter_is_refused_before_any_install_write(self):
+        for existing in ("canonical", "adapter"):
+            for apply in (False, True):
+                with self.subTest(existing=existing, apply=apply), tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp).resolve()
+                    canonical, adapter = root / "canonical", root / "adapter"
+                    target = root / existing / "SKILL.md"
+                    target.parent.mkdir()
+                    target.write_bytes(b"original task-pinned skill")
+                    before = target.stat()
+                    with self.assertRaisesRegex(ValueError, "PINNED_SKILL_OVERWRITE_REFUSED"):
+                        installer.install(canonical, adapter, apply=apply)
+                    self.assertEqual(target.read_bytes(), b"original task-pinned skill")
+                    self.assertEqual(target.stat().st_mtime_ns, before.st_mtime_ns)
+                    self.assertFalse((canonical / "README.md").exists())
+                    self.assertFalse(list(root.glob("*.backup-*")))
+
+    def test_identical_reinstall_preserves_existing_pinned_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            canonical, adapter = root / "release-v1", root / "adapter-v1"
+            first = installer.install(canonical, adapter, apply=True)
+            before = {r["path"]: Path(r["path"]).stat().st_mtime_ns for r in first["files"]}
+            again = installer.install(canonical, adapter, apply=True)
+            self.assertTrue(all(not r["changed"] for r in again["files"]))
+            self.assertEqual(before, {p: Path(p).stat().st_mtime_ns for p in before})
+
     def test_rollback_rechecks_after_temporary_fsync_and_keeps_concurrent_bytes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp).resolve()
@@ -21,7 +68,7 @@ class InstallTests(unittest.TestCase):
             canonical.mkdir()
             target = canonical / "SKILL.md"
             target.write_bytes(b"original")
-            plan = installer.install(canonical, apply=True)
+            plan = historical_overlay_receipt(canonical)
             actual_fsync = os.fsync
             injections = []
 
@@ -52,7 +99,6 @@ class InstallTests(unittest.TestCase):
             canonical = root / "canonical"
             canonical.mkdir()
             target = canonical / "README.md"
-            target.write_bytes(b"prior version")
             actual_fsync = os.fsync
             def interleave(fd):
                 actual_fsync(fd)
@@ -121,7 +167,7 @@ class InstallTests(unittest.TestCase):
             canonical.mkdir()
             (canonical / "SKILL.md").write_text("old")
             (canonical / "private.log").write_text("untouched")
-            plan = installer.install(canonical, adapter, apply=True)
+            plan = historical_overlay_receipt(canonical, adapter)
             preview = installer.rollback(plan["manifest"])
             self.assertFalse(preview["applied"])
             self.assertNotEqual((canonical / "SKILL.md").read_text(), "old")
@@ -151,7 +197,7 @@ class InstallTests(unittest.TestCase):
             c = root / "canonical"
             c.mkdir()
             (c / "SKILL.md").write_text("original")
-            plan = installer.install(c, apply=True)
+            plan = historical_overlay_receipt(c)
             old = next(r for r in plan["files"] if r["path"] == str(c / "SKILL.md"))
             Path(old["backup"]).write_text("corrupt")
             with self.assertRaisesRegex(ValueError, "BACKUP_HASH"):
@@ -161,19 +207,17 @@ class InstallTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SYMLINKED"):
                 installer.install(link / "nested", apply=True)
 
-    def test_dry_run_then_overlay_preserves_private_files_and_old_bytes(self):
+    def test_dry_run_then_fresh_install_preserves_private_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp).resolve()
             canonical, adapter = root / "canonical", root / "adapter"
             canonical.mkdir()
-            (canonical / "SKILL.md").write_text("legacy instructions")
             (canonical / "private.log").write_text("preserve")
             plan = installer.install(canonical, adapter)
             self.assertFalse(plan["applied"])
             self.assertFalse(adapter.exists())
             plan = installer.install(canonical, adapter, apply=True)
-            old = next(x for x in plan["files"] if x["path"] == str(canonical / "SKILL.md"))
-            self.assertEqual(Path(old["backup"]).read_text(), "legacy instructions")
+            self.assertEqual((canonical / "SKILL.md").read_bytes(), (installer.ROOT / "SKILL.md").read_bytes())
             self.assertEqual((canonical / "private.log").read_text(), "preserve")
             self.assertIn(str(canonical / "SKILL.md"), (adapter / "SKILL.md").read_text())
             result = subprocess.run([sys.executable, str(canonical / "scripts/workflow.py"), "--help"], capture_output=True, text=True)

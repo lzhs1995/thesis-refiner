@@ -50,20 +50,28 @@ Hook 每次只做有界原生核查，不构造无限 Stop/idle 或新消息循�
 
 连接恢复维护优先使用可叠加的工具。`nlm_recovery_preflight.py` 兼容既有 JSON-only 健康入口，`nlm_tls_probe.py` 只处理诊断，不替换正在运行的 query transport。安装后核现役固定文件仍为原哈希；不要为修一个证据解析错误更改所有账号、共享代理、SDK或健康日志。新诊断工具的本地环回测试、旧故障真实回放、既有实际恢复和现役采用分别记录。
 
-## 安装与回滚
+## 版本安装与在途任务
 
 先比对待安装版本的 source commit、skill 版本和维护文件 SHA256，以及现役安装的
 来源记录、release manifest 与 `INSTALLED.json` 的 after 哈希。安装回执只能
 证明所列字节；缺失来源或哈希漂移须明确记录，不能仅凭版本字符串推断同源。
-若现役维护内容较新，先将其有效增量合入待安装维护源，再审阅覆盖计划；不导入无关
-私有历史资源。当前安装器不自动拒绝版本降级，把 metadata 升号不能防止旧
-正文覆盖新版，也不能代替来源与文件差异核对。
+若现役维护内容较新，先将其有效增量合入待安装维护源；不导入无关私有历史资源。
+从2026.10.18.2起，公共安装器在任何安装写入前核对全部受管目标；已有文件与
+待装字节不同时返回 `PINNED_SKILL_OVERWRITE_REFUSED`，包括Codex adapter。
+版本字符串不是授权，不能通过升号覆盖旧任务绑定的路径。相同字节重复安装仍允许。
 
-沿 `scripts/install.py` 的 dry run 审阅维护文件差异，再执行本地已授权覆盖。原件和文件哈希保存在备份目录，历史私有资源保持。`INSTALLED.json` 是完成安装回执；`INCOMPLETE.json` 是部分失败，不能当已完成。
+升级使用独立的新版本目录，沿 `scripts/install.py` 的 dry run 核对计划，再执行
+已授权安装。该安装器只管理回执中列明的文件，不封存整个源码树，不切换全局alias。
+统一安装流程另行封存完整版本源码、逐项manifest和只读权限，并核验新任务alias；
+新任务必须固定解析后的真实 `SKILL.md` 路径与SHA。旧任务原目录、原adapter及
+原字节全部保留；仅备份旧文件或把旧路径改成指向新版本的symlink不算保护在途任务。
+
+`INSTALLED.json` 只证明所列文件安装完成；`INCOMPLETE.json` 表示部分失败。
+安装不证明活跃客户端加载、原生收件或论文接受。
 
 ```bash
-python3 scripts/install.py --canonical /absolute/skill --codex-adapter /absolute/adapter
-python3 scripts/install.py --canonical /absolute/skill --codex-adapter /absolute/adapter --apply
+python3 scripts/install.py --canonical /absolute/releases/2026.10.18.2/skill --codex-adapter /absolute/releases/2026.10.18.2/adapter
+python3 scripts/install.py --canonical /absolute/releases/2026.10.18.2/skill --codex-adapter /absolute/releases/2026.10.18.2/adapter --apply
 python3 scripts/install.py --rollback /absolute/backup/INSTALLED.json
 python3 scripts/install.py --rollback /absolute/backup/INSTALLED.json --apply
 ```
