@@ -4,12 +4,19 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.14.1**, synchronized with collaboration **0.4.34**.
-The shared release recognizes one exact text ACK alongside strictly validated
-thinking or redacted-thinking blocks without exposing their contents. It retains
-the original controller, nonce and notice-reception evidence. The 0.4.33 support
-for context-token footers and a narrowly proven pasted-but-unsubmitted handshake
-also applies, with reviewed 0.4.32/0.4.33 file-protocol compatibility.
+Current source: **2026.10.17.1**, synchronized with collaboration **0.4.35**.
+New input observes native reception for 30 seconds by default; reconciliation
+defaults to one read-only observation. Pending input and interrupted turns never
+authorize a resend. Terminal reasks wait at least 60 seconds after the previous
+native confirmation; file cadence remains independent. Nonblocking PostToolUse
+context exposes exact unconsumed replies, pending handshakes and separate callback
+settlement. Reading, consumption, acceptance and exact RELEASE remain distinct.
+The runner returns at a formal reservation without stopping its original episode
+or proving an idle terminal; fresh preflight is still required before dispatch.
+The shared release also covers the verified 0.4.34 file protocol and measured
+Monitor/Goal/padding layouts without changing historical controller authority.
+This repository documents that shared implementation; it adds no sender, hook
+or research review round. Validation status is recorded in CHANGELOG.
 Cross-release file scheduling, recoverable registration and explicit recovery
 after proven zero-input preflight exhaustion remain available.
 Formal reservations pause new inquiries while allowing the original executor to

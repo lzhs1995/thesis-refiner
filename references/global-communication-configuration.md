@@ -1,6 +1,6 @@
 # 全局通信配置与显式主动求派
 
-本 skill 2026.10.12.3 复用 multi-agent-collaboration **0.4.27** 的
+本 skill 2026.10.17.1 对齐 multi-agent-collaboration **0.4.35** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
 
@@ -28,11 +28,14 @@ shell 可以通过 exec 优化替换自身，令实际工具成为 managed daemo
 以 caller 自填环境或共享 daemon 的旧 workspace 代替证据。真实冲突仍只拒绝该次
 终端输入；普通工具、诚实报告与已授权 SOLO 工作继续开放。
 
-用户明确授权后，可显式运行 `executor_reask.py run`，每60秒以新 marker 询问，
-每5秒查答复，单次轮询预算最多540秒，同步 I/O 可延长实际耗时；原 episode 可在命令退出后继续等待，按既有授权显式
-续同一段。绑定主管回复或用户停止可结束等待。新派发自动出口依赖旧 idle binding，
-现役 advisory hook 不写该绑定，不能凭新包存在宣称自动结束。Stop hook 不发起或强迫该循环。原终端消息
-未确认时仅更新已配置文件通道，不堆叠 prompt。主管主动检查原 mailbox，按原请求的
+用户明确授权后，可显式运行 `executor_reask.py run`。0.4.35 的终端新 marker
+不早于上一条消息原生确认后60秒，发送前重核原 receipt；未确认时只观察原次，
+文件通道独立计时。每5秒查答复，单次轮询预算最多540秒，同步 I/O 可延长实际
+耗时；原 episode 可在命令退出后继续等待，按既有授权显式续同一段。
+遇到须由原执行者消费的回复、正式预留或观察期限，runner 返回并给出具体原因；
+返回不停止或重开 episode，也不证明终端空闲、Goal改变或已经派包。正式派发前
+重新 preflight；旧 controller 不自动取得新返回行为。Stop hook 不发起或强迫该循环。
+原终端消息未确认时仅更新已配置文件通道，不堆叠 prompt。主管主动检查原 mailbox，按原请求的
 caller、supervisor、task、episode 和 marker 回复；等待类回复写明解除条件。
 询问次数、文件写入、正文已读和实际送达分别计数；不能将已退出命令称为仍在运行。
 
@@ -72,6 +75,10 @@ launchd每60秒运行，容量256、单次10秒、非阻塞锁；不读转录或
 不发送消息、不迁移旧episode、不唤醒空闲模型。保留UNKNOWN与terminal_pending，
 只归档真实episode转换。安装job、登记、实际sweep和收到绑定回复分别核验。
 
+0.4.35 仅将 reask scheduler 的 launchd ProcessType 设为 Standard；配置 guardian
+仍为 Background。分页、轮转与阶段计时保持有界；启动观测只涵盖模块入口到
+sweep 入口，不能据此推算解释器启动前的全部耗时。
+
 PostToolUse保留已认证foreground.thread_id，actual/inherited/parent分列，
 child不能把继承root当自己或消费parent收件箱。每次最多8条文件提示，公平轮转，
 未答至少60秒再提示，输出成功flush后才更新游标。提示后主管核正文并回精确mailbox；
@@ -87,3 +94,17 @@ next_due；ANSWERED 不等于消费。原执行者实读完整正文后用精确
 完成、撤权及授权到期停止；未知原投递不重发，不迁移旧controller。实现统一在
 multi-agent-collaboration，文件scheduler不发输入、不唤醒模型、不阻断Stop。
 安装、登记、实际sweep、正文消费及两轮现场采用分别核验。
+
+## 0.4.35：回复实读与独立结算提示
+
+非阻断 PostToolUse 可展示已认证 ANSWERED 的完整正文、SHA及原 controller 的
+consume 入口；原执行者实读后按精确SHA消费。展示不代替读取或消费，成功flush
+后才更新提示游标。runner 返回的 `runner_returned=true` 搭配
+`REPLY_REQUIRES_ORIGINAL_CONSUME`、`FORMAL_RESERVATION_WAIT` 或
+`OBSERVATION_DEADLINE`；`wait_boundary` 保持 `idle_observed=false`、
+`goal_state_changed=false`、`fresh_preflight_required=true`。
+
+精确同任务预留在原锁下复用；精确RELEASE只清理对应暂停，不复活终态或撤权
+episode。已核原生callback但预留尚未RELEASE时，独立 `CALLBACK_SETTLEMENT`
+文件提示主管核收报告；不增加下一任务ask_count、不发输入、不消费、不代核收
+或RELEASE。主管完成实际裁决及解除后接回原论文待办，不重复已接受的审查。

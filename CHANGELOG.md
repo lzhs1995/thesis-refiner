@@ -1,3 +1,24 @@
+## 2026.10.17.1
+
+- 对齐协作0.4.35的新投递30秒确认窗、有限0至60秒选项及默认一次只读reconcile；
+  保留原RPC诊断与controller来源，不把超时或turn abort当成消息丢失或重发权限。
+- 同步从上一条原生确认后至少60秒起算的终端求派、独立文件节奏及runner返回边界；
+  返回不停止episode、不改Goal、不证明终端空闲，正式派单仍核新鲜preflight。
+- 同步原ANSWERED全文与consume入口、待ACK/超时提示及独立CALLBACK_SETTLEMENT。
+  提示不代正文读取、ACK、论文核收或精确RELEASE；不增加下一任务ask_count。
+- 对齐精确reservation复用、终态RELEASE清理、有界公平发现和0.4.34历史文件协议。
+  仅reask scheduler采用Standard，配置守护器仍Background；实测Monitor/Goal与
+  padding不授权全局strip/rstrip、清草稿或额外补键。原controller与旧证据保留。
+- 更新全局通信、投递和收尾参考；协作恢复后接原论文待办，不新增科研审轮。
+
+本次只改文档，运行实现由共享协作skill提供。R1冻结的协作提交
+`60a992cd51413e8799235c6012dba5559be8ec31` 在macOS/Ubuntu与Python 3.10/3.14
+四个CI环境各运行2,111项（含2项skip，实际执行2,109项），0 failures/errors。
+该计数只对应R1冻结提交；后续整改与最终发布须引用各自精确HEAD的CI，不能沿用。
+论文仓R1冻结提交`c4bb88aeb5de912b1bd8335a679eabf9a9e2b906`的Python 3.10/3.12
+CI通过；更早的本地计数不记成本次最终验证。
+原会话独审、CI、不可变安装、真实自动hook、正文读取与native receipt分别核验。
+
 ## 2026.10.14.1
 
 - 将 SKILL metadata、当前版本说明与 README 统一对齐协作 0.4.34；旧版本记录保留。
