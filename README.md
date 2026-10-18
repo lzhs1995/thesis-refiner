@@ -4,7 +4,13 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.17.1**, synchronized with collaboration **0.4.35**.
+Current source: **2026.10.18.1**, synchronized with collaboration **0.4.37**.
+File scheduling reuses complete release verification within one sweep, rechecking
+every verified member and parent for changes before reuse. Task and authorization
+state remain live. A read-only validation benchmark does not prove production
+detection latency, body reading or callback reception. The 0.4.36 embedded Codex
+identity path remains limited to the original supervisor's late ACK recovery;
+it does not authenticate ordinary messages or automatic hooks.
 New input observes native reception for 30 seconds by default; reconciliation
 defaults to one read-only observation. Pending input and interrupted turns never
 authorize a resend. Terminal reasks wait at least 60 seconds after the previous
@@ -13,14 +19,15 @@ context exposes exact unconsumed replies, pending handshakes and separate callba
 settlement. Reading, consumption, acceptance and exact RELEASE remain distinct.
 The runner returns at a formal reservation without stopping its original episode
 or proving an idle terminal; fresh preflight is still required before dispatch.
-The shared release also covers the verified 0.4.34 file protocol and measured
+The shared release also covers the verified 0.4.36 and earlier file protocols and measured
 Monitor/Goal/padding layouts without changing historical controller authority.
 This repository documents that shared implementation; it adds no sender, hook
 or research review round. Validation status is recorded in CHANGELOG.
 Cross-release file scheduling, recoverable registration and explicit recovery
 after proven zero-input preflight exhaustion remain available.
-Formal reservations pause new inquiries while allowing the original executor to
-read and consume its bound reply; only the matching release clears the pause.
+Formal reservations pause inquiries by default. Explicitly enrolled reservation
+status inquiries remain file-only; terminal input stays paused. The original
+executor may read and consume its bound reply, without implying exact RELEASE.
 Workflow hooks observe their actual invocation without blocking ordinary tools or
 Stop. Supervisor PostToolUse also exposes authenticated file requests; it cannot
 wake an idle client or settle work. A bound mailbox reply lets the executor's
