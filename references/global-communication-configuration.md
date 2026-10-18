@@ -1,6 +1,6 @@
 # 全局通信配置与显式主动求派
 
-本 skill 2026.10.17.1 对齐 multi-agent-collaboration **0.4.35** 的
+本 skill 2026.10.18.1 对齐 multi-agent-collaboration **0.4.37** 的
 [配置与请求生命周期](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/configuration-and-reasks.md)。
 本机执行时解析已安装协作 skill 的真实路径并读取同名参考文件；在途任务保留原控制器。
 
@@ -78,6 +78,12 @@ launchd每60秒运行，容量256、单次10秒、非阻塞锁；不读转录或
 0.4.35 仅将 reask scheduler 的 launchd ProcessType 设为 Standard；配置 guardian
 仍为 Background。分页、轮转与阶段计时保持有界；启动观测只涵盖模块入口到
 sweep 入口，不能据此推算解释器启动前的全部耗时。
+
+0.4.37 在单次sweep内复用完整release验证，每次复用前核所有成员及父目录的
+dev/ino/size/mode/mtime_ns/ctime_ns，变化或缺失即完整重验；新sweep不继承缓存。
+CURRENT完整批准和实时任务/授权/STOP/预留/回件检查保留，256上限、10秒预算和
+公平游标不变。实际sweep的release_verification计数与原回件检测时间分开取证；
+只读样本不代实机验收。原控制器及历史权限不迁移，发现回复也不代执行者消费。
 
 PostToolUse保留已认证foreground.thread_id，actual/inherited/parent分列，
 child不能把继承root当自己或消费parent收件箱。每次最多8条文件提示，公平轮转，

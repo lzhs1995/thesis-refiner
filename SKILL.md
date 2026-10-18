@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.17.1"
+  version: "2026.10.18.1"
 ---
 
 # 论文精炼助手
@@ -13,13 +13,20 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.17.1**对齐 multi-agent-collaboration **0.4.35**：新提交默认观察
+**2026.10.18.1**对齐 multi-agent-collaboration **0.4.37**。文件调度在单轮内
+复用完整版本验证，每次复用仍核全部成员及父目录是否变化，任务与授权状态实时读取；
+新一轮重新验证。只读提速样本不代表实机发现延迟、正文已读或回调已核收。
+0.4.36 的嵌入式 Codex 身份恢复仅限原主管迟到 ACK，不授予普通发送或 hook 认证。
+完整核验的历史文件协议保留原控制器及既有预留询问权限。详见
+[协作提效与收尾](references/collaboration-efficiency-and-closeout.md)。
+
+新提交默认观察
 原生收件30秒，reconcile默认一次只读观察；窗口耗尽或turn abort不授权重发。
 终端求派从上一条原生确认后至少60秒起算，文件求派独立计时。PostToolUse提示
 原ANSWERED全文、原consume入口、待ACK握手与独立CALLBACK_SETTLEMENT；
 提示不代读取、核收或RELEASE。正式预留时本次runner返回，仍须新鲜preflight，
 不停止原episode或改变Goal。详见[全局通信配置](references/global-communication-configuration.md)。
-共享实现同时保留经完整核验的0.4.34文件协议与实测Monitor/Goal/padding边界；
+共享实现同时保留经完整核验的0.4.36及更早文件协议与实测Monitor/Goal/padding边界；
 不迁移原控制器、不清草稿、不复制sender或hook。最终验证见CHANGELOG，
 安装、自动hook、正文读取与论文接受分别取证；通信维护不增加科研审轮。
 
@@ -124,7 +131,7 @@ python3 scripts/hook_doctor.py --config /absolute/client/settings.json
 
 ## 协作不得封锁会话
 
-协作工作流 hook 统一采用 0.4.35 非阻断 observer；在途任务保留原控制器。
+协作工作流 hook 统一采用 0.4.37 非阻断 observer；在途任务保留原控制器。
 旧任务、未结算 callback、
 身份不明、等待主管或 review 轮次均不得禁止普通工具、接收新握手或结束回合。
 原检查器仅供显式诊断，不作为全局拒绝执行的 hook。停止自动求派不能阻塞 Stop。
