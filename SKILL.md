@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.18.4"
+  version: "2026.10.19.1"
 ---
 
 # 论文精炼助手
@@ -13,7 +13,12 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.18.4**对齐 multi-agent-collaboration **0.4.46**。双方 prompt 准备好后
+**2026.10.19.1**对齐 multi-agent-collaboration **0.4.47**。补齐互核来源、
+原始字符差、版面证据与旧规范 FAIL 的独立记录，见
+[跨章整合、来源绑定与证据复用](references/evidence-reuse-and-integration.md)。
+共享运行时提供显式 profile 修复及原控制器诊断；配置已写入不等于活跃客户端已加载。
+
+双方 prompt 准备好后
 立即通过共享支持入口发送；正常工作、原生 `/goal` 或自动续轮不构成通信禁令，
 不要求先暂停 Goal 或等待空闲。接收方自行安排回应和任务顺序；共享文件写入仍按
 明确范围和单写者交接。新 preflight 不再强制执行 `bridge-test`，未运行探针的
@@ -78,7 +83,8 @@ shell/rtk 祖先不代表 caller 非法，沿工具自身的内核进程证据�
 
 cc-switch 切换、全局 hook 与每60秒求派按
 [全局通信配置](references/global-communication-configuration.md)执行：复用协作
-skill 的唯一守护器，原消息未确认时走文件通道；每个工作区通过后立即回原任务。
+skill 的唯一守护器；原消息未确认时只对账、不重发，自动求派可走文件通道，
+独立新信息仍及时经支持入口发送。每个工作区通过后立即回原任务。
 
 Claude 已排队的合法继任通知若被旧主管等待循环饿死，使用协作 skill 0.4.31
 的显式原次登记与非阻塞 PostToolUse 正文提示；不另写发送器或工作流门禁。
