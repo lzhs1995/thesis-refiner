@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.19.7"
+  version: "2026.10.19.8"
 ---
 
 # 论文精炼助手
@@ -13,7 +13,13 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.19.7**对齐 multi-agent-collaboration **0.4.53**。Claude 2.1.303
+**2026.10.19.8**对齐 multi-agent-collaboration **0.4.54**。既有同pane不同tab
+的终端可以直接通信并进行正式握手；参与者按独立surface、UUID和原生会话核验，
+输入仍按pane串行。正常工作或Goal不构成通信禁令；共享写入单独交接。
+不迁移原会话，不重放旧通知，正常.52登记不重复停启。详见
+[同窗格既有终端](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/existing-terminal-tabs.md)。
+
+此前Claude 2.1.303
 的 180 列正文引用通知支持实测填充布局；仍核完整原文和输入框稳定性。
 已粘贴通知先按原控制器核原次，原生入队后不补键、不重贴；正常运行的求派登记
 不因显示匹配升级而重复 stop/start。
