@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.19.4"
+  version: "2026.10.19.5"
 ---
 
 # 论文精炼助手
@@ -13,7 +13,14 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.19.4**对齐 multi-agent-collaboration **0.4.49**。原执行者显式
+**2026.10.19.5**对齐 multi-agent-collaboration **0.4.51**。自动 PostToolUse
+回件提示已取消旧的 idle-preflight 要求；双方正常工作或 Goal 续轮时仍及时发送
+就绪信息。新任务包核验当前身份、握手和 validation，无需等待 idle 或暂停 Goal。
+完整核验的 0.4.50 文件协议保留原权限，在途 episode 无需为升级停止重登。
+本次确认的是自动提示文本错误，不据此认定发送器仍以忙碌为门禁或解释历史停顿。
+安装、客户端自动提示、正文读取及真实预留期往返继续分别验收。
+
+原执行者显式
 停止旧求派 episode 后，可用 `--resume-stopped` 登记新 episode；事务提交前
 保留旧 stop，正式任务预留与未确认消息全程保留。预留期间的持续文件询问须
 显式授权，安装新版本不自动升级旧 episode，也不重放原消息。

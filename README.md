@@ -4,7 +4,15 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.19.4**, synchronized with collaboration **0.4.49**.
+Current source: **2026.10.19.5**, synchronized with collaboration **0.4.51**.
+Automatic reply guidance no longer requires an idle preflight. Ready messages
+can be sent during normal work and native Goal; a new pack still needs current
+identity, handshake and validation. Reviewed 0.4.50 file episodes retain their
+original authority without stopping or registering again for this upgrade.
+This corrects misleading advisory text; it does not establish a sender defect
+or explain historical stalls. Installation and real inquiry cycles are verified
+separately. See the [shared release contract](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/release-0.4.51.md).
+
 An authenticated original executor can explicitly re-enroll a stopped inquiry
 while retaining formal reservations and pending input. Registration clears the
 previous stop only after commit; reservation inquiries require explicit continuing
