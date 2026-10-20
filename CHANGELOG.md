@@ -1,5 +1,12 @@
 ## 2026.10.19.8
 
+## 2026.10.20.1
+
+- Adopt the shared three-state continuity contract: original trio, available Codex takeover, or original Claude peer continuation; bound child agents across the whole task.
+- Require explicitly enrolled task-scoped proactive Stop continuation and full reply consumption; preserve old episodes and uncertain callbacks.
+- Remove stale raw-send, separate-pane and mandatory300-second-wait rules from collaboration recovery guidance. Shared runtime remains in multi-agent-collaboration.
+
+
 - Adopt MAC 0.4.54 direct communication, pre-input socket fallback and native marker user receipts.
 
 - 对齐协作0.4.54：同pane不同tab可通信与握手，身份和实际布局分别核验。

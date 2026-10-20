@@ -13,7 +13,7 @@ python3 scripts/hook_doctor.py --config /absolute/current/settings.json --legacy
 消息投递复用[共享接收端绑定契约](receiver-bound-delivery.md)。actual hooks、
 wrappers、bridge 与 reader 必须来自同一 immutable collaboration release，
 原 attempt、pending index、接收端 session/transcript inode 及完整原文保持绑定。
-Hook 每次只做有界原生核查，不构造无限 Stop/idle 或新消息循环。分别验证源码、
+每次hook只作有界检查；已授权proactive任务由共享Stop入口要求原executor继续有界runner，hook自身不长时循环或发送。分别验证源码、
 独立安装、客户端实际加载及实机原生 receipt；本版本文档不证明其中任何一项。
 
 `a5-termination-auditor.js` 只处理显式 `workflow_checkpoint` / `THESIS_REFINER_CHECKPOINT` 和可选 `delivery_checkpoint` / `THESIS_REFINER_DELIVERY_CHECKPOINT`。两者都是绝对路径。未绑定任务原样放行；已绑定任务缺少回执则拒绝。复制 hook 到另一个运行目录时通过绝对 `THESIS_REFINER_ROOT` 指向同版 skill，或保留原目录结构；不要依赖复制后的 `../scripts` 恰好存在。`THESIS_PYTHON` 固定实际解释器。完成边界调用，不阻断普通中间工作。
