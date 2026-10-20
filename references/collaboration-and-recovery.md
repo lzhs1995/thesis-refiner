@@ -2,24 +2,52 @@
 
 任务分工、握手预算归因与已验收成果收尾见[协作提效与收尾](collaboration-efficiency-and-closeout.md)。沿用下列原会话、身份与资源边界。
 
-## 同 workspace 握手硬门禁（不可绕过）
+身份不符必须 fail-closed、零发送：发送前核实当前 caller 与指定 receiver 的真实
+workspace、surface、pane UUID 和原 session；UUID 缺失、相互矛盾或身份未核实，不可按
+标题、焦点或数字 ref 猜目标。正常协作沿原同 workspace；用户明确授权的跨 workspace
+继任维护必须固定两端 UUID/session 和授权原文。忙碌、Goal、压缩与输入方式的限制已取消，
+身份核验和原次去重仍生效。可使用共享 cmux_workspace_guard/bridge 或已完成等价核验的
+直接发送；不恢复裸 cmux 禁令，不把配置写入当现役加载。
 
-只准与 **当前真实 caller 所属 workspace UUID 相同** 的独立 terminal pane 中的 agent 握手。
-每次先读 `cmux identify --json` 的 caller，再与实时 tree 的 UUID 对齐；focused、标题、旧摘要、
-历史 surface 编号和环境变量都不能代替身份。用户指定的 executor surface UUID 必须同时精确匹配。
-指定工作区与真实 caller 冲突即拒绝输入，不能回退旧 Claude、伪造身份、搬动面板或另开会话。
+## 当前通信与身份
 
-必须使用 `multi-agent-collaboration` 的 `cmux_workspace_guard.py`、现役 PreToolUse hook 和
-受保护的 `cmux_bridge`。harness 固定 `--expected-workspace-uuid` 与
-`--expected-executor-uuid`；bridge 在每次粘贴和按键前重核，并用双 UUID 发送。
-跨区、缺 UUID、旧绑定、面板移动或身份不明一律 fail-closed，零发送。裸 `cmux send/send-key`、
-`cmux-agent ask/broadcast` 被 hook 拒绝；不得借 STATUS、恢复授权、force、超时或 shell 环境绕过。
-用户明确指定的目标可存于协作 skill 的 caller-scoped workspace-scope 文件，不因不可用自行撤销。
+先用原生 `cmux-agent self` 核真实caller，并用实时tree核目标UUID及原会话。
+数字ref只作显示；标题、focus、cwd和共享后台继承环境均不授身份。原同workspace
+的独立surface可及时互通，同pane不同tab允许协作，输入串行。用户明确授权的
+指定维护/继任跨workspace联络沿共享协议办理，不转让旧callback或文件所有权。
 
-跨工作区资源协调继续使用现有文件/队列回执，不借资源协调重新指定 executor。
-安装后实测 hook 的 exit 2 与零输入；配置写入不等于运行中客户端重载，旧导入模块也不算自动更新。
-协作 skill 缺失或身份门禁未通过时，禁止发送；已授权的单 agent 离线工作可继续。
+prompt就绪立即发送，正常工作、Goal和压缩不是通信禁令。不要求为握手停Goal。
+允许直接cmux通信；推荐统一共享bridge，以避免自写重复Enter和全量日志扫描。
+新消息以原接收端新增含marker的user消息证明收到；排队、按键和工具成功不算。
+正文读取、精确ACK和业务接受分别记录。历史attempt继续由完整原controller核收，
+不因超时或升级重贴原消息。配置写入、运行客户端加载与自动hook执行分开验证。
 
+## 三态连续推进与主动反馈
+
+统一执行 [MAC任务连续性](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/task-continuity.md)。
+Codex及原双Claude正常时分工、ACK、回传和核收及时进行；Claude真实失效时，
+有界原会话重试后由Codex接续，健康的另一Claude继续工作；Codex失效时原双Claude
+在同任务内协商CLAIM范围、产物和合并负责人，继续计划。整个任务按需最多2子agent，
+核对parent/child/task标识及主agent已读的返回结果，不能把spawn成功当完成。
+
+可重试API错误最多3次独立终态尝试，至少间隔60秒且遵守更长Retry-After；成功重置。
+不强制空等300秒，独立核值和候选修订立即继续。busy、queued、无回复、socket缺失
+和旧错误重读都不是API失败。认证/计费单独诊断，不盲目重试。实际模式由共享
+`scripts/collaboration_continuity.py`结合固定任务/原参与者及哈希证据生成；不另建论文身份库。
+
+新持续任务必须原executor登记 `--continuing --reservation-inquiries --proactive-hook`。
+共享Stop hook核原身份和授权后要求继续工作，或运行原 `executor_reask.py run --max-seconds 60`；
+仍WAITING_REPLY就续办。新proactive授权允许预留期STATUS，旧登记维持原合同。
+收到主管实际reply后原executor读取完整正文、exact-SHA consume并执行指示。
+询问到达主管不等于主管已答复；不得仅因收到native回执就永久停问。原输入未确认时
+只核原次并继续文件询问，不重复粘贴callback。文件scheduler不代表唤醒模型。
+用户停止、授权撤销、任务完成均有效；未登记任务/子agent不受此Stop约束。
+
+API故障下原agent可能仍占共享文件或资源；先明确单写者边界，不能从超时推导释放。
+独立候选可继续。Codex SOLO标solo_self_review；双Claude互核标peer_review，
+不冒充原主管验收。恢复后立即交回checkpoint、冻结产物、未决nonce和资源事实，
+不重做已接受审轮，不重放原任务，不替换原会话。共享工程反馈统一送维护者
+surface1000020040，由其检验、合并、发布，业务session只交证据并继续本职任务。
 
 通用实现归 `multi-agent-collaboration`。论文任务包只附研究 profile、完整清单、保护路径、文档适配器精确 SHA、当前模式与任务 checkpoint，不把论文判断硬编码进通用协作工具。
 
@@ -27,16 +55,6 @@
 已核收回调的收尾通知不需要另一轮ACK；修通信不自动成为executor的后续业务。
 
 双 agent 必须有当前任务的真实握手、独立 nonce、报告和回调哈希。旧章节 DONE 不能证明新 skill 工程的参与。
-
-502/504/524 等可重试 Claude API 故障采用有界同会话重试。事先记录有限观察/尝试预算，给门槛后的真实观察留出时间；原尝试确实结束后至少间隔 60 秒，服务要求更久则遵循其等待时间。不向在途调用后叠加请求，不重发已接受或结果未知的 nonce，客户端内部次数不当作 supervisor 的外层重试。
-
-暂时不可用须由至少连续 300 秒的真实失败证据支持：从第一次实际 API 失败计时，直到当前新鲜失败，期间已观测 API 结果全部失败；任何真实 API 成功重置计时。保存同一任务/执行者的首次及末次失败时间、最后一次真实成功时间（未观测到则记未知）、尝试结果、原始日志与可用的请求/错误 ID。门槛处必须有新的失败且当前尝试已终态，不能等五分钟后重读旧错凑时长。屏幕静止、queued、unknown、迟到回调、三次重试或监督端预算不足均不证明这段连续失败；观察有缺口时保留未知，从新的可验证证据重新建立失败区间，不能拼接短观察或未知时段。有限预算耗尽而证据不足时仍不能切 SOLO，继续独立核值、来源整理与候选修订，并核收原次调用。
-
-401/403、计费/额度/no-account 不盲重试，独立分类。用户明确停用或撤回授权也单独登记，不能称为 Claude 死机或已满足上述故障门槛。五分钟是执行策略下限，现有有限恢复经验不证明它在统计上最优；这段规则不修改现役控制器或新增运行时计时保证。
-
-可重试 API 故障达到上述门槛且已获用户自动接管授权时：保存失败 → 冻结 executor 的派发和写入 → 停止并验证 sentinel 的该阶段已终止 → 核实没有并发写入及未决操作 → 固定 checkpoint、活动 nonces 和保护路径 → Codex 接管。其他故障按各自分类和已有授权处理。始终保留原会话，不 `/clear` 或新建替代 Claude。恢复时在 HANDOFF_READY 交接，确认 solo 写入结束，再给同 UUID/同会话真实新握手；新任务也须有当前任务握手。API 成功只重置故障计时，不等于任务完成或自动恢复写权限。旧回调只可供审计，不能重新启动已经完成的工作。五分钟经过不授予 Word/NLM 未知资源的释放权。
-
-跨工作区的章节会话通过原文件/队列回执协调资源与文件所有权；同工作区才可沿受保护的 cmux transport 发消息，不互相接管 executor。使用 task_id、workspace UUID、surface UUID 为身份，数字 surface ref 仅作当前显示。发消息先定位现有 surface；内置 bridge 验证投递。网络已投递但探测不确定时核对接收端，不重复派发。
 
 资源按申请 → 授予 → 使用 → 排空 → 释放。共享 SQLite 队列让调度者退出后仍可恢复，真实 OS 锁保护调用和交接。过期租约不自动授予别人，先核对原进程、pending 和 lock。
 

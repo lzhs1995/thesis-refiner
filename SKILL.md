@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.19.8"
+  version: "2026.10.20.1"
 ---
 
 # 论文精炼助手
@@ -13,11 +13,18 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.19.8**对齐 multi-agent-collaboration **0.4.54**。既有同pane不同tab
-的终端可以直接通信并进行正式握手；参与者按独立surface、UUID和原生会话核验，
-输入仍按pane串行。正常工作或Goal不构成通信禁令；共享写入单独交接。
-不迁移原会话，不重放旧通知，正常.52登记不重复停启。详见
-[同窗格既有终端](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/existing-terminal-tabs.md)。
+**2026.10.20.1**采用 multi-agent-collaboration **0.4.56** 的
+[三态任务连续执行](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/task-continuity.md)。
+正常时 Codex 与原双 Claude 及时协作；Claude 有界真实重试仍失效时由 Codex 接续；
+Codex 失效时原同任务双 Claude 协商分工并继续既定计划。按整个任务最多2个子agent，
+核实结果回到原主agent。自动接续不依赖旧主管再次批准，共享写入仍明确归属。
+
+新持续任务由原executor登记 `--continuing --reservation-inquiries --proactive-hook`，
+共享 Stop hook 强制继续已授权任务或执行每次60秒的原求派 runner，直到主管实际回复
+并由原executor全文读取、exact-SHA consume。正常忙碌、Goal和正式预留不禁止STATUS。
+文件scheduler仅作兜底，不冒充唤醒模型。用户停止、撤销授权及任务完成生效；
+旧episode与旧callback不自动迁移或重放。普通工具不受阻，无登记任务保持advisory。
+详见[协作与恢复](references/collaboration-and-recovery.md)。本仓不复制通用hook或sender。
 
 此前Claude 2.1.303
 的 180 列正文引用通知支持实测填充布局；历史 attempt 保持原草稿规则；新输入采用 0.4.54 直接通信合同。
@@ -66,7 +73,7 @@ callback 收件分别留证，见[协作提效与收尾](references/collaboratio
 原生收件30秒，reconcile默认一次只读观察；窗口耗尽或turn abort不授权重发。
 终端求派从上一条原生确认后至少60秒起算，文件求派独立计时。PostToolUse提示
 原ANSWERED全文、原consume入口、待ACK握手与独立CALLBACK_SETTLEMENT；
-提示不代读取、核收或RELEASE。正式预留时本次runner返回，仍须新鲜preflight，
+提示不代读取、核收或RELEASE。历史未登记proactive的正式预留runner按原合同返回，仍须新鲜preflight，
 不停止原episode或改变Goal。详见[全局通信配置](references/global-communication-configuration.md)。
 共享实现同时保留经完整核验的0.4.36及更早文件协议与实测Monitor/Goal/padding边界；
 不迁移原控制器、不清草稿、不复制sender或hook。最终验证见CHANGELOG，
@@ -80,7 +87,7 @@ callback 收件分别留证，见[协作提效与收尾](references/collaboratio
 窄窗格状态栏的 git 分支省略号只在完整边框外的物理行尾识别。共享 release 的安装、客户端实际加载、
 Claude → supervisor 原生 receipt 和正文已读分别核验；文档与离线检查不证明现役采用。
 用户已授权的每60秒新 marker 求派经显式入口运行，也可在认证登记后由独立文件
-调度持续更新；不由 Stop 强迫续跑，安装不等于登记或实际执行，文件调度不唤醒空闲模型。
+调度持续更新；旧未登记任务的 Stop 保持 advisory。新明确授权任务按前述 proactive hook 续办；安装不等于登记或实际执行，文件调度不唤醒空闲模型。
 明确余额不足按 BILLING 分类，即使同时出现 /login 或 403；未知投递与主管观察预算
 不足仍优先保留原分类。分类修正不代表 API 恢复，也不证明写者已冻结或 SOLO 边界成立。
 
@@ -122,7 +129,7 @@ Claude 已排队的合法继任通知若被旧主管等待循环饿死，使用�
 
 ## macOS 自动化故障：优先执行规则
 
-用户已明确授权自动处理时，沿用该授权，读取当前安装的 `officecli-word-revision/references/macos-tcc-zotero-word.md`，不得再次把同一个 Automation 开关或确认问题交给用户。先按实际发送方核查，再按已授权范围自动恢复；TCC.db 备份/重置是有证据的恢复动作，不是普通文稿流水线的隐含动作。多个 agent 只保留一个恢复执行者，其余继续离线工作；Claude 可重试 API 故障先按下文的连续 300 秒证据门槛核验，再沿既有授权和安全交接边界切换 supervisor 单 agent，不停整个任务。实际原生操作未通过前，不得把“已记录规则”“权限条目存在”或“退出码0”称为恢复成功。
+用户已明确授权自动处理时，沿用该授权，读取当前安装的 `officecli-word-revision/references/macos-tcc-zotero-word.md`，不得再次把同一个 Automation 开关或确认问题交给用户。先按实际发送方核查，再按已授权范围自动恢复；TCC.db 备份/重置是有证据的恢复动作，不是普通文稿流水线的隐含动作。多个 agent 只保留一个恢复执行者，其余继续离线工作；Claude 可重试 API 故障先按下文的三次真实终态失败及 Retry-After 核验，再沿既有授权和安全交接边界切换 supervisor 单 agent，不停整个任务。实际原生操作未通过前，不得把“已记录规则”“权限条目存在”或“退出码0”称为恢复成功。
 
 目标是形成有据可查、可提交的精简文稿。精简以前必须全量追溯初稿的实证链条；文字删减量不是完成指标。保存用户原始问题、研究设计、目标稿件、允许补核范围和完成条件，恢复任务时先读这些记录。
 
@@ -194,7 +201,7 @@ workspace/surface/pane UUID，无须故障旧主管批准或先结算旧任务�
 
 交付后保留报告、task pack 和原 attempt；待核收状态不能冻结整个会话。
 诊断、继任握手及独立已授权工作均可继续；旧消息只能沿原次核收，不重复输入。
-全局 Stop/reask hook 不强迫无限续跑。显式发送器保留原生证据校验。
+无登记任务的全局 Stop/reask hook 保持 advisory；显式登记任务按前述每60秒原 runner 与 Stop 续办合同执行。保留原生连续无工具续轮上限，不以紧循环空转冒充求派。显式发送器保留原生证据校验。
 
 主管核收/disarm 后须[交回结论和下一步](references/collaboration-efficiency-and-closeout.md#子任务收尾后仍由主管推进整篇)。
 正常子任务收尾不等于 API 失败或论文完成；新授权查询以最新回执为准，不能永久
@@ -280,7 +287,7 @@ receipt/state 写前返回 ORIGINAL_CONTROLLER_REQUIRED。
 终端只在受保护输入条件成立时发送。新普通消息超过700 UTF-8字节或含任意 CR/LF/tab，
 由同版发送器固定完整正文并发送短通知，保留原 marker 与全部空白；
 通知收到不等于正文已读。正式 task/callback 保持专用绑定。
-`cmux_executor_reask_stop_guard.py` 的全局注册仅作 advisory 观察；
+`cmux_executor_reask_stop_guard.py` 的历史全局注册仅作 advisory 观察；新proactive登记由共享原idle Stop入口强制任务续办；
 主管先按原 caller/supervisor/task/episode/marker 写精确 mailbox 答复，让显式等待返回，
 再做新鲜 live preflight 与正式派包；TASK 答复本身不是派包。旧新派发出口依赖 idle
 binding，现役 advisory hook 不更新该绑定，不能宣称写了新包就会自动退出求派。
@@ -313,7 +320,7 @@ attempt 保留原字节，原锁下核收可追加观察及原子发布 receipt�
 原回调已验证且对应任务监控已解除后，停止该任务的回调探针，不让通信排障持续占用研究执行者。
 经验文档更新不表示运行中hook已经改变。
 
-用户授权双 agent 时优先复用已绑定的 Claude 会话，并用 `multi-agent-collaboration` 的真实握手与任务包。可重试 Claude API 故障必须从第一次真实失败起，取得至少连续 300 秒均失败且门槛后有新鲜失败的证据，才可判断该执行者暂时不可用；任何真实 API 成功重置计时，静屏、排队、未知状态与重试次数均不能代替。等待期间推进独立工作；满足门槛后仍须冻结原执行者、核实无并发写入，再依既有授权接管。认证/计费/额度故障不盲重试，用户明确停用或撤回授权单列，详见[协作与恢复](references/collaboration-and-recovery.md)。恢复沿原会话、真实新握手和单写交接；单 agent 自审标 `solo_self_review`，其他 Codex 会话的独立审查单独署名，不能冒称 Claude 参与。
+用户授权双 agent 时优先复用已绑定的 Claude 会话，并用 `multi-agent-collaboration` 的真实握手与任务包。可重试 Claude API 故障以连续三次不同真实请求的终态失败判暂不可用；请求间至少60秒或更长 Retry-After，不把原生内重试、排队或同一错误重复计数，不要求空等300秒。真实 API 成功重置失败计数；静屏、排队、未知与无回复不是失败。等待期间推进独立工作；按既有自动接续授权由 Codex 执行后续任务，健康 Claude 继续参与；另一写者范围须先核无并发写入并交接。认证/计费/额度故障不盲重试，用户明确停用或撤回授权单列，详见[协作与恢复](references/collaboration-and-recovery.md)。恢复沿原会话、真实新握手和单写交接；单 agent 自审标 `solo_self_review`，其他 Codex 会话的独立审查单独署名，不能冒称 Claude 参与。
 
 Word/Zotero 是串行应用资源。NLM 的账号预算与执行容量分开：已有真实证据和固定执行器支持两路时，复用该能力；缺少对应能力时使用串行入口。同账号单并发是本地兼容策略，不能称为 Google 官方安全上限；不同 notebook/target 仍共用额度。多任务按 [并发能力与自动调度](references/nlm-concurrency-and-scheduling.md) 消费固定 READY，真实归还后自动轮转，离线裁决并行。资源交接与论文验收分列；未知终态保留隔离，不能预填“无在途”。
 
@@ -370,7 +377,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 
 新粘贴统一采用单行：普通/握手用同版 MESSAGE_REFERENCE_V2 保存完整正文；
 正式任务经 submit_task_pack 的 TASK_PACK_V2 绑定完整包SHA；callback保持
-专用原文。共享门禁拒绝任意 CR/LF/tab 或超过700 UTF-8字节的新粘贴，旧次不重贴。
+专用原文。可选bridge将长文保存为SHA引用通知；raw cmux通信不被一概禁止，旧次不重贴。
 只有原接收端新增含唯一 marker 的 user 消息才证明收到；真实 callback 和活跃客户端
 自动hook分别留证，手动hook测试不冒充自动加载。验收后接回用户原任务。
 
