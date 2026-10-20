@@ -17,7 +17,8 @@ prompt、任务包、callback、封口与 idle/CCC 等待使用协作 skill 的
 - bridge 优先原线程 native steer/start；socket 或原生方法不可用且尚无输入意图时，
   降级一次终端粘贴加 Enter。Claude 默认直发。输入意图后未知结果只核原次，不双送。
 - 未确认终端消息仍 pending 且见本次 marker 残留或压缩时，先再核转录，最多补一个
-  已记录 Enter；不重贴、不清空、不重置预算。已排队只观察。旧 attempt 保留原合同。
+  已记录 Enter；压缩未结束时有界等待且不耗补键预算。不重贴、不清空、不重置预算。
+  已排队只观察。旧 attempt 保留原合同。
   正文读取、ACK、callback 核收和业务接受单列，不从短通知收到推导。
 - 封口冻结报告、task pack 与旧 attempt 记录，保留严格 task-bound 诊断
   和原 controller reconcile。普通诚实等待可以正常结束；现役工作流 hook
