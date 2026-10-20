@@ -1,3 +1,9 @@
+## 2026.10.20.2
+
+- Align current communication guidance with MAC 0.4.58: protected terminal submission, complete-draft recovery, shared input locks and explicit host atomicity limits. Keep normal work and Goal communication available.
+- Distinguish immutable inquiry bytes, controller-specific reply-body consumption and actual task acceptance; preserve original registrations and controllers.
+- Document native character-format preservation when revising document text, with the reviewed isolated prototype and validation boundaries.
+
 ## 2026.10.19.8
 
 ## 2026.10.20.1
