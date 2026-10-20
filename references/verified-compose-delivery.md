@@ -5,22 +5,20 @@ prompt、任务包、callback、封口与 idle/CCC 等待使用协作 skill 的
 该页是唯一详细权威；论文 skill 不复制发送实现、重试器或 hook。
 实际执行使用原 task pack 固定的完整相容版本，不迁移在途任务。
 
-本版对齐0.4.35：新提交默认观察原生确认30秒，`--wait-seconds`仅接受有限的
+本版对齐0.4.54：新提交默认观察原生确认30秒，`--wait-seconds`仅接受有限的
 [0,60]秒，并在输入前验证。`--reconcile-only`默认0秒，即一次只读观察；时间与
 `ceil(seconds)+1`次数同时有界，同步I/O仍可能延长实际耗时。exit75保留RPC诊断、
 原controller及同参核原次入口；缺旧controller记为 `UNKNOWN_LEGACY_CONTROLLER`，
 不能从CURRENT补齐。turn abort既不证明丢失，也不增加重发或补键预算。
 
-- 只认同一 workspace/surface/process/session/transcript，在原输入意图的
-  新鲜 EOF fence 后新增、与完整正文（含全部空白）精确相等
-  的 native user。Claude `queued_command` 是 pending，不是 NATIVE_RECEIVED。
-- 新 Codex 消息、任务包和 callback 经原生 control socket 回原会话，先固定
-  NATIVE_INPUT_INTENT 及 EOF fence；运行中一次 turn/steer，空闲时一次
-  turn/start，不改变设置、不操作 composer、不发 Enter/Tab。RPC 接受不是
-  原生收到，异常只读观察原次，不重试或退回队列。历史 queued callback 不重放。
-- Claude 终端首次完整稳定草稿只提交一次。旧终端恢复共用最多一次补键，
-  意图落盘即耗用；显式补键仅属于 submit-text 的受保护恢复分支。
-  任务/callback 及新 native attempt 只读核原次。缺原绑定/fence 不追补。
+- 双方 prompt 就绪即发送，包括忙碌、Goal 和压缩期间；允许 raw cmux，bridge 可选。
+  不等空闲或 composer 稳定。新消息以原目标转录在原 EOF fence 后新增含唯一
+  marker 的 user 消息确认送达；assistant/tool、历史消息及 queued_command 不算。
+- bridge 优先原线程 native steer/start；socket 或原生方法不可用且尚无输入意图时，
+  降级一次终端粘贴加 Enter。Claude 默认直发。输入意图后未知结果只核原次，不双送。
+- 未确认终端消息仍 pending 且见本次 marker 残留或压缩时，先再核转录，最多补一个
+  已记录 Enter；不重贴、不清空、不重置预算。已排队只观察。旧 attempt 保留原合同。
+  正文读取、ACK、callback 核收和业务接受单列，不从短通知收到推导。
 - 封口冻结报告、task pack 与旧 attempt 记录，保留严格 task-bound 诊断
   和原 controller reconcile。普通诚实等待可以正常结束；现役工作流 hook
   只经 advisory observer，不输出 deny、block 或 continue:false，不调用旧 gate。
@@ -51,4 +49,4 @@ prompt、任务包、callback、封口与 idle/CCC 等待使用协作 skill 的
 
 ## 自动续跑与派单共用输入框
 
-遵循协作[终端发送冲突与原次恢复](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/input-collisions.md)。0.4.29握手探针也使用既有pane/target互斥。后台自动续跑须采用同一锁和完整草稿保护；安装共享skill不证明后台实际加载。混合入站保持原记录及未确认回执，沿原执行者核包实读和审稿产物，不重贴、不换nonce、不删除续跑草稿。定向静默须从运行健康记录确认，只涉及原受影响会话。
+遵循协作[终端发送冲突与原次恢复](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/input-collisions.md)。0.4.29握手探针也使用既有pane/target互斥。后台自动续跑须采用同一锁及原次去重；新消息不等 composer 准入，安装共享skill不证明后台实际加载。混合入站保持原记录及未确认回执，沿原执行者核包实读和审稿产物，不重贴、不换nonce、不删除续跑草稿。定向静默须从运行健康记录确认，只涉及原受影响会话。

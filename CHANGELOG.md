@@ -1,5 +1,7 @@
 ## 2026.10.19.8
 
+- Adopt MAC 0.4.54 direct communication, pre-input socket fallback and native marker user receipts.
+
 - 对齐协作0.4.54：同pane不同tab可通信与握手，身份和实际布局分别核验。
 - 输入仍串行，旧消息、原会话与登记保留；callback接口健康单独验证。
 

@@ -20,7 +20,7 @@ metadata:
 [同窗格既有终端](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/existing-terminal-tabs.md)。
 
 此前Claude 2.1.303
-的 180 列正文引用通知支持实测填充布局；仍核完整原文和输入框稳定性。
+的 180 列正文引用通知支持实测填充布局；历史 attempt 保持原草稿规则；新输入采用 0.4.54 直接通信合同。
 已粘贴通知先按原控制器核原次，原生入队后不补键、不重贴；正常运行的求派登记
 不因显示匹配升级而重复 stop/start。
 支持核验升级后
@@ -74,7 +74,7 @@ callback 收件分别留证，见[协作提效与收尾](references/collaboratio
 
 已发布的 **2026.10.13.2 / 协作 0.4.31** 基线保留原生 Codex 投递、非阻塞
 工作流观察和已登记 Claude 维护通知正文提示，不作为本次新增修复。新消息与 callback
-直接进入原 supervisor 会话：运行中 steer、空闲时 start，不操作 composer、不入 Tab 队列。
+发送至原 supervisor：native 可用时 steer/start；不可用且尚未输入时直发并核 marker user。
 主管 PostToolUse 按真实root/child身份每次最多提示8条文件请求，公平轮转，
 未回复至少60秒再提示，成功flush后更新游标；child不能冒用继承的root消费收件箱。
 窄窗格状态栏的 git 分支省略号只在完整边框外的物理行尾识别。共享 release 的安装、客户端实际加载、
@@ -208,20 +208,13 @@ workspace/surface/pane UUID，无须故障旧主管批准或先结算旧任务�
 `AWAITING_EXECUTOR_ACK/PENDING`，不提前报FAIL。短探针仍逐键核身份、保留
 600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
 
-**双向通信遵循[原生投递与有界等待](references/verified-compose-delivery.md)。**
-只有同一已授权绑定的 workspace/surface/process/session/transcript，在原输入意图的
-新鲜 EOF fence 后新增、全文完全相等的 native user 才为 NATIVE_RECEIVED；
-保留全部空白。Claude `queued_command` 仍 pending，屏幕、ACK、按键返回、
-队列和空输入区不证明收到。
-
-新 Codex 输入先持久化 NATIVE_INPUT_INTENT，通过同版共享入口调用原会话的
-一次 turn/steer 或 turn/start。RPC 接受不证明收到；超时或异常只读核原次，
-不重发、不退回 Enter/Tab。历史 queued callback 保留原控制器，不能原生重放。
-Claude 终端输入仍只粘贴一次，完整草稿稳定后提交一次；旧终端恢复先核迟到
-原生记录，自动/显式恢复共用最多一次补键，意图落盘即耗用。
-当前 `--recover-stranded` 只用于 `submit-text` 的原 NATIVE_PENDING、
-PASTE_INTENT/ENTER_SENT 及未耗预算；任务/callback 只读 reconcile。
-未知、压缩、排队、重连或结构改变不补键，缺原 binding/fence 不追补、不重贴。
+**双向通信遵循协作技能 0.4.54 的[直接投递合同](references/verified-compose-delivery.md)。**
+双方 prompt 就绪即发，包括忙碌、Goal 和压缩期，不要求空闲或 composer 判读。
+允许 raw cmux 直发；bridge 优先 native steer/start，socket 不可用且尚未输入时
+自动降级终端粘贴一次并 Enter。原会话转录在原输入 fence 后新增含唯一 marker
+的 user 消息才证明送达；queued_command、屏幕、按键和 RPC 接受不证明收到。
+未确认终端消息仅在残留/压缩时最多补一次 Enter，禁止重复粘贴；未知 native
+RPC 只核原次，不切通道重发。旧 controller/预算保留，论文接受与送达分列。
 
 自动 PreToolUse、PostToolUse 与 Stop 的协作工作流条目统一指向同版
 `cmux_workflow_advisory.py --hook <原检查器名>`，记录实际调用的来源、版本、
@@ -306,7 +299,7 @@ bridge 在完整边框外识别；输入框内同样的文字仍保留为草稿�
 共享后台继承的 workspace 不得替代实际客户端。完整 Claude 边框成立时，报告及
 recap 中引用的历史 Compacting/Reconnecting 不代表当前状态；只核当前 activity。
 Codex steer queue 标题和已测 warnings 尾行按各自结构识别，真实压缩、重连与
-未知界面仍不输入。界面兼容不降低原 fence 后完整 native user 的逐字核验。
+新输入不由未知界面或忙碌状态阻断；原 fence 后含唯一 marker 的 native user 才确认收到。
 
 通用实现只在协作 skill 维护，本文不复制发送器或 hook。报告/pack/既有
 attempt 保留原字节，原锁下核收可追加观察及原子发布 receipt；旧任务沿原
@@ -356,7 +349,8 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 
 ## 双向投递与高效协作维护
 
-执行[接收端绑定投递](references/receiver-bound-delivery.md)和[高效协作](references/efficient-bidirectional-collaboration-20261004.md)：新Codex消息及callback经原会话native steer/start一次输入，不操作composer或Enter/Tab队列。Claude终端仍核完整稳定原文后提交一次。只有原fence后新增、全文相等的native user证明收到；RPC接受、正文已读、执行与论文接受分列，未知仅观察原次，不重放历史callback。
+执行[接收端绑定投递](references/receiver-bound-delivery.md)：采用当前协作 skill 的
+直接通信与 marker user 回执规则，随时交换信息；完整正文读取、ACK、业务接受分列。
 
 
 ## 归档双执行者现场经验（2026-10-05）
@@ -377,7 +371,7 @@ HTTP 200 中的 `REGION_NOT_SUPPORTED` 是服务实际返回的地区拒绝，�
 新粘贴统一采用单行：普通/握手用同版 MESSAGE_REFERENCE_V2 保存完整正文；
 正式任务经 submit_task_pack 的 TASK_PACK_V2 绑定完整包SHA；callback保持
 专用原文。共享门禁拒绝任意 CR/LF/tab 或超过700 UTF-8字节的新粘贴，旧次不重贴。
-只有原接收端新增完整 native user 才证明收到；真实 callback 和活跃客户端
+只有原接收端新增含唯一 marker 的 user 消息才证明收到；真实 callback 和活跃客户端
 自动hook分别留证，手动hook测试不冒充自动加载。验收后接回用户原任务。
 
 ## 历史投递接续
