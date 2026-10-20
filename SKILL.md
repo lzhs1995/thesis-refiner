@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.20.1"
+  version: "2026.10.20.2"
 ---
 
 # 论文精炼助手
@@ -13,7 +13,7 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.20.1**采用 multi-agent-collaboration **0.4.56** 的
+**2026.10.20.2**采用 multi-agent-collaboration **0.4.58** 的
 [三态任务连续执行](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/task-continuity.md)。
 正常时 Codex 与原双 Claude 及时协作；Claude 有界真实重试仍失效时由 Codex 接续；
 Codex 失效时原同任务双 Claude 协商分工并继续既定计划。按整个任务最多2个子agent，
@@ -215,13 +215,15 @@ workspace/surface/pane UUID，无须故障旧主管批准或先结算旧任务�
 `AWAITING_EXECUTOR_ACK/PENDING`，不提前报FAIL。短探针仍逐键核身份、保留
 600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
 
-**双向通信遵循协作技能 0.4.54 的[直接投递合同](references/verified-compose-delivery.md)。**
-双方 prompt 就绪即发，包括忙碌、Goal 和压缩期，不要求空闲或 composer 判读。
-允许 raw cmux 直发；bridge 优先 native steer/start，socket 不可用且尚未输入时
-自动降级终端粘贴一次并 Enter。原会话转录在原输入 fence 后新增含唯一 marker
-的 user 消息才证明送达；queued_command、屏幕、按键和 RPC 接受不证明收到。
-未确认终端消息仅在残留/压缩时最多补一次 Enter，禁止重复粘贴；未知 native
-RPC 只核原次，不切通道重发。旧 controller/预算保留，论文接受与送达分列。
+**双向通信遵循协作技能 0.4.58 的[直接投递合同](references/verified-compose-delivery.md)。**
+双方 prompt 就绪即发，包括忙碌、Goal 和压缩期，不要求工作回合空闲。同一
+输入区的发送者共用 pane/target 锁，终端输入前核真实草稿和对话框，不提交用户
+未完成文字。bridge 优先 native steer/start；原生不可用且尚无输入意图时，
+使用一次受保护 paste/submit 并核实际 submitted/queued 结果。拒绝、非零或
+未知结果不得无条件补 Enter；恢复须完整原文仍在且保留原次唯一补键预算。
+原会话转录在原 fence 后新增含唯一 marker 的 user 消息才证明送达；排队、
+屏幕、按键和 RPC 接受不证明收到。原 controller/预算保留，不重贴；正文实读
+与论文接受分列。主机检查与输入尚非原子，不宣称消除了并发用户输入竞态。
 
 自动 PreToolUse、PostToolUse 与 Stop 的协作工作流条目统一指向同版
 `cmux_workflow_advisory.py --hook <原检查器名>`，记录实际调用的来源、版本、
