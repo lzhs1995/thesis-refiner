@@ -1,3 +1,14 @@
+# Current transport update: MAC 0.4.54
+
+For new input, follow the canonical [direct delivery contract](verified-compose-delivery.md).
+Ready prompts may be sent in either direction during work, Goal or compaction.
+The bridge falls back before input when the native transport is unavailable.
+A newly appended original-transcript user message containing the unique marker
+proves reception. Old attempts retain their controller and original budget.
+
+The following dated notes describe historical attempts only; native-only and
+stable-composer restrictions below do not govern new communication.
+
 # 高效握手、多执行者与双向投递
 
 本页在 efficient-bidirectional.2026.10.09.2 基础上同步
