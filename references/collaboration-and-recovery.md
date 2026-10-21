@@ -51,6 +51,28 @@ surface1000020040，由其检验、合并、发布，业务session只交证据�
 
 通用实现归 `multi-agent-collaboration`。论文任务包只附研究 profile、完整清单、保护路径、文档适配器精确 SHA、当前模式与任务 checkpoint，不把论文判断硬编码进通用协作工具。
 
+### 场景三WIP上限与共享0.4.61
+
+每位作者最多2包已冻结提交、尚未完成对方互核的成果。以精确包SHA和互核结果SHA
+记账；独立复算已冻结、通知收到或询问轮数都不表示互核闭合。到上限先互核、
+预登记后续CLAIM/计划但不执行，或运行原授权60秒询问。恢复时已有超额包不作废，
+先排空再开作者新包。对方互核完成释放此工作预算，但科学接受仍归原论文主管。
+
+共享[0.4.61](https://github.com/lzhs1995/multi-agent-collaboration/blob/v0.4.61/references/release-0.4.61.md)
+沿原文件协议处理有界大记录读取、provider熔断、原executor显式继任登记和单调
+work-checkpoint。安装不迁移旧episode；同surface换主管thread须原executor精确计划
+登记，旧callback、pending和共享资源归属不转移。自报进展与主管接受分列。
+isMeta反馈、工具结果、排队附件和API包装不算原通知native收件；raw行末SHA和
+canonical正文SHA各自核验。无需在论文仓复制hook、求派器或身份库。
+
+新工单区分acceptance、progress_path和final_output；只有output时它只指终稿，
+进度写独立后缀路径。已消费/回调绑定的成果保持冻结，后到修订另存新后缀并列
+前版SHA。派单前核工具链和实际磁盘，缺工具或rc127标NOT_RUN。等待期间用原
+60秒runner，返回后先读原会话输入和文件上下文；queued_command不冒充原生收到。
+mailbox若引用已直派任务，在独立投递清单附evidence-only duplicate_of_native_marker
+及原attempt/pack SHA，此信息不自行派单或授去重权限。缺control socket与压缩
+期间pending如实记录，沿原控制器零输入复核；有限等待不授权重贴或换会话。
+
 具体分工、双向Enter后核收和回调停止条件见[以研究进展衡量协作效率](efficient-collaboration.md)。
 已核收回调的收尾通知不需要另一轮ACK；修通信不自动成为executor的后续业务。
 

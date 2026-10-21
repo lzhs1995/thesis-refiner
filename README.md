@@ -4,7 +4,14 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.19.5**, synchronized with collaboration **0.4.51**.
+Current source: **2026.10.22.1**, synchronized with collaboration **0.4.61**.
+The shared runtime provides bounded record progress, provider circuits, explicit
+successor inquiry registration and durable original-executor work checkpoints.
+Codex-unavailable peer work is limited to two submitted, unreviewed packages per
+author; preserve and drain an existing excess. These reports do not supply
+scientific acceptance. See the [shared0.4.61 contract](https://github.com/lzhs1995/multi-agent-collaboration/blob/v0.4.61/references/release-0.4.61.md).
+
+Earlier0.4.51 guidance remains:
 Automatic reply guidance no longer requires an idle preflight. Ready messages
 can be sent during normal work and native Goal; a new pack still needs current
 identity, handshake and validation. Reviewed 0.4.50 file episodes retain their
