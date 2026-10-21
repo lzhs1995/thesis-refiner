@@ -2,6 +2,12 @@
 
 - 记录主管 STANDBY 答复优先于每60秒空闲求派，以及 executor 对 bridge 零输入/待定结果的判读（Claude-B CC948292 实测，2026-10-21）。
 
+## 2026.10.21.1
+
+- Apply task-bound supervisor STANDBY only after the original executor reads, acknowledges and exact-SHA consumes the continuing mailbox reply. Preserve the 60-second cadence for a later authorized unanswered inquiry.
+- Keep explicit bridge outcome/error/attempt evidence; absent state or attempt never proves zero input. Pending input retains its original controller.
+- Adopt MAC 0.4.59 stable hook guidance with pre-execution dependency checks, explicit import diagnostics, normalized-profile repair and independent client-adoption evidence. Preserve deliberately paused guardian and old releases.
+
 ## 2026.10.20.2
 
 - Align current communication guidance with MAC 0.4.58: protected terminal submission, complete-draft recovery, shared input locks and explicit host atomicity limits. Keep normal work and Goal communication available.
