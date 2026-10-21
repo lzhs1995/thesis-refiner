@@ -1,6 +1,9 @@
-## Unreleased
+## 2026.10.22.1
 
-- 记录主管 STANDBY 答复优先于每60秒空闲求派，以及 executor 对 bridge 零输入/待定结果的判读（Claude-B CC948292 实测，2026-10-21）。
+- Consume MAC0.4.61 bounded transcript, provider-circuit, explicit successor-inquiry and durable work-checkpoint contracts without copying shared hooks or senders.
+- Limit each author's submitted, unreviewed work to two packages during Codex-unavailable peer continuation; retain and drain an existing excess. Exact peer review remains separate from scientific acceptance.
+- Distinguish exact raw record/body pins, original native reception, full reading, executor self-reported progress and parent acceptance. Hook feedback, tool output and queued attachments do not supply receipt evidence.
+- Preserve consumed task-bound STANDBY precedence and original-controller handling of known-zero-input versus pending/unknown delivery outcomes.
 
 ## 2026.10.21.1
 
