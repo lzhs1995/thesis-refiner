@@ -24,6 +24,14 @@ Codex 失效时原同任务双 Claude 协商分工并继续既定计划。按整
 并由原executor全文读取、exact-SHA consume。正常忙碌、Goal和正式预留不禁止STATUS。
 文件scheduler仅作兜底，不冒充唤醒模型。用户停止、撤销授权及任务完成生效；
 旧episode与旧callback不自动迁移或重放。普通工具不受阻，无登记任务保持advisory。
+
+主管 STANDBY 优先：原executor全文读取并回执主管明确的 STANDBY/HOLD 答复后，即视为
+「主管已回复」；保持待命，不发空闲求派、不重启 runner，直到新任务包或日志到达；只有后续
+已送达的 callback 或空闲通知仍无主管答复时才恢复每60秒求派。落在主管失败轮里的 marker
+回执不算答复。bridge 结果须原样打印 error、details 与 attempt，不能只取一个字段：无 state
+且无含该 marker 的 attempt 文件即零输入，可换新 marker 发一次；已有 attempt 只看收端
+rollout 并 --reconcile-only 一次。用户授权直发时 Enter rc=0 不等于已提交，须核 composer
+已清空且收端新增 marker user 记录。
 详见[协作与恢复](references/collaboration-and-recovery.md)。本仓不复制通用hook或sender。
 
 此前Claude 2.1.303
