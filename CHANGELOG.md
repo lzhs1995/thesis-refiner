@@ -1,3 +1,7 @@
+## Unreleased
+
+- 记录主管 STANDBY 答复优先于每60秒空闲求派，以及 executor 对 bridge 零输入/待定结果的判读（Claude-B CC948292 实测，2026-10-21）。
+
 ## 2026.10.20.2
 
 - Align current communication guidance with MAC 0.4.58: protected terminal submission, complete-draft recovery, shared input locks and explicit host atomicity limits. Keep normal work and Goal communication available.

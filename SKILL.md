@@ -24,6 +24,15 @@ Codex 失效时原同任务双 Claude 协商分工并继续既定计划。按整
 并由原executor全文读取、exact-SHA consume。正常忙碌、Goal和正式预留不禁止STATUS。
 文件scheduler仅作兜底，不冒充唤醒模型。用户停止、撤销授权及任务完成生效；
 旧episode与旧callback不自动迁移或重放。普通工具不受阻，无登记任务保持advisory。
+
+主管 STANDBY 优先：原executor全文读取并确认来自已认证原主管、绑定本任务的明确
+STANDBY/HOLD 答复后，视为「主管已回复」。continuing 邮箱仍须沿原controller按精确
+SHA执行 consume；未消费的 ANSWERED 不能算待命已结算。按答复的范围与恢复条件等待；
+后续已授权的 callback 或求派仍无答复时可恢复每60秒询问。沉默、日志、队列marker和
+失败回合都不提供待命答复，也不释放预留。bridge 须打印 error、details 与 attempt；
+缺 state 或缺 attempt 文件不证明零输入。仅原次预检或host明确证明零输入，才可进行
+新的已授权提交。已有或未知输入只沿原controller执行 --reconcile-only，不重贴、不盲按。
+收端新增含唯一marker的user记录证明通知收到；正文读取、业务接受另留证。
 详见[协作与恢复](references/collaboration-and-recovery.md)。本仓不复制通用hook或sender。
 
 此前Claude 2.1.303
