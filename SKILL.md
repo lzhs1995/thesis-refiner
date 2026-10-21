@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.20.2"
+  version: "2026.10.21.1"
 ---
 
 # 论文精炼助手
@@ -13,7 +13,7 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.20.2**采用 multi-agent-collaboration **0.4.58** 的
+**2026.10.21.1**采用 multi-agent-collaboration **0.4.59** 的
 [三态任务连续执行](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/task-continuity.md)。
 正常时 Codex 与原双 Claude 及时协作；Claude 有界真实重试仍失效时由 Codex 接续；
 Codex 失效时原同任务双 Claude 协商分工并继续既定计划。按整个任务最多2个子agent，
@@ -46,6 +46,10 @@ SHA执行 consume；未消费的 ANSWERED 不能算待命已结算。按答复�
 先只读预检，再由原执行者按授权显式停止旧 episode、用 `--resume-stopped`
 建立新登记，保留旧回件、正式预留与 pending。详见[运行时验收](references/runtime-validation.md)。
 本仓只同步规则，共享 runtime、hook 和兼容修复由协作仓统一维护。
+
+新版本共享hook采用固定入口逐次解析CURRENT，执行前核路由器及本地依赖；
+导入失败留明确诊断，已规范化profile可补回缺失入口。安装、真实自动Pre/Post/Stop
+执行和原会话采用分别核验；暂停的guardian保留暂停，不以配置文件落盘宣称采用。
 
 原执行者显式
 停止旧求派 episode 后，可用 `--resume-stopped` 登记新 episode；事务提交前
@@ -224,7 +228,7 @@ workspace/surface/pane UUID，无须故障旧主管批准或先结算旧任务�
 `AWAITING_EXECUTOR_ACK/PENDING`，不提前报FAIL。短探针仍逐键核身份、保留
 600秒预算；详见[握手清理与等待状态](references/collaboration-efficiency-and-closeout.md)。
 
-**双向通信遵循协作技能 0.4.58 的[直接投递合同](references/verified-compose-delivery.md)。**
+**双向通信遵循协作技能 0.4.59 的[直接投递合同](references/verified-compose-delivery.md)。**
 双方 prompt 就绪即发，包括忙碌、Goal 和压缩期，不要求工作回合空闲。同一
 输入区的发送者共用 pane/target 锁，终端输入前核真实草稿和对话框，不提交用户
 未完成文字。bridge 优先 native steer/start；原生不可用且尚无输入意图时，
