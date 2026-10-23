@@ -4,7 +4,7 @@ description: Refine empirical theses through evidence tracing, concise revision,
 metadata:
   display_name: 论文精炼助手
   aliases: [论文精炼助手, 论文精选助手]
-  version: "2026.10.22.1"
+  version: "2026.10.24.1"
 ---
 
 # 论文精炼助手
@@ -13,7 +13,7 @@ metadata:
 无关旧任务结算。复用原会话与健康握手，旧次证据单独保留；不再让无关 pending
 永久阻塞新联络。完整边框外的 ASCII `...` 截断路径及任务摘要按 footer 识别。
 
-**2026.10.22.1**采用 multi-agent-collaboration **0.4.61** 的
+**2026.10.24.1**采用 multi-agent-collaboration **0.4.67** 的
 [三态任务连续执行](https://github.com/lzhs1995/multi-agent-collaboration/blob/main/references/task-continuity.md)。
 正常时 Codex 与原双 Claude 及时协作；Claude 有界真实重试仍失效时由 Codex 接续；
 Codex 失效时原同任务双 Claude 协商分工并继续既定计划。按整个任务最多2个子agent，
@@ -23,13 +23,26 @@ Codex 失效时原同任务双 Claude 协商分工并继续既定计划。按整
 只预登记下一范围或沿原任务每60秒询问，不开新作者包。恢复时已有超额包保留，
 先排空再开新包。互核闭合须引用精确成果SHA；不等于surface39科学验收。
 
-共享0.4.61支持有界大记录读取、原provider终态熔断和dead-shell输入前拒绝。
+共享运行时支持有界大记录读取、原provider终态熔断和dead-shell输入前拒绝。
 原executor可显式登记继任求派，先只读计划、再以精确授权/计划SHA提交；同surface
 换Codex线程也须登记，旧pending、callback和预留归属保留。持久work-checkpoint
 只记原executor单调自报进展，不记主管接受。isMeta反馈、工具队列和API包装不算
 原通知native收件；原行末raw SHA与canonical正文SHA分别核。
 详见[共享0.4.61契约](https://github.com/lzhs1995/multi-agent-collaboration/blob/v0.4.61/references/release-0.4.61.md)。
 本仓只消费共享规则与接口，不复制hook、sender或求派实现。
+
+当前回复与收尾使用[共享0.4.67任务契约](references/mac-0.4.67-task-continuity.md)：
+先在独立工作边界全文读取相关互核件，再生成交付；转派唯一互核方前固定待审件与
+返回条件。询问与回件次数不计为论文成果。原主管可只读核对原双executor登记覆盖，
+继任preview后正常poll变化不冒充业务变化，过期授权或语义变化仍拒绝apply。
+STANDBY/HOLD是等待语义，不是邮箱status；使用原协议的WAITING_DEPENDENCY并保留
+明确触发条件、等待归属和有界期限。预检不发送、不认证主管，不代替原controller消费。
+新限定工单固定自己的完整controller、接受/进度/结果路径；用--prepare-body生成精确
+完成正文，保留stdout、stderr、returncode与原次reconcile参数，不手填占位路径或重发。
+0.4.67受限Word入口只支持新自有PDF，旧ACTIVE与foreign UNKNOWN保留，不能计作
+真实Zotero引文插入或普通资源释放。完整引文任务继续要求其实际原生入口与持久字段验收。
+安装后逐个核客户端实际hook/source、正文读取及任务产物；旧中文alias不同或旧静态
+命令仍在运行时，不声称全会话采用，不迁移在途固定路径。
 
 新持续任务由原executor登记 `--continuing --reservation-inquiries --proactive-hook`，
 共享 Stop hook 强制继续已授权任务或执行每次60秒的原求派 runner，直到主管实际回复
