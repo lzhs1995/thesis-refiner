@@ -1,3 +1,11 @@
+## 2026.10.24.1
+
+- Consume MAC0.4.67 fair file sweeps, semantic successor previews, original-pair coverage and complete scoped-result receipts without copying shared hooks or senders.
+- Read pinned reviews at a separate work boundary before generating a deliverable; preserve WIP2 and the return condition when diverting the sole reviewer.
+- Keep STANDBY/HOLD semantics in valid original WAITING_DEPENDENCY bodies; structural preflight does not authenticate, send or consume.
+- Distinguish the actual owned-PDF-only Word lane from persistent Zotero citations, ordinary resource release and dissertation acceptance. Preserve legacy ACTIVE/UNKNOWN and original controllers.
+- Require actual per-client loading and useful product evidence; source synchronization does not prove legacy alias or live-session adoption.
+
 ## 2026.10.22.1
 
 - Consume MAC0.4.61 bounded transcript, provider-circuit, explicit successor-inquiry and durable work-checkpoint contracts without copying shared hooks or senders.

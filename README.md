@@ -4,12 +4,21 @@ This version documents the **receiver-bound delivery contract**. Verify the
 shared collaboration release's installation, actual client loading and live
 native receipts separately before claiming adoption by an active session.
 
-Current source: **2026.10.22.1**, synchronized with collaboration **0.4.61**.
+Current source: **2026.10.24.1**, synchronized with collaboration **0.4.67**.
 The shared runtime provides bounded record progress, provider circuits, explicit
 successor inquiry registration and durable original-executor work checkpoints.
 Codex-unavailable peer work is limited to two submitted, unreviewed packages per
 author; preserve and drain an existing excess. These reports do not supply
 scientific acceptance. See the [shared0.4.61 contract](https://github.com/lzhs1995/multi-agent-collaboration/blob/v0.4.61/references/release-0.4.61.md).
+
+The [current task contract](references/mac-0.4.67-task-continuity.md) covers fair
+file sweeps, original-pair inquiry coverage, semantic successor previews,
+complete scoped-result streams and review consumption before generation.
+The shared reply preflight is structural validation and sends no input. The
+restricted Word queue supports owned PDFs while retaining the legacy ACTIVE
+ticket and foreign UNKNOWN; it does not supply persistent Zotero citations.
+Keep installation, actual client loading, receipt/body reading and accepted
+manuscript progress separate. A differing legacy alias is not proof of adoption.
 
 Earlier0.4.51 guidance remains:
 Automatic reply guidance no longer requires an idle preflight. Ready messages
