@@ -1,6 +1,7 @@
 ## Unreleased
 
 - Add a separate exact-SHA Codex discovery-alias preview/apply path. A symlinked shared canonical entry is supported without copying a release or changing the immutable full-source installer contract.
+- Reject symlinked alias files, including dangling links, during preview and the locked apply preflight before creating a mutation journal.
 - Recheck alias identity, canonical resolution and approved plan under the installer lock; retain the original alias and report post-commit uncertainty without automatic retry or rollback. Active-client adoption and in-flight source retention remain separate checks.
 
 ## 2026.10.24.1

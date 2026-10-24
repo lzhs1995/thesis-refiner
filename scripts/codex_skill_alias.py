@@ -56,6 +56,7 @@ def preview(canonical_skill, adapter_root, previous_sha256):
     adapter = absolute(adapter_root)
     _installer.reject_symlinks(adapter)
     target = adapter / "SKILL.md"
+    _installer.reject_symlinks(target)
     resolved_source = Path(canonical["resolved_path"]).parent
     if (adapter == ROOT or adapter.is_relative_to(ROOT) or ROOT.is_relative_to(adapter)
             or adapter == resolved_source or adapter.is_relative_to(resolved_source)
@@ -172,4 +173,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

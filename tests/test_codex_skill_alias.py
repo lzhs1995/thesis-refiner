@@ -110,6 +110,46 @@ class CodexAliasTests(unittest.TestCase):
             self.assertEqual((root / "journal" / "BEFORE.md").read_bytes(), b"old discovery route")
             self.assertEqual(json.loads((root / "journal" / "INCOMPLETE.json").read_text())["outcome"], "CONCURRENT_TARGET_CHANGE")
 
+    def test_symlinked_skill_file_is_refused_at_preview_including_dangling_links(self):
+        for dangling in (False, True):
+            with self.subTest(dangling=dangling), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp).resolve()
+                canonical, adapter, previous = self.fixture(root)
+                external = root / "external.md"
+                if not dangling:
+                    external.write_bytes((adapter / "SKILL.md").read_bytes())
+                target = adapter / "SKILL.md"
+                target.unlink()
+                target.symlink_to(external)
+                entries = set(root.iterdir())
+                with self.assertRaisesRegex(ValueError, "SYMLINKED_INSTALL_PATH"):
+                    alias.preview(canonical, adapter, "ABSENT" if dangling else previous)
+                self.assertEqual(set(root.iterdir()), entries)
+                self.assertTrue(target.is_symlink())
+                self.assertEqual(external.exists(), not dangling)
+                if not dangling:
+                    self.assertEqual(external.read_bytes(), b"old discovery route")
+
+    def test_target_becomes_symlink_after_preview_refuses_before_journal(self):
+        for dangling in (False, True):
+            with self.subTest(dangling=dangling), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp).resolve()
+                canonical, adapter, previous = self.fixture(root)
+                path, sha = self.approved(root, canonical, adapter, previous)
+                external = root / "external.md"
+                if not dangling:
+                    external.write_bytes((adapter / "SKILL.md").read_bytes())
+                target = adapter / "SKILL.md"
+                target.unlink()
+                target.symlink_to(external)
+                with self.assertRaisesRegex(ValueError, "SYMLINKED_INSTALL_PATH"):
+                    alias.apply(path, sha, root / "journal")
+                self.assertFalse((root / "journal").exists())
+                self.assertTrue(target.is_symlink())
+                self.assertEqual(external.exists(), not dangling)
+                if not dangling:
+                    self.assertEqual(external.read_bytes(), b"old discovery route")
+
     def test_committed_sync_failure_keeps_new_alias_and_reports_uncertainty(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp).resolve()
@@ -160,4 +200,3 @@ class CodexAliasTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
