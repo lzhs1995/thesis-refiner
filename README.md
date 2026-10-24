@@ -167,6 +167,26 @@ must separately freeze the complete source and verify its manifest before routin
 new tasks to it. Existing v2 receipts retain explicit rollback support.
 See [version installation and in-flight tasks](references/runtime-validation.md#版本安装与在途任务).
 
+For a Codex discovery alias that still points at an old Claude skill, use the
+separate `scripts/codex_skill_alias.py` utility. It links the thin entry to the
+shared canonical path, including a symlinked canonical path, without copying or
+modifying a release. The complete versioned source still requires independent
+manifest verification. First settle any task that pinned the discovery alias's
+own bytes; keep all versioned task sources and adapters at their original paths.
+
+```bash
+python3 -BE scripts/codex_skill_alias.py preview --canonical-skill /absolute/shared/thesis-refiner/SKILL.md --adapter-root /absolute/codex/skills/论文精炼助手 --previous-sha256 EXACT_CURRENT_ALIAS_SHA256
+python3 -BE scripts/codex_skill_alias.py apply --plan /absolute/evidence/ALIAS-PLAN.json --plan-sha256 EXACT_PLAN_SHA256 --journal-directory /absolute/evidence/alias-install-v1
+```
+
+Persist the complete preview JSON as `ALIAS-PLAN.json` and review its exact SHA
+before applying. A fresh discovery alias uses `--previous-sha256 ABSENT`.
+Apply rechecks the alias's identity and bytes, the resolved canonical file and
+the complete plan under the existing installer lock. It backs up the old alias
+and changes only `SKILL.md`. A concurrent edit is preserved; a failure after
+replacement records uncertainty without automatic rollback or retry. The
+receipt does not claim active-client adoption or migration of an in-flight task.
+
 The 2026.09.26.9 increment adds [whole-thesis formatting retrospectives](references/full-thesis-format-retrospective.md):
 source-qualified institution rules, conditional section decisions, caption/footnote/bibliography checks,
 versioned electronic appendices and grounded NLM interpretation review. It reuses OfficeCLI's optional
