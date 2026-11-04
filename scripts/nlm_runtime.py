@@ -23,6 +23,9 @@ class AdmissionError(ValueError):
 
 
 def broker_module(binding):
+    if "execution_contract" in binding:
+        from nlm_execution import load_broker
+        return load_broker(binding)
     path = checked_ref(binding["broker_module"])
     spec = importlib.util.spec_from_file_location("thesis_resource_broker", path)
     module = importlib.util.module_from_spec(spec)
@@ -220,7 +223,25 @@ def validate_response(request, raw):
     return conversation
 
 
-def run_bound(binding, request, budget=None):
+def cached_receipt(request, admitted):
+    """Use the same byte and response checks for both execution modes."""
+    if admitted["state"] != "COMPLETE":
+        raise AdmissionError("EXISTING_REQUEST_REQUIRES_RECONCILIATION: " + admitted["id"])
+    saved_ref = json.loads(admitted["receipt"])
+    saved = json.loads(checked_ref(saved_ref).read_text())
+    raw = checked_ref(saved.get("raw_answer"))
+    if (saved.get("status") != "COMPLETE" or saved.get("request_id") != admitted["id"]
+            or saved.get("exit_code") != 0 or saved.get("answer_sha256") != ref(raw)["sha256"]):
+        raise AdmissionError("CACHED_RECEIPT_INVALID")
+    validate_response(request, raw)
+    return saved_ref, saved
+
+
+def run_bound(binding, request, budget=None, *, budget_root=None):
+    enforced = "execution_contract" in binding
+    if enforced:
+        from nlm_execution import reject_overrides
+        reject_overrides(request)
     protected = {"target_id", "workspace_uuid", "surface_uuid", "account_key", "broker_module", "commands",
                  "transport_artifacts", "resource_root", "external_locks", "simulation", "lease_ttl",
                  "existing_target_only", "no_navigation", "no_login", "no_default_write", "no_browser_launch"}
@@ -254,28 +275,54 @@ def run_bound(binding, request, budget=None):
             raise AdmissionError("PDF_UPLOAD_REQUIRED")
     if request["operation"] == "source_fulltext" and not request.get("source_id"):
         raise AdmissionError("FULLTEXT_SOURCE_REQUIRED")
-    budget = budget or Budget()
     module = broker_module(binding)
-    broker = module.Broker(binding.get("resource_root"))
+    prepared_prompt = None
+    if enforced:
+        from nlm_execution import EnforcedBroker, prepare
+        root = budget.root if budget is not None else Path(budget_root or os.environ.get(
+            "NLM_ACCOUNT_STATE_ROOT", Path.home() / ".local/state/nlm-account-budget"))
+        contract, prepared_prompt = prepare(binding, request, root, request_key(request), module)
+    budget = budget or Budget(budget_root)
+    if enforced:
+        # No new request/ticket for an original uncertain request or complete
+        # cache. A new binding never upgrades an old ticket or cached result.
+        prior = budget.db.execute("SELECT * FROM requests WHERE id=?", (request_key(request),)).fetchone()
+        if prior:
+            saved_ref, saved = cached_receipt(request, dict(prior))
+            broker = EnforcedBroker(module, binding, contract)
+            try:
+                broker.verify_cached(saved)
+            finally:
+                broker.close()
+            return {"cached": True, "receipt": saved_ref}
+        broker = EnforcedBroker(module, binding, contract)
+    else:
+        broker = module.Broker(binding.get("resource_root"))
     resource = "nlm-account:" + binding["account_key"]
-    broker.configure(resource, binding.get("external_locks", []))
-    ticket = broker.request(resource, request["task_id"], binding["workspace_uuid"], binding["surface_uuid"])
-    lease = broker.grant(ticket["id"], ttl=binding.get("lease_ttl", 600))
+    try:
+        broker.configure(resource, binding.get("external_locks", []))
+        ticket = broker.request(resource, request["task_id"], binding["workspace_uuid"], binding["surface_uuid"])
+        if enforced and ticket["status"] == "RELEASED":
+            # A budget refusal can release a genuinely unsubmitted original
+            # ticket. Recheck the original budget row before explicit requeue;
+            # MAC validates zero invocation/intent and archives the old lease.
+            if budget.db.execute("SELECT 1 FROM requests WHERE id=?", (request_key(request),)).fetchone():
+                raise AdmissionError("ORIGINAL_REQUEST_EXISTS_NO_REQUEUE")
+            ticket = broker.requeue_unsubmitted(ticket)
+        lease = broker.grant(ticket["id"], ttl=binding.get("lease_ttl", 600))
+    except BaseException:
+        if enforced:
+            broker.close()
+        raise
     admitted = None
     proof = {"pending": None, "own_processes_empty": None, "in_flight_requests": "UNKNOWN"}
     release_safe = True
     try:
         admitted = budget.admit(binding["account_key"], request)
         if admitted["duplicate"]:
-            if admitted["state"] != "COMPLETE":
-                raise AdmissionError("EXISTING_REQUEST_REQUIRES_RECONCILIATION: " + admitted["id"])
-            saved_ref = json.loads(admitted["receipt"])
-            saved = json.loads(checked_ref(saved_ref).read_text())
-            raw = checked_ref(saved.get("raw_answer"))
-            if (saved.get("status") != "COMPLETE" or saved.get("request_id") != admitted["id"]
-                    or saved.get("exit_code") != 0 or saved.get("answer_sha256") != ref(raw)["sha256"]):
-                raise AdmissionError("CACHED_RECEIPT_INVALID")
-            validate_response(request, raw)
+            saved_ref, saved = cached_receipt(request, admitted)
+            if enforced:
+                broker.verify_cached(saved)
             return {"cached": True, "receipt": saved_ref}
         key = admitted["id"]
         release_safe = False
@@ -285,7 +332,7 @@ def run_bound(binding, request, budget=None):
         (out / "lease.json").write_text(json.dumps(lease, indent=2))
         prompt = out / "prompt.txt"
         prompt.write_text(request.get("prompt", ""))
-        fields = {**request, **binding, "request_id": key, "prompt_file": str(prompt), "output_dir": str(out),
+        fields = {**request, **binding, "request_id": key, "prompt_file": str(prepared_prompt or prompt), "output_dir": str(out.resolve()) if enforced else str(out),
                   "source_ids_csv": ",".join(request.get("source_ids") or [request.get("source_id", "")])}
         command = [str(arg).format_map(fields) for arg in command_template]
         started = time.time()
@@ -315,6 +362,9 @@ def run_bound(binding, request, budget=None):
                    "answer_sha256": ref(raw)["sha256"], "raw_answer": ref(raw), "error": reason,
                    "process_group_empty": result["process_group_empty"], "quota_limited": quota,
                    "A5_credit": False, "target_id": binding["target_id"], "transport_artifacts": binding["transport_artifacts"]}
+        if enforced:
+            receipt["execution"] = result["execution"]
+            receipt["enforcement_scope"] = "PRELAUNCH_ONLY"
         status = "COMPLETE" if valid else "FAILED" if quota else "UNCERTAIN"
         receipt["status"] = status
         rp = out / "receipt.json"
@@ -339,10 +389,14 @@ def run_bound(binding, request, budget=None):
         raise
     finally:
         # 网络结束立即归窗；本地裁决不占用账号租约。
-        if release_safe:
-            if admitted is None or admitted.get("duplicate"):
-                proof.update(pending=False, own_processes_empty=True, in_flight_requests=[], no_request_submitted=True)
-            broker.release(lease["id"], lease["token"], proof, reconcile=lease["expires"] <= time.time())
+        try:
+            if release_safe:
+                if admitted is None or admitted.get("duplicate"):
+                    proof.update(pending=False, own_processes_empty=True, in_flight_requests=[], no_request_submitted=True)
+                broker.release(lease["id"], lease["token"], proof, reconcile=lease["expires"] <= time.time())
+        finally:
+            if enforced:
+                broker.close()
 
 
 def reconcile_bound(binding, request_id, terminal_evidence, budget):
@@ -371,23 +425,46 @@ def reconcile_bound(binding, request_id, terminal_evidence, budget):
         if request["operation"] == "query" and conversation != recovered.get("conversation_id"):
             raise AdmissionError("RECOVERED_QUERY_NOT_COMPLETE")
     module = broker_module(binding)
-    broker = module.Broker(binding.get("resource_root"))
-    current = broker.get(lease["id"])
-    if current["resource"] != "nlm-account:" + binding["account_key"] or current["token"] != lease["token"]:
-        raise AdmissionError("RECOVERY_LEASE_MISMATCH")
-    terminal = out / ("terminal-" + str(time.time_ns()) + ".json")
-    terminal.write_text(json.dumps({"request_id": request_id, "resource_lease": lease,
-        "status": proof["terminal_state"], "remote_terminal": True, "process_group_empty": True,
-        "evidence": terminal_evidence}, indent=2))
-    release_proof = {"pending": False, "own_processes_empty": True, "in_flight_requests": [], "terminal_receipt": ref(terminal)}
-    if current["status"] == "ACTIVE":
-        released = broker.release(lease["id"], lease["token"], release_proof, reconcile=True)
-        (out / "reconciled-release.json").write_text(json.dumps(released, indent=2))
-    elif current["status"] != "RELEASED" or not (out / "reconciled-release.json").is_file():
-        raise AdmissionError("RECOVERY_RELEASE_NOT_PROVEN")
-    record = budget.reconcile(request_id, terminal_evidence)
-    return {"status": proof["terminal_state"], "receipt": record,
-            "release_receipt": ref(out / "reconciled-release.json")}
+    enforced = "execution_contract" in binding
+    if enforced:
+        from nlm_execution import EnforcedBroker, prepare
+        contract, _ = prepare(binding, request, budget.root, request_id, module)
+        broker = EnforcedBroker(module, binding, contract)
+    else:
+        broker = module.Broker(binding.get("resource_root"))
+    try:
+        if enforced:
+            broker.lease = lease
+            broker.verify_lease(lease)
+            original = json.loads(checked_ref(json.loads(row["receipt"])).read_text()) if row["receipt"] else {}
+            broker.result_execution = original.get("execution") or proof.get("execution")
+            if proof["terminal_state"] == "COMPLETE":
+                if recovered.get("resource_lease") != lease or recovered.get("execution") != broker.result_execution:
+                    raise AdmissionError("RECOVERED_EXECUTION_BINDING_REQUIRED")
+            current = broker.raw.get(lease["id"])
+        else:
+            current = broker.get(lease["id"])
+        if current["resource"] != "nlm-account:" + binding["account_key"] or current["token"] != lease["token"]:
+            raise AdmissionError("RECOVERY_LEASE_MISMATCH")
+        terminal = out / ("terminal-" + str(time.time_ns()) + ".json")
+        terminal.write_text(json.dumps({"request_id": request_id, "resource_lease": lease,
+            "operation": request["operation"],
+            "status": proof["terminal_state"], "remote_terminal": True, "process_group_empty": True,
+            "evidence": terminal_evidence}, indent=2))
+        release_proof = {"pending": False, "own_processes_empty": True, "in_flight_requests": [], "terminal_receipt": ref(terminal)}
+        if enforced and proof.get("execution_readback"):
+            release_proof["execution_readback"] = proof["execution_readback"]
+        if current["status"] == "ACTIVE":
+            released = broker.release(lease["id"], lease["token"], release_proof, reconcile=True)
+            (out / "reconciled-release.json").write_text(json.dumps(released, indent=2))
+        elif current["status"] != "RELEASED" or not (out / "reconciled-release.json").is_file():
+            raise AdmissionError("RECOVERY_RELEASE_NOT_PROVEN")
+        record = budget.reconcile(request_id, terminal_evidence)
+        return {"status": proof["terminal_state"], "receipt": record,
+                "release_receipt": ref(out / "reconciled-release.json")}
+    finally:
+        if enforced:
+            broker.close()
 
 
 def main():
@@ -400,7 +477,9 @@ def main():
     p.add_argument("--resume-after", type=float)
     p.add_argument("--request-id")
     args = p.parse_args()
-    budget = Budget(args.root)
+    # New enforced execution authenticates its complete binding before either
+    # database is constructed. Other explicit budget commands keep their API.
+    budget = None if args.command == "run" else Budget(args.root)
     try:
         if args.command == "configure":
             budget.configure(args.account, json.loads(Path(args.input).read_text()))
@@ -417,7 +496,8 @@ def main():
         elif args.command == "reconcile":
             result = reconcile_bound(json.loads(Path(args.binding).read_text()), args.request_id, ref(args.input), budget)
         else:
-            result = run_bound(json.loads(Path(args.binding).read_text()), json.loads(Path(args.input).read_text()), budget)
+            result = run_bound(json.loads(Path(args.binding).read_text()), json.loads(Path(args.input).read_text()),
+                               budget_root=args.root)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("status") not in {"FAILED", "UNCERTAIN"} else 2
     except Exception as e:
