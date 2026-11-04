@@ -19,6 +19,9 @@ metadata:
 ## 按任务加载
 
 - 多agent分工和原稿文风：读[分工与忠实审阅](references/voice-and-collaboration.md)。
+- 各章独占cmux workspace、内嵌Herdr团队、senior supervisor统稿：读
+  [分层章节工作流](references/nested-chapter-workflow.md)。四种合作模式与五条
+  协作规则引用已绑定MAC的共同契约，纯cmux论文任务仍支持。
 - 传输由已绑定的multi-agent-collaboration维护：新任务先读其
   `references/collaboration-profiles.md`；Herdr使用其轻量入口，cmux使用原传输。
 - 既有任务或cmux专门恢复：按需读[原版完整流程](references/cmux-legacy-entry.md)，
