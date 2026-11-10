@@ -7,6 +7,7 @@ UNKNOWN settlement. One transport child handles exactly one query.
 from __future__ import annotations
 
 import argparse
+import base64
 import asyncio
 from contextlib import ExitStack, closing, contextmanager
 import fcntl
@@ -14,6 +15,7 @@ import hashlib
 import importlib.abc
 import importlib.machinery
 import json
+import locale
 import os
 from pathlib import Path
 import signal
@@ -221,6 +223,34 @@ def phase_deadline(seconds, label):
                 max(.001, previous_timer[0] - (time.monotonic() - started)), previous_timer[1])
 
 
+def archive_deadline_output(command, ticket, token, pgid, stdout, stderr, drained):
+    # Only the original runtime receipt directory supplied to this child. Never
+    # put arbitrary child prose back into the legacy terminal/quota classifier.
+    require(command.count('--output-dir') == 1, 'ORIGINAL_OUTPUT_DIRECTORY_REQUIRED')
+    out = Path(command[command.index('--output-dir') + 1]).resolve(strict=True)
+    lease = json.loads((out / 'lease.json').read_text())
+    require(lease['id'] == ticket and lease['token'] == token, 'ORIGINAL_OUTPUT_LEASE_REQUIRED')
+    streams = {}
+    for name, body in (('stdout', stdout), ('stderr', stderr)):
+        body = body or b''
+        require(isinstance(body, bytes), 'RAW_CHILD_OUTPUT_REQUIRED')
+        streams[name] = {'bytes': len(body), 'sha256': hashlib.sha256(body).hexdigest(),
+                         'base64': base64.b64encode(body).decode('ascii')}
+    return freeze(out / 'SDK-DEADLINE-OUTPUT.json', {
+        'status': 'LOCAL_DEADLINE_REMOTE_UNKNOWN', 'ticket_id': ticket, 'pgid': pgid,
+        'process_group_empty': drained, 'capture_complete': drained,
+        'remote_terminal': False, 'streams': streams,
+        'scope': 'complete captured pipes after drain; partial capture if drain unproven'})
+
+
+def child_text(body, kwargs):
+    if body is None or not (kwargs.get('text') or kwargs.get('universal_newlines')
+                            or kwargs.get('encoding') or kwargs.get('errors')):
+        return body
+    encoding = kwargs.get('encoding') or ('utf-8' if sys.flags.utf8_mode else locale.getencoding())
+    return body.decode(encoding, kwargs.get('errors') or 'strict').replace('\r\n', '\n').replace('\r', '\n')
+
+
 def bounded_broker(module, *, total=CHILD_SECONDS, drain=DRAIN_SECONDS):
     """Override only run for new SDK callers; original queue/release rules stay."""
     class BoundedBroker(module.Broker):
@@ -228,15 +258,17 @@ def bounded_broker(module, *, total=CHILD_SECONDS, drain=DRAIN_SECONDS):
             started = time.monotonic()
             require(isinstance(command, list) and command, 'ARGV_REQUIRED')
             proc = None
+            capture = {k: v for k, v in kwargs.items() if k not in {'text', 'universal_newlines', 'encoding', 'errors'}}
             with ExitStack() as stack:
                 timed_out = False
+                drain_unproven = False
                 try:
                     with phase_deadline(min(PREFLIGHT_SECONDS, total), 'BROKER_PRELAUNCH_DEADLINE'):
                         row = self.require(ticket, token)
                         stack.enter_context(module.os_lock(self.lock_path(row['resource'])))
                         self.require(ticket, token)
                         self._external_free(row['resource'])
-                        proc = subprocess.Popen(command, start_new_session=True, **kwargs)
+                        proc = subprocess.Popen(command, start_new_session=True, **capture)
                         self.db.execute('UPDATE tickets SET pgid=?,invocations=invocations+1 WHERE id=?',
                                         (proc.pid, ticket))
                     stdout, stderr = proc.communicate(timeout=max(.001, total - (time.monotonic() - started)))
@@ -255,19 +287,29 @@ def bounded_broker(module, *, total=CHILD_SECONDS, drain=DRAIN_SECONDS):
                         except ProcessLookupError: pass
                         try:
                             stdout, stderr = proc.communicate(timeout=drain)
-                        except subprocess.TimeoutExpired:
-                            # An uninterruptible child/escaped pipe is not drain.
-                            # Raise into the original runtime's UNKNOWN journal.
-                            raise TimeoutError('OWN_CHILD_DRAIN_UNPROVEN')
+                        except subprocess.TimeoutExpired as exc:
+                            # Preserve the captured prefix before the original
+                            # runtime records UNKNOWN; never claim full drain.
+                            stdout, stderr = exc.output, exc.stderr
+                            drain_unproven = True
+                # Child phase timers use the same reserved nonterminal code.
+                # Their original logs also cannot become legacy quota proof.
+                timed_out = timed_out or proc.returncode == 124
                 empty = not module.group_alive(proc.pid)
                 if empty:
                     self.db.execute('UPDATE tickets SET pgid=NULL WHERE id=?', (ticket,))
                 if timed_out:
-                    marker = '\nSDK_CHILD_HARD_DEADLINE_REMOTE_STATE_UNKNOWN\n'
-                    stderr = (stderr or ('' if kwargs.get('text') else b'')) + (
-                        marker if kwargs.get('text') else marker.encode())
+                    with phase_deadline(CLEANUP_SECONDS, 'DEADLINE_EVIDENCE_5_SECONDS'):
+                        archive_deadline_output(command, ticket, token, proc.pid,
+                                                stdout, stderr, empty and not drain_unproven)
+                    if drain_unproven:
+                        raise TimeoutError('OWN_CHILD_DRAIN_UNPROVEN')
+                    # Deadline takes precedence over any quota/auth/terminal
+                    # words in the raw evidence. Legacy runtime stays unchanged.
+                    stdout = b'{"status":"UNCERTAIN","error_type":"SDK_CHILD_HARD_DEADLINE"}\n'
+                    stderr = b'SDK_CHILD_HARD_DEADLINE_REMOTE_STATE_UNKNOWN\n'
                 return {'exit_code': 124 if timed_out else proc.returncode,
-                        'stdout': stdout, 'stderr': stderr,
+                        'stdout': child_text(stdout, kwargs), 'stderr': child_text(stderr, kwargs),
                         'process_group_empty': empty, 'pgid': proc.pid}
     return BoundedBroker
 
@@ -478,6 +520,8 @@ def transport(path, expected, output):
     except BaseException as exc:
         value = {'status': 'UNCERTAIN', 'error_type': type(exc).__name__}
         record['error_type'] = type(exc).__name__
+        if isinstance(exc, TimeoutError):
+            code = 124
     finally:
         try:
             # Parent timeout remains active throughout close, auth readback and
@@ -488,11 +532,13 @@ def transport(path, expected, output):
                 record['auth_files_after'] = [ref(manager.cookies_file), ref(manager.metadata_file)]
                 record['auth_files_unchanged'] = before == record['auth_files_after']
                 if not record['auth_files_unchanged']:
-                    code, value = 2, {'status': 'UNCERTAIN', 'error_type': 'AuthFilesChanged'}
+                    code = 124 if code == 124 else 2
+                    value = {'status': 'UNCERTAIN', 'error_type': 'AuthFilesChanged'}
                 record.update(exit_code=code, ended_at=time.time())
                 save(out / 'TRANSPORT.json', record)
         except BaseException as exc:
-            code, value = 2, {'status': 'UNCERTAIN', 'error_type': 'Cleanup' + type(exc).__name__}
+            code = 124 if code == 124 or isinstance(exc, TimeoutError) else 2
+            value = {'status': 'UNCERTAIN', 'error_type': 'Cleanup' + type(exc).__name__}
     print(json.dumps(value, ensure_ascii=False))
     return code
 
@@ -505,7 +551,12 @@ def main():
     child = sub.add_parser('transport'); child.add_argument('--config', required=True); child.add_argument('--config-sha256', required=True); child.add_argument('--output-dir', required=True)
     a = p.parse_args()
     if a.mode == 'transport':
-        return transport(a.config, a.config_sha256, a.output_dir)
+        try:
+            return transport(a.config, a.config_sha256, a.output_dir)
+        except TimeoutError:
+            # Includes preflight before transport's record/cleanup scope. The
+            # parent archives pipes and passes only fixed UNKNOWN to runtime.
+            return 124
     result = prepare(a.config, a.output_dir) if a.mode == 'prepare' else run(a.config, a.request)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if a.mode == 'prepare' or result.get('status') == 'COMPLETE' else 2

@@ -132,6 +132,12 @@ drain observation. If drain cannot be proven, retain UNKNOWN; the parent does no
 wait forever or claim remote cancellation. A timeout returns non-success even
 if the child previously printed a plausible answer. The original budget remains
 charged and the lease stays with its original owner for reconciliation.
+On a parent deadline or child phase timeout, `SDK-DEADLINE-OUTPUT.json` in the original receipt directory
+preserves captured stdout/stderr bytes as base64 with hashes and the original
+ticket binding (a partial prefix is labelled when drain is unproven). This local
+evidence write has its own 5-second timer. Only a fixed UNKNOWN signal reaches
+the legacy classifier: quota, 429 or auth words in timed-out output cannot become
+remote-terminal proof. Normal non-timeout quota handling remains unchanged.
 The dedicated child uses one POST and a 90-second idle limit,
 disables auth refresh/retry and reuses the confirmed conversation without
 an extra listing. An unchanged request remains deduplicated by the runtime.
