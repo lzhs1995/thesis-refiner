@@ -191,3 +191,36 @@ the existing route checker. No prechecked boolean, old list result or offline
 exception replaces these gates. Gate failure means no new send; UNKNOWN,
 charges and earlier attempts remain untouched. Fixed-chain TLS still does not
 prove service-region acceptance, query completion or review credit.
+
+## macOS framework interpreter invocation compatibility
+
+Some framework launchers expose the application runtime as `sys.orig_argv[0]`,
+while the registered launcher remains `sys.executable`. This can make the
+explicit local guard reject an otherwise exact invocation. A new immutable
+policy may opt into `python_invocation_compat` with exactly these fields:
+
+```json
+{
+  "kind": "macos-framework-launcher-v1",
+  "launcher": {"path": "/absolute/Framework/Versions/version/bin/python", "bytes": 0, "sha256": "ACTUAL_LAUNCHER_SHA"},
+  "runtime": {"path": "/absolute/Framework/Versions/version/Resources/Python.app/Contents/MacOS/Python", "bytes": 0, "sha256": "ACTUAL_RUNTIME_SHA"}
+}
+```
+
+The `launcher` descriptor must equal the policy's existing `python` descriptor.
+The entry accepts this mapping only on Darwin, after checking that the actual
+`sys.executable` resolves to that pinned launcher, the original argv header
+resolves to the pinned runtime in the same framework, and `proc_pidpath` for the
+current PID returns that same runtime with the same bytes and SHA. Missing or
+changed evidence fails before admission. Direct invocations whose original
+header already resolves to the launcher need no compatibility mapping.
+
+After these checks, only argv element zero is normalized for the unchanged
+registry guard. The original seven trailing arguments remain exact. The result
+records both `raw_orig_argv` and `guard_argv`, the launcher/runtime pins and the
+observed process image; it does not rewrite process arguments or report the old
+failed invocation as successful. The original controller, query limits and fresh
+route checks remain unchanged. A source or policy change needs a separately
+registered immutable entry and new prepared pins; preserve old preparations,
+failures and request identities as provenance rather than changing them in place.
+Machine paths and actual binary pins belong only in the private policy.

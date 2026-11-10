@@ -1,6 +1,7 @@
 """Synthetic policies and task data only; no live route, broker, SDK or account."""
 from contextlib import contextmanager, nullcontext
 import copy
+import ctypes
 import hashlib
 import importlib.util
 import json
@@ -160,14 +161,82 @@ class RegistryTests(unittest.TestCase):
         write(self.new['root'] / 'NLM-GUARD-REGISTRY-PIN.json',
               {'schema': 'nlm-network-entry-registry-authority-v1', 'registry': self.registry})
         entry = types.SimpleNamespace(SCRIPTS=self.new['script'].parent, __file__=str(self.new['script']),
-                                      checked=checked, require=require)
+                                      checked=checked, require=require, ref=ref,
+                                      read=lambda value: json.loads(checked(value).read_text()),
+                                      enforce_route_policy=lambda cfg: G.load_policy(
+                                          self.new['item']['policy']['path'], self.new['item']['policy']['sha256'])[1])
         argv = self.argv(self.new)
-        with patch.object(sys, 'orig_argv', argv):
+        with patch.object(sys, 'orig_argv', argv), patch.object(sys, 'executable', str(self.python)):
             result = L.explicit_guard(entry, argv[5], argv[7])
         self.assertEqual(result['status'], 'EXPLICIT_SAME_RELEASE_GUARD_ALLOW')
         self.assertFalse(result['automatic_client_hook_observed'])
         with patch.object(sys, 'orig_argv', argv + ['--extra']), self.assertRaises(ValueError):
             L.explicit_guard(entry, argv[5], argv[7])
+
+
+    def framework_fixture(self):
+        # 完全合成的framework与kernel回件，跨平台测试不访问真实进程或网络。
+        version = self.root / 'Synthetic.framework/Versions/fixture'
+        self.python = version / 'bin/python'; self.python.parent.mkdir(parents=True)
+        self.python.write_text('synthetic pinned launcher')
+        runtime = version / 'Resources/Python.app/Contents/MacOS/Python'
+        runtime.parent.mkdir(parents=True); runtime.write_text('synthetic pinned runtime')
+        compat = {'kind': 'macos-framework-launcher-v1', 'launcher': ref(self.python), 'runtime': ref(runtime)}
+        self.new['policy'].update(python=ref(self.python), python_invocation_compat=compat)
+        self.new['item']['policy'] = write(self.new['root'] / 'policy.json', self.new['policy'])
+        self.new['item']['authority'] = write(self.new['root'] / 'NLM-ROUTE-POLICY-PIN.json',
+            {'schema': 'nlm-network-policy-authority-v1', 'policy': self.new['item']['policy']})
+        self.new['cfg'].update(python=ref(self.python), route_policy=self.new['item']['policy'])
+        self.new['config'] = write(self.new['root'] / 'config.json', self.new['cfg'])
+        self.registry = self.freeze_registry()
+        write(self.new['root'] / 'NLM-GUARD-REGISTRY-PIN.json',
+              {'schema': 'nlm-network-entry-registry-authority-v1', 'registry': self.registry})
+        entry = types.SimpleNamespace(SCRIPTS=self.new['script'].parent, __file__=str(self.new['script']),
+            checked=checked, require=require, ref=ref, read=lambda value: json.loads(checked(value).read_text()),
+            enforce_route_policy=lambda cfg: G.load_policy(
+                self.new['item']['policy']['path'], self.new['item']['policy']['sha256'])[1])
+        argv = self.argv(self.new); argv[0] = str(runtime)
+        return entry, argv, runtime
+
+    def framework_call(self, entry, argv, runtime, *, platform='darwin', process_image=None, executable=None):
+        class ProcessPath:
+            def __call__(self, pid, buffer, length):
+                buffer.value = str(process_image or runtime).encode(); return len(buffer.value)
+        with patch.object(sys, 'orig_argv', argv), patch.object(sys, 'platform', platform), \
+             patch.object(sys, 'executable', str(executable or self.python)), \
+             patch.object(ctypes, 'CDLL', return_value=types.SimpleNamespace(proc_pidpath=ProcessPath())):
+            return L.explicit_guard(entry, self.new['config']['path'], str(self.new['root'] / 'request.json'))
+
+    def test_framework_runtime_header_requires_pinned_process_mapping(self):
+        entry, argv, runtime = self.framework_fixture()
+        # 原guard直接看到app头会拒绝；兼容层核全证据后把原尾7项交回同一guard。
+        with self.assertRaisesRegex(G.Denied, 'PINNED_ENTRY_REQUIRED'): self.check(argv)
+        result = self.framework_call(entry, argv, runtime)
+        self.assertEqual(result['invocation']['raw_orig_argv'], argv)
+        self.assertEqual(result['invocation']['guard_argv'], [str(self.python), *argv[1:]])
+        self.assertEqual(result['invocation']['runtime'], ref(runtime))
+        self.assertEqual(result['invocation']['process_image'], str(runtime))
+
+    def test_framework_missing_changed_or_cross_framework_mapping_refused(self):
+        entry, argv, runtime = self.framework_fixture()
+        base = copy.deepcopy(self.new['policy'])
+        absent = copy.deepcopy(base); absent.pop('python_invocation_compat')
+        bad_pin = copy.deepcopy(base); bad_pin['python_invocation_compat']['runtime']['sha256'] = '0' * 64
+        cross = copy.deepcopy(base); cross['python_invocation_compat']['runtime'] = ref(self.python)
+        wrong_launcher = copy.deepcopy(base); wrong_launcher['python_invocation_compat']['launcher'] = ref(runtime)
+        for label, policy in [('missing', absent), ('bad_pin', bad_pin), ('cross', cross), ('launcher', wrong_launcher)]:
+            with self.subTest(label=label), patch.object(entry, 'enforce_route_policy', return_value=policy), \
+                 self.assertRaises(ValueError):
+                self.framework_call(entry, argv, runtime)
+
+    def test_framework_process_platform_executable_and_tail_refused(self):
+        entry, argv, runtime = self.framework_fixture()
+        for label, kw in [('platform', {'platform': 'linux'}), ('kernel_image', {'process_image': self.python}),
+                          ('sys_executable', {'executable': runtime})]:
+            with self.subTest(label=label), self.assertRaises(ValueError): self.framework_call(entry, argv, runtime, **kw)
+        for changed in (argv + ['--extra'], [*argv[:-1], str(self.root / 'different-request.json')]):
+            with self.subTest(argv=changed), self.assertRaises(ValueError): self.framework_call(entry, changed, runtime)
+
 
 
 class LegacyFlowTests(unittest.TestCase):

@@ -99,16 +99,50 @@ def explicit_guard(entry, config_path, request_path):
     entry.require(authority.get('schema') == 'nlm-network-entry-registry-authority-v1', 'GUARD_REGISTRY_AUTHORITY_REQUIRED')
     registry = authority['registry']; entry.checked(registry)
     from nlm_network_guard import event_check, load_registry
-    argv = list(sys.orig_argv)
+    raw_argv = list(sys.orig_argv)
+    argv = list(raw_argv)
     entry.require(len(argv) == 8 and argv[1] == '-BE'
                   and Path(argv[2]).resolve() == Path(entry.__file__).resolve()
                   and argv[3] == 'legacy-run'
                   and dict(zip(argv[4::2], argv[5::2])) == {'--config': str(config_path), '--request': str(request_path)},
                   'ACTUAL_LEGACY_PUBLIC_INVOCATION_REQUIRED')
+    # 某些macOS framework launcher将orig_argv[0]改成实际app image。
+    # 必须同时核安装者固定的两文件、同framework关系及当前真实进程；保原argv留证。
+    cfg = entry.read(entry.ref(config_path)); policy = entry.enforce_route_policy(cfg)
+    launcher = entry.checked(policy['python'])
+    entry.require(entry.ref(Path(sys.executable).resolve()) == policy['python'], 'ACTUAL_REGISTERED_LAUNCHER_REQUIRED')
+    evidence = {'kind': 'unchanged', 'raw_orig_argv': raw_argv, 'guard_argv': argv}
+    if Path(raw_argv[0]).resolve() != launcher:
+        compat = policy.get('python_invocation_compat')
+        entry.require(sys.platform == 'darwin' and type(compat) is dict
+                      and set(compat) == {'kind', 'launcher', 'runtime'}
+                      and compat['kind'] == 'macos-framework-launcher-v1'
+                      and compat['launcher'] == policy['python'], 'REGISTERED_FRAMEWORK_COMPATIBILITY_REQUIRED')
+        runtime = entry.checked(compat['runtime'])
+        entry.require(launcher.parent.name == 'bin'
+                      and runtime == launcher.parent.parent / 'Resources/Python.app/Contents/MacOS/Python'
+                      and Path(raw_argv[0]).is_absolute() and Path(raw_argv[0]).resolve() == runtime,
+                      'EXACT_SAME_FRAMEWORK_RUNTIME_REQUIRED')
+        import ctypes
+        import os
+        libproc = ctypes.CDLL('/usr/lib/libproc.dylib', use_errno=True)
+        proc_pidpath = libproc.proc_pidpath
+        proc_pidpath.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_uint32]
+        proc_pidpath.restype = ctypes.c_int
+        buffer = ctypes.create_string_buffer(4096)
+        returned = proc_pidpath(os.getpid(), buffer, len(buffer))
+        entry.require(0 < returned < len(buffer) and bool(buffer.value), 'ACTUAL_PROCESS_IMAGE_REQUIRED')
+        process_image = Path(os.fsdecode(buffer.value)).resolve(strict=True)
+        entry.require(process_image == runtime and entry.ref(process_image) == compat['runtime'],
+                      'ACTUAL_PINNED_FRAMEWORK_IMAGE_REQUIRED')
+        argv = [str(launcher), *raw_argv[1:]]
+        evidence = {'kind': compat['kind'], 'raw_orig_argv': raw_argv, 'guard_argv': argv,
+                    'launcher': policy['python'], 'runtime': compat['runtime'],
+                    'process_image': str(process_image), 'proc_pidpath_returned': returned}
     event_check({'tool_name': 'exec_command', 'tool_input': {'cmd': shlex.join(argv)}},
                 lambda: load_registry(registry['path'], registry['sha256']))
     return {'status': 'EXPLICIT_SAME_RELEASE_GUARD_ALLOW', 'registry': registry,
-            'automatic_client_hook_observed': False, 'query_credit': False}
+            'automatic_client_hook_observed': False, 'query_credit': False, 'invocation': evidence}
 
 
 def decision(entry, ctx, spec, cfg_ref, key):
