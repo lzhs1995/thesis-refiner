@@ -1,5 +1,6 @@
 from pathlib import Path
 from importlib.util import find_spec
+from importlib import metadata
 import json
 import sys
 import tempfile
@@ -12,8 +13,11 @@ from nlm_runtime import validate_response
 
 class SuccessorDelta(unittest.TestCase):
     def test_real_http2_lazy_dependencies_before_admission(self):
-        value=dependency_preflight({'h2':'4.3.0','hpack':'4.1.0','hyperframe':'6.1.0'})
-        self.assertEqual(value['h2']['version'],'4.3.0')
+        # Base CI supports a wider HTTPX dependency range. The separate SDK job
+        # pins the actual validated versions; both paths must enforce their pins.
+        versions={name:metadata.version(name) for name in ('h2','hpack','hyperframe')}
+        value=dependency_preflight(versions)
+        self.assertEqual(value['h2']['version'],versions['h2'])
         with self.assertRaisesRegex(ValueError,'DEPENDENCY_VERSION'):
             dependency_preflight({'h2':'missing'})
 

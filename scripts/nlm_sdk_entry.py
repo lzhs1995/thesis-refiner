@@ -67,6 +67,7 @@ def actor_check(cfg):
 
 
 def validate_inputs(cfg):
+    require(sys.version_info >= (3, 11), 'SDK_ENTRY_REQUIRES_PYTHON_3_11')
     require(cfg['schema'] == 'nlm-sdk-task-v1', 'TASK_SCHEMA')
     for field in ('task_id', 'account_key', 'notebook_id', 'target_id', 'profile_name', 'email',
                   'proxy', 'budget_root', 'resource_root'):

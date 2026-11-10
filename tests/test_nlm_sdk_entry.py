@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import nlm_sdk_entry as entry
 
 
+@unittest.skipUnless(sys.version_info >= (3, 11), 'Optional SDK entry requires Python 3.11+')
 class TaskEntryTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

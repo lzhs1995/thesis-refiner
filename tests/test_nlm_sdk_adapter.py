@@ -16,6 +16,7 @@ from nlm_sdk_adapter import BoundedHTTP, jacob_request, teng_request, parse_answ
 
 SDK_AVAILABLE = find_spec("notebooklm_tools") is not None and find_spec("notebooklm") is not None
 
+@unittest.skipUnless(sys.version_info >= (3, 11), 'SDK transport requires Python 3.11 asyncio.timeout')
 class StreamTests(unittest.IsolatedAsyncioTestCase):
     async def receive(self, encoding, wire, *, idle=1, total=2, delay=0):
         import httpx
