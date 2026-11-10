@@ -72,6 +72,14 @@ def normalized_result(operation, data, *, source_id=None, notebook_id=None):
                 raise ValueError("NOTEBOOK_ID_MISSING")
         return {"notebooks": value}
     value = unwrap(data)
+    if operation == "notebook_create":
+        if not isinstance(value.get("created_notebook_id"), str) or not value["created_notebook_id"]:
+            raise ValueError("CREATED_NOTEBOOK_ID_REQUIRED")
+        return value
+    if operation == "source_text_add":
+        if not value.get("source_id") or value.get("notebook_id") != notebook_id:
+            raise ValueError("BOUND_TEXT_SOURCE_REQUIRED")
+        return value
     if notebook_id and value.get("notebook_id") not in {None, notebook_id}:
         raise ValueError("RESPONSE_NOTEBOOK_MISMATCH")
     if operation == "source_add":

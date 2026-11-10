@@ -1,0 +1,7 @@
+# Optional SDK CI uses these official PyPI projects. Runtime trees have separate full SHA manifests.
+notebooklm-mcp-cli==0.16.1
+notebooklm-py==0.8.6
+httpx[http2]==0.28.1
+h2==4.3.0
+hpack==4.1.0
+hyperframe==6.1.0

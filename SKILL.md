@@ -9,6 +9,14 @@ metadata:
 
 # 论文精炼助手
 
+## NLM 联网最高优先级：专属路线硬前提
+
+任何 NLM 联网操作必须满足用户指定的专属代理路线。调用前执行
+[强制 hook 与固定政策检查](references/nlm-network-hook.md)，执行器发送前再次核验。
+政策缺失、代理或节点不符、路线证据不足一律禁止调用，不得直连或回退其他节点。
+本机实际路线从安装时固定的私有政策读取；任务不能自行选择替代政策。
+HTTP 200、端口可连和历史成功均不代替此条件。此要求优先于以下可选工具选择。
+
 目标是忠实原稿语气、证据可追溯、可提交的论文；修改数量不是质量指标。
 
 先读任务检查点，复用已验收结果、原稿风格样本和原参与者。
@@ -19,11 +27,17 @@ metadata:
 ## 按任务加载
 
 - 多agent分工和原稿文风：读[分工与忠实审阅](references/voice-and-collaboration.md)。
+- 各章独占cmux workspace、内嵌Herdr团队、senior supervisor统稿：读
+  [分层章节工作流](references/chapter-teams.md)。四种合作模式与五条
+  协作规则引用已绑定MAC的共同契约，纯cmux论文任务仍支持。
 - 传输由已绑定的multi-agent-collaboration维护：新任务先读其
   `references/collaboration-profiles.md`；Herdr使用其轻量入口，cmux使用原传输。
 - 既有任务或cmux专门恢复：按需读[原版完整流程](references/cmux-legacy-entry.md)，
   旧controller、回执和已授权continuing登记不迁移。
 - NLM阶段：[完整审查与额度](references/nlm-review-and-budget.md)。
+- 新任务可选 [有界 SDK 入口与依赖绑定](references/nlm-sdk-adapter.md)；仅已确认来源和持久会话，保留原账号队列与预算，不切换同名 MCP 或在途控制器。
+  任一新SDK入口须沿领域NLM路线门槛：不能只核代理端口；prepare和发送前核实际监听进程、固定路线及连接所用节点，缺证据在发送前拒绝。本机节点与凭据只写私有任务绑定。
+  [NLM 专属强制 hook](references/nlm-network-hook.md)须由客户端固定政策与哈希：未绑定的 MCP/CLI/SDK 网络调用拒绝；只放行已钉入口，入口再次核验专属路线。读取技能或安装文件不等于客户端已加载 hook。
   若任务已绑定有界执行扩展，继续其240秒总期限、90秒无进展规则及原预算；
   不把超时当服务端取消，也不重复询问已有作废许可。
 - Word原生检查使用已绑定的officecli-word-revision；保留引文域、

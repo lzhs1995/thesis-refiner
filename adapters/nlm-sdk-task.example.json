@@ -1,0 +1,67 @@
+{
+  "schema": "nlm-sdk-task-v1",
+  "task_id": "REPLACE_NEW_AUTHORIZED_TASK_ID",
+  "provider": "jacob",
+  "account_key": "REPLACE_ACTUAL_ACCOUNT_KEY",
+  "notebook_id": "REPLACE_ACCEPTED_NOTEBOOK_ID",
+  "source_ids": [
+    "REPLACE_ACCEPTED_SOURCE_ID"
+  ],
+  "conversation_id": "REPLACE_CONFIRMED_PERSISTENT_ID",
+  "conversation_receipt": {
+    "path": "/absolute/prior-complete-receipt.json",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
+  "source_binding": {
+    "path": "/absolute/new-task/source-binding.json",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
+  "authorization": {
+    "path": "/absolute/new-task/authorization.md",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
+  "actor": {
+    "thread_id": "REPLACE_ACTUAL_CODEX_THREAD_ID",
+    "workspace_uuid": "REPLACE_ACTUAL_CMUX_WORKSPACE_ID",
+    "surface_uuid": "REPLACE_ACTUAL_CMUX_SURFACE_ID"
+  },
+  "single_request_per_process": true,
+  "python": {
+    "path": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
+  "sdk_manifest": {
+    "path": "/absolute/pinned-sdk-environment.json",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
+  "broker_module": {
+    "path": "/absolute/original-complete-mac-source/scripts/resource_broker.py",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
+  "budget_root": "/Users/lzhs/.local/state/nlm-account-budget",
+  "resource_root": "/Users/lzhs/.local/state/multi-agent-collaboration/resources",
+  "external_locks": [
+    "/absolute/existing/account-lock"
+  ],
+  "query_budget": 1,
+  "profile_name": "REPLACE_EXISTING_PROFILE",
+  "email": "REPLACE_EXPECTED_ACCOUNT_EMAIL",
+  "proxy": "http://127.0.0.1:REPLACE_PINNED_PROXY_PORT",
+  "route_policy": {
+    "path": "/absolute/private-policy/NLM-ROUTE-POLICY.json",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_MAINTAINER_REGISTERED_POLICY_SHA256"
+  },
+  "route_binding": {
+    "path": "/absolute/private-task/route-binding.json",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
+  "target_id": "REPLACE_EXISTING_TARGET_ID"
+}

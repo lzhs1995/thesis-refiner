@@ -1,0 +1,22 @@
+{
+  "schema": "nlm-network-policy-v1",
+  "policy_role": "mandatory-domain-route",
+  "required_route_label": "TASK_REQUIRED_CHAIN_TO_APPROVED_TERMINAL",
+  "route_binding": {
+    "path": "/absolute/private-policy/ROUTE-BINDING.json",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_APPROVED_ROUTE_BINDING_SHA256"
+  },
+  "entry": {
+    "path": "/absolute/release/source/scripts/nlm_sdk_entry.py",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ENTRY_SHA256"
+  },
+  "python": {
+    "path": "/absolute/pinned/python",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_PYTHON_SHA256"
+  },
+  "code_pins": [],
+  "offline_commands": []
+}
