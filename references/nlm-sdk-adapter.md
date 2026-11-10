@@ -21,6 +21,12 @@ client provider and actual executor. Do not select either same-name
 `notebooklm-mcp` through PATH. Installing this candidate does not switch a running
 MCP client or an in-flight request.
 
+Every new SDK entry must also enforce the domain route gate in
+[connection recovery](nlm-connection-recovery.md). A local proxy port, a node
+label or a prior successful query does not prove the route used now. Bind the
+approved machine-specific route privately; never copy node names, credentials
+or proxy configuration into this public skill.
+
 The present candidate targets Jacob 0.16.1 and Teng 0.8.6. The official request
 builders and parsers are used; the public CLI/MCP retry/auth/cache machinery is
 not invoked. This scope must be reported accurately in validation. The Jacob
@@ -113,13 +119,49 @@ remain explicit dependencies; the skill installer does not bundle or install the
 From the complete release's source directory (replace absolute task paths):
 
 ```bash
-rtk proxy /opt/homebrew/bin/python3.14 -BE scripts/nlm_sdk_entry.py prepare --config /absolute/new-task/task-input.json --output-dir /absolute/new-task/prepared
-rtk proxy /opt/homebrew/bin/python3.14 -BE scripts/nlm_sdk_entry.py run --config /absolute/new-task/prepared/CONFIG.json --request /absolute/new-task/query.json
+rtk proxy /absolute/pinned/python -BE /absolute/release/source/scripts/nlm_sdk_entry.py prepare --config /absolute/new-task/task-input.json --output-dir /absolute/new-task/prepared
+rtk proxy /absolute/pinned/python -BE /absolute/release/source/scripts/nlm_sdk_entry.py run --config /absolute/new-task/prepared/CONFIG.json --request /absolute/new-task/query.json
 ```
 
 `prepare` performs local identity, source, dependency and existing account-policy
 checks with a 30-second local preflight timer; it freezes code/config pins without
-network or budget writes. `run`
+query, origin HTTP or budget writes. It does make a credential-free CONNECT/TLS
+observation, so `PREPARED.json` correctly records `no_network: false`.
+The [mandatory network hook](nlm-network-hook.md) and the entry both require the
+maintainer-pinned `route_policy`; a task cannot authorize a different route by
+supplying its own binding. The required private `route_binding` uses
+`nlm-fixed-proxy-route-v1`: exact proxy URL and two NotebookLM hosts, pinned local
+proxy configuration, listener object, process PID/birth/command, control socket
+identity, and the fixed terminal/dialer nodes with hashes of their private
+configuration objects. `scope_acceptance` explicitly records the evidence
+boundary when the core lacks an independent listener-mapping API. This binding
+contains no credential values; the pinned private proxy configuration remains
+in its original location.
+
+The gate checks the actual TCP listener and Unix control socket belong to the
+same unchanged process, its command selects the pinned configuration, and its
+runtime proxy chain has no selector. One bounded credential-free CONNECT/TLS
+observation then matches the live local connection by source port, destination
+host and inbound port, requiring the approved terminal node in its actual
+`chains`. Fixed dialers from runtime node checks are reported separately if the
+connection API omits them. It sends zero origin HTTP and zero query POSTs and
+closes immediately. This proves a short observation window, not a permanent
+route or Google's acceptance of the exit region. The observation socket closes
+before the separate query connection: it is not evidence of that later socket's
+actual chain. The fixed process/configuration is checked around the observation.
+Missing or mismatched evidence
+fails before sending; no route, selector or service is altered.
+This implementation supports a macOS local HTTP listener and a Mihomo Unix
+control socket with a fixed proxy/dialer chain. Other platforms, shared selectors
+or missing control evidence require a separately reviewed binding; there is no
+silent port-only fallback.
+
+`prepare`, pre-admission and immediately pre-send repeat this same route gate.
+The whole route check has a 20-second hard signal deadline, including local
+control response reads; the TLS segment additionally uses a 15-second remaining
+I/O budget. Existing 30-second preflight and
+240-second admitted-child deadlines still apply. A changed process or route
+requires a new named binding, never editing an old attempt's pins. `run`
 admits through the original account broker, existing external locks and explicit
 task budget. Its dedicated parent replaces only the broker's child-wait method
 for this process; queue, grant, budget, receipt and release rules are unchanged.

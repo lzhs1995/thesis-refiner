@@ -53,5 +53,15 @@
   "profile_name": "REPLACE_EXISTING_PROFILE",
   "email": "REPLACE_EXPECTED_ACCOUNT_EMAIL",
   "proxy": "http://127.0.0.1:REPLACE_PINNED_PROXY_PORT",
+  "route_policy": {
+    "path": "/absolute/private-policy/NLM-ROUTE-POLICY.json",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_MAINTAINER_REGISTERED_POLICY_SHA256"
+  },
+  "route_binding": {
+    "path": "/absolute/private-task/route-binding.json",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
   "target_id": "REPLACE_EXISTING_TARGET_ID"
 }

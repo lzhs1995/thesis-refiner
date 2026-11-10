@@ -31,6 +31,15 @@ PREFLIGHT_SECONDS = 30
 CHILD_SECONDS = 240
 CLEANUP_SECONDS = 5
 DRAIN_SECONDS = 5
+ROUTE_POLICY_AUTHORITY = SCRIPTS.parent.parent / 'NLM-ROUTE-POLICY-PIN.json'
+
+
+def check_route(*args, **kwargs):
+    # Called only after sdk_preflight installed the pinned source loader; -B
+    # alone would still permit importing a pre-existing local bytecode cache.
+    from nlm_route_gate import check_route as route_check
+    with phase_deadline(20, 'ROUTE_WHOLE_PHASE_20_SECONDS'):
+        return route_check(*args, **kwargs)
 
 
 def require(ok, message):
@@ -76,6 +85,29 @@ def actor_check(cfg):
                 'ACTUAL_TASK_EXECUTOR_REQUIRED:' + variable)
 
 
+def enforce_route_policy(cfg):
+    # This file is installed by the maintainer beside the immutable source tree,
+    # not accepted from a CLI flag, environment variable or task input. The
+    # client's hook independently pins the same policy in its registered command.
+    authority = json.loads(ROUTE_POLICY_AUTHORITY.read_text())
+    require(authority['schema'] == 'nlm-network-policy-authority-v1', 'ROUTE_AUTHORITY_SCHEMA')
+    policy_ref = authority['policy']
+    require(cfg.get('route_policy') == policy_ref, 'REGISTERED_ROUTE_POLICY_REQUIRED')
+    policy = read(policy_ref)
+    require(policy['schema'] == 'nlm-network-policy-v1'
+            and policy['policy_role'] == 'mandatory-domain-route'
+            and bool(policy['required_route_label']), 'MANDATORY_DOMAIN_ROUTE_POLICY')
+    require(policy['entry'] == ref(__file__) and policy['python'] == cfg['python']
+            and cfg['route_binding'] == policy['route_binding'], 'TASK_ROUTE_NOT_APPROVED')
+    require(policy['code_pins'] == [ref(p) for p in sorted(SCRIPTS.glob('*.py'))],
+            'APPROVED_ENTRY_CODE_CHANGED')
+    if 'code_pins' in cfg:
+        require(cfg['code_pins'] == policy['code_pins'], 'PREPARED_CODE_NOT_APPROVED')
+    route = read(cfg['route_binding'])
+    require(cfg['proxy'] == route['proxy'], 'APPROVED_ROUTE_PROXY_REQUIRED')
+    return policy
+
+
 def validate_inputs(cfg):
     require(sys.version_info >= (3, 11), 'SDK_ENTRY_REQUIRES_PYTHON_3_11')
     require(cfg['schema'] == 'nlm-sdk-task-v1', 'TASK_SCHEMA')
@@ -88,6 +120,9 @@ def validate_inputs(cfg):
     require(threading.active_count() == 1, 'THREADED_SDK_ENTRY_FORBIDDEN')
     actor_check(cfg)
     checked(cfg['authorization'])
+    require('route_binding' in cfg, 'PRIVATE_DOMAIN_ROUTE_BINDING_REQUIRED')
+    checked(cfg['route_binding'])
+    enforce_route_policy(cfg)
     checked(cfg['python'])
     require(Path(sys.executable).resolve() == checked(cfg['python']), 'PINNED_PYTHON_REQUIRED')
     require(sys.flags.ignore_environment and sys.dont_write_bytecode and not sys.flags.optimize,
@@ -367,6 +402,7 @@ def _prepare(config, output):
     validate_inputs(cfg)
     dependencies = sdk_preflight(cfg)
     queue_preflight(cfg)
+    route = check_route(cfg, 'prepare')
     out = Path(output).resolve()
     require(not out.exists(), 'FRESH_TASK_DIRECTORY_REQUIRED')
     cfg['scripts'] = str(SCRIPTS)
@@ -374,9 +410,11 @@ def _prepare(config, output):
     cfg['prepared_from'] = ref(config)
     out.mkdir(parents=True)
     prepared = freeze(out / 'CONFIG.json', cfg)
-    freeze(out / 'PREPARED.json', {'config': prepared, 'dependencies': dependencies,
+    freeze(out / 'PREPARED.json', {'config': prepared, 'dependencies': dependencies, 'route': route,
         'native_actor_authentication': False, 'actor_check': 'actual caller environment; no root substitution',
-        'no_network': True, 'budget_mutations': False, 'global_entry_changes': False,
+        'no_network': False, 'network_scope': 'credential-free CONNECT/TLS route observation only',
+        'origin_http_requests': 0, 'query_posts': 0,
+        'budget_mutations': False, 'global_entry_changes': False,
         'preflight_seconds': PREFLIGHT_SECONDS, 'child_hard_seconds': CHILD_SECONDS,
         'cleanup_seconds': CLEANUP_SECONDS, 'termination_grace_seconds': DRAIN_SECONDS,
         'kill_drain_seconds': DRAIN_SECONDS})
@@ -412,7 +450,8 @@ def locked(path):
 def binding(cfg, path):
     path = Path(path).resolve()
     artifacts = [*cfg['code_pins'], cfg['python'], ref(path), cfg['sdk_manifest'],
-                 cfg['source_binding'], cfg['conversation_receipt'], cfg['authorization']]
+                 cfg['source_binding'], cfg['conversation_receipt'], cfg['authorization'], cfg['route_binding'],
+                 cfg['route_policy'], ref(ROUTE_POLICY_AUTHORITY)]
     return {'account_key': cfg['account_key'], 'notebook_id': cfg['notebook_id'],
         'target_id': cfg['target_id'] + ':' + cfg['provider'],
         'workspace_uuid': cfg['actor']['workspace_uuid'], 'surface_uuid': cfg['actor']['surface_uuid'],
@@ -426,6 +465,9 @@ def binding(cfg, path):
 
 def run(path, request_path):
     cfg = config_checked(path)
+    with phase_deadline(PREFLIGHT_SECONDS, 'ROUTE_PRE_ADMISSION_30_SECONDS'):
+        route = check_route(cfg, 'pre_admission')
+    freeze(Path(path).parent / 'route-observations' / (str(time.time_ns()) + '.json'), route)
     source = read(cfg['source_binding'])
     request = request_input(request_path)
     request.update(task_id=cfg['task_id'], operation='query', source_ids=cfg['source_ids'],
@@ -473,7 +515,9 @@ def transport(path, expected, output):
         with closing(sqlite3.connect((Path(cfg['budget_root']) / 'budget.sqlite3').as_uri() + '?mode=ro', uri=True)) as db:
             require(db.execute("SELECT 1 FROM requests WHERE id=? AND task_id=? AND state='STARTED'",
                                (out.name, cfg['task_id'])).fetchone(), 'ORIGINAL_BUDGET_ADMISSION')
-        from nlm_sdk_adapter_v3 import BoundedHTTP, save, jacob_request, teng_request, parse_answer, validate_answer
+        from nlm_sdk_adapter_v3 import (BoundedHTTP, save, jacob_request, teng_request,
+                                       parse_answer, validate_answer, ProviderApplicationError)
+        from nlm_route_gate import RouteGateError
         from notebooklm_tools.services.auth import AuthManager
         from notebooklm_tools.core.client import NotebookLMClient
         manager = AuthManager(cfg['profile_name'])
@@ -507,6 +551,12 @@ def transport(path, expected, output):
                 else:
                     url, body, wire_id = teng_request(profile, cfg['notebook_id'], request['prompt'],
                                                      cfg['source_ids'], cfg['conversation_id'])
+                from urllib.parse import urlparse
+                # Recheck the actual built destination immediately before its
+                # single POST. This TLS-only observation sends no credentials
+                # or origin HTTP and remains inside the child's hard deadline.
+                route = check_route(cfg, 'pre_send', host=urlparse(url).hostname)
+                save(out / 'ROUTE-PRE-SEND.json', route)
                 remaining = max(.001, CHILD_SECONDS - (time.monotonic() - began))
                 http = BoundedHTTP(out, proxy=cfg['proxy'], cookies=client._get_httpx_cookies(), total=remaining, idle=90)
                 raw = asyncio.run(http.post('query', url, body))
@@ -520,6 +570,14 @@ def transport(path, expected, output):
     except BaseException as exc:
         value = {'status': 'UNCERTAIN', 'error_type': type(exc).__name__}
         record['error_type'] = type(exc).__name__
+        if isinstance(exc, ProviderApplicationError):
+            # Preserve the explicit application error in the transport evidence.
+            # It does not turn UNKNOWN into remote terminal or refund admission.
+            record['provider_application_error'] = exc.details
+        if getattr(exc, 'route_observation', None) is not None:
+            record['route_observation_failure'] = exc.route_observation
+        if isinstance(exc, RouteGateError):
+            record['route_gate_failure'] = str(exc)
         if isinstance(exc, TimeoutError):
             code = 124
     finally:
