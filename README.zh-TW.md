@@ -58,7 +58,7 @@ python -m pip install -r requirements-test.txt
 python -B -m unittest discover -s tests -v
 ```
 
-Windows 使用者可在 PowerShell 執行 `.venv\Scripts\Activate.ps1` 啟用環境。符合測試前置條件，不代表該電腦的原生 Word 自動化或 NotebookLM 線上傳輸已可用。
+完整測試命令需要提供 `fcntl` 的 POSIX 環境，因為安裝測試會實際執行檔案鎖定。這套完整測試不支援原生 Windows；僅更換虛擬環境啟用命令不能消除這項要求。測試也不代表原生 Word 自動化或 NotebookLM 線上傳輸已可用。
 
 開始 agent 協助的審閱前，先讀 [Agent 快速上手](docs/agent-quickstart.md)，並把此工作副本的 `SKILL.md` 絕對路徑交給 agent。文稿、證據與檢查點放在獨立私有任務目錄；先完成範圍明確的本地清點，再准入線上請求。
 

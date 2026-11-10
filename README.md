@@ -58,7 +58,7 @@ python -m pip install -r requirements-test.txt
 python -B -m unittest discover -s tests -v
 ```
 
-On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerShell. The test prerequisites do not establish that native Word automation or a live NotebookLM transport works on that machine.
+The complete test command requires a POSIX environment with `fcntl`: installation tests exercise real file locking. Native Windows is not supported by this full suite; changing the virtual-environment activation command does not remove that requirement. These tests also do not establish native Word automation or live NotebookLM transport readiness.
 
 To begin an agent-assisted review, read [the agent quickstart](docs/agent-quickstart.md) and give the agent the absolute path to this checkout's `SKILL.md`. Use a separate private task directory for the manuscript, evidence, and checkpoints. Start with a bounded local inventory before admitting online requests.
 

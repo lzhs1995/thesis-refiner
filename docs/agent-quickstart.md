@@ -37,7 +37,7 @@ python -B -m unittest discover -s tests -v
 python -B scripts/install.py --help
 ```
 
-Use `.venv\Scripts\Activate.ps1` for PowerShell activation. Install dependencies into an isolated environment. The tests use synthetic evidence, including loopback TLS; they submit no NotebookLM queries. Cross-repository tests need a compatible sibling collaboration checkout or an explicit `COLLABORATION_BROKER=/absolute/source/scripts/resource_broker.py`. A skipped integration test is not a pass. Native Word, statistical software, and live account transports require separate actual validation.
+The complete suite requires POSIX `fcntl`, including in the installation tests; native Windows is not supported by this command. Install dependencies into an isolated environment. The tests use synthetic evidence, including loopback TLS; they submit no NotebookLM queries. Cross-repository tests need a compatible sibling collaboration checkout or an explicit `COLLABORATION_BROKER=/absolute/source/scripts/resource_broker.py`. A skipped integration test is not a pass. Native Word, statistical software, and live account transports require separate actual validation.
 
 The public [installer](../scripts/install.py) is optional. A preview is read-only; `--apply` requires POSIX file locks and fresh, separate, non-symlinked version paths outside the source tree. It copies maintained skill files, not the complete documentation/test/assets tree. It does not select a running client's release or configure dependencies, hooks, credentials or MCP. Preserve old pinned installations; use the [version-installation contract](../references/runtime-validation.md#版本安装与在途任务).
 
