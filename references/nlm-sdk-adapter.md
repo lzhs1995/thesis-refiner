@@ -1,5 +1,12 @@
 # Explicit SDK candidate transport
 
+For new requests, use `nlm_sdk_adapter_v2.py`. It checks the pinned h2, hpack and
+hyperframe imports before budget admission, and supplies the existing runtime's
+citation map for Teng while preserving its full reference objects. The original
+adapter remains intact for its original attempts. Pin/copy those three optional
+HTTP/2 dependencies into the new isolated entry; SDK installation alone did not
+include them. Missing dependencies must fail locally before network admission.
+
 `scripts/nlm_sdk_adapter.py` supplies a narrow HTTP boundary for separately pinned
 Jacob and Teng installations. It does not select/install an SDK, obtain a login,
 allocate an account budget, release an UNKNOWN request, or change a controller.
