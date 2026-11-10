@@ -89,7 +89,7 @@ class OriginalBrokerDeadlines(unittest.TestCase):
     def test_preflight_stream_and_cleanup_hangs_preserve_unknown_budget_and_lease(self):
         import nlm_runtime as runtime
         original_factory=entry.bounded_broker
-        for stage in ('preflight','stream','cleanup','quota_stdout','quota_stderr','429_stdout','auth_stderr','child_timeout_quota','normal_quota'):
+        for stage in ('preflight','stream','cleanup','quota_stdout','quota_stderr','429_stdout','auth_stderr','child_timeout_quota','normal_quota','provider_region'):
             with self.subTest(stage=stage), tempfile.TemporaryDirectory() as d:
                 root=Path(d);script=root/'child.py';counter=root/'synthetic-post-count.txt'
                 # No network: model a zero-send preflight, one-send blocked stream,
@@ -102,12 +102,14 @@ class OriginalBrokerDeadlines(unittest.TestCase):
                     expected_stdout=(json.dumps(value)+'\r\n').encode()
                 if stage in {'quota_stderr','child_timeout_quota','normal_quota'}:expected_stderr=b'quota exceeded\r\n'
                 if stage=='auth_stderr':expected_stderr=b'auth failed; unauthorized; token expired\r\nraw-byte:\xff'
+                if stage=='provider_region':
+                    expected_stdout=b'{"status":"UNCERTAIN","error_type":"ProviderApplicationError"}\n'
                 script.write_text('import os,signal,time\nfrom pathlib import Path\n'
                     'signal.signal(signal.SIGTERM,signal.SIG_IGN)\n'
                     +('' if stage=='preflight' else f'Path({str(counter)!r}).write_text("1")\n')
                     +f'os.write(1,{expected_stdout!r})\nos.write(2,{expected_stderr!r})\n'
                     +'class Client:\n def close(self):time.sleep(30)\n'
-                    +('raise SystemExit(124)\n' if stage=='child_timeout_quota' else 'raise SystemExit(2)\n' if stage=='normal_quota' else 'Client().close()\n' if stage=='cleanup' else 'time.sleep(30)\n'))
+                    +('raise SystemExit(124)\n' if stage=='child_timeout_quota' else 'raise SystemExit(2)\n' if stage in {'normal_quota','provider_region'} else 'Client().close()\n' if stage=='cleanup' else 'time.sleep(30)\n'))
                 broker=entry.ref(os.environ['COLLABORATION_BROKER'])
                 cfg=dict(account_key='a',notebook_id='book',target_id='test-only',
                     workspace_uuid='11111111-1111-1111-1111-111111111111',
@@ -128,6 +130,15 @@ class OriginalBrokerDeadlines(unittest.TestCase):
                 out=Path(result['receipt']['path']).parent
                 module=runtime.broker_module(cfg);queue=module.Broker(cfg['resource_root'])
                 ticket=queue.get(receipt['resource_lease']['id'])
+                if stage=='provider_region':
+                    self.assertEqual(result['status'],'UNCERTAIN')
+                    self.assertEqual(receipt['exit_code'],2)
+                    self.assertFalse(receipt['remote_terminal']);self.assertFalse(receipt['quota_limited'])
+                    self.assertEqual(ticket['status'],'ACTIVE')
+                    self.assertEqual(budget.report('a')['query_count'],1)
+                    self.assertEqual(json.loads((out/'raw.json').read_text()),
+                        {'status':'UNCERTAIN','error_type':'ProviderApplicationError'})
+                    queue.db.close();budget.db.close();continue
                 if stage=='normal_quota':
                     self.assertEqual(result['status'],'FAILED')
                     self.assertEqual(receipt['exit_code'],2)

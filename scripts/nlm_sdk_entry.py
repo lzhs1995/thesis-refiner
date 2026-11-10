@@ -473,7 +473,8 @@ def transport(path, expected, output):
         with closing(sqlite3.connect((Path(cfg['budget_root']) / 'budget.sqlite3').as_uri() + '?mode=ro', uri=True)) as db:
             require(db.execute("SELECT 1 FROM requests WHERE id=? AND task_id=? AND state='STARTED'",
                                (out.name, cfg['task_id'])).fetchone(), 'ORIGINAL_BUDGET_ADMISSION')
-        from nlm_sdk_adapter_v3 import BoundedHTTP, save, jacob_request, teng_request, parse_answer, validate_answer
+        from nlm_sdk_adapter_v3 import (BoundedHTTP, save, jacob_request, teng_request,
+                                       parse_answer, validate_answer, ProviderApplicationError)
         from notebooklm_tools.services.auth import AuthManager
         from notebooklm_tools.core.client import NotebookLMClient
         manager = AuthManager(cfg['profile_name'])
@@ -520,6 +521,10 @@ def transport(path, expected, output):
     except BaseException as exc:
         value = {'status': 'UNCERTAIN', 'error_type': type(exc).__name__}
         record['error_type'] = type(exc).__name__
+        if isinstance(exc, ProviderApplicationError):
+            # Preserve the explicit application error in the transport evidence.
+            # It does not turn UNKNOWN into remote terminal or refund admission.
+            record['provider_application_error'] = exc.details
         if isinstance(exc, TimeoutError):
             code = 124
     finally:
