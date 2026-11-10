@@ -1,0 +1,19 @@
+{
+  "notebook_id": "REPLACE_ACCEPTED_NOTEBOOK_ID",
+  "source_ids": [
+    "REPLACE_ACCEPTED_SOURCE_ID"
+  ],
+  "acceptance": "ACCEPTED_FOR_REQUEST_SCOPE",
+  "document": {
+    "path": "/absolute/new-task/frozen-document.pdf",
+    "bytes": 0,
+    "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+  },
+  "evidence": [
+    {
+      "path": "/absolute/new-task/actual-source-acceptance.json",
+      "bytes": 0,
+      "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+    }
+  ]
+}
