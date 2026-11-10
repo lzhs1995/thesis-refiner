@@ -27,6 +27,7 @@ metadata:
 - 既有任务或cmux专门恢复：按需读[原版完整流程](references/cmux-legacy-entry.md)，
   旧controller、回执和已授权continuing登记不迁移。
 - NLM阶段：[完整审查与额度](references/nlm-review-and-budget.md)。
+- 新任务可选 [有界 SDK 入口与依赖绑定](references/nlm-sdk-adapter.md)；仅已确认来源和持久会话，保留原账号队列与预算，不切换同名 MCP 或在途控制器。
   若任务已绑定有界执行扩展，继续其240秒总期限、90秒无进展规则及原预算；
   不把超时当服务端取消，也不重复询问已有作废许可。
 - Word原生检查使用已绑定的officecli-word-revision；保留引文域、

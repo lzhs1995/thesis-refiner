@@ -1,4 +1,5 @@
 import asyncio
+from importlib.util import find_spec
 import gzip
 import json
 from pathlib import Path
@@ -12,6 +13,8 @@ from urllib.parse import parse_qs
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from nlm_sdk_adapter import BoundedHTTP, jacob_request, teng_request, parse_answer, unique_conversation, validate_answer
 
+
+SDK_AVAILABLE = find_spec("notebooklm_tools") is not None and find_spec("notebooklm") is not None
 
 class StreamTests(unittest.IsolatedAsyncioTestCase):
     async def receive(self, encoding, wire, *, idle=1, total=2, delay=0):
@@ -58,6 +61,7 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ContractTests(unittest.TestCase):
+    @unittest.skipUnless(SDK_AVAILABLE, "optional SDKs: run dedicated SDK CI job")
     def test_actual_sdk_builders_explicit_sources_and_conversation(self):
         from notebooklm_tools.core.client import NotebookLMClient
         client=NotebookLMClient(cookies={},csrf_token='offline',session_id='offline',rpc_transport='http')
@@ -81,6 +85,7 @@ class ContractTests(unittest.TestCase):
         finally:
             client.close()
 
+    @unittest.skipUnless(SDK_AVAILABLE, "optional SDKs: run dedicated SDK CI job")
     def test_actual_sdk_final_shorter_answer_and_all_reference_fields(self):
         from notebooklm_tools.core.conversation import ConversationMixin
         from notebooklm._web.rows.chat_stream import parse_streaming_chat_response
@@ -116,6 +121,7 @@ class ContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             normalized_result('source_add',{'status':'READY'},notebook_id='own')
 
+    @unittest.skipUnless(SDK_AVAILABLE, "optional SDKs: run dedicated SDK CI job")
     def test_structured_cited_table_survives_adapter(self):
         from notebooklm_tools.core.conversation import ConversationMixin
         cursor=0
@@ -153,6 +159,7 @@ class ContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_answer({**value,**changed},{'source_ids':['s'],'conversation_id':'persistent'})
 
+    @unittest.skipUnless(SDK_AVAILABLE, "optional SDKs: run dedicated SDK CI job")
     def test_empty_and_nonterminal_not_complete(self):
         for raw in ['',')]}\'\n[["e",2]]','[["wrb.fr",null,"[[\"thinking\"]]"]]']:
             with self.assertRaises(ValueError):

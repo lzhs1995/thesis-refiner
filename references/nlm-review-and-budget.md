@@ -113,6 +113,8 @@ PDF不能核真，若任务需要核对，沿既有来源政策留原出版记�
 
 ## 执行入口
 
+需采用已经验证的低层 SDK 传输时，按 [新任务 SDK 入口](nlm-sdk-adapter.md#prepare-a-new-task) 固定完整依赖、实际执行者、账号、已验来源和持久会话。该入口复用下述串行 runtime，不能据此启用两路能力或宣称完整 CLI/MCP 已验证。
+
 `scripts/nlm_runtime.py` 是保留的串行入口，使用 `multi-agent-collaboration/scripts/resource_broker.py` 的共享队列和 OS 锁。它的单在途检查不因文档更新自动变成两路，也不能绕开检查并启动多个旧 runner。已验证两路通过任务绑定的执行器使用同一预算与全局租约，在组内原子登记两条原始请求；现役 pinned 文件保持原字节。新增 `scripts/nlm_ready_scheduler.py` 负责持久 READY、公平选择和消费真实归还，不发网络、不改预算或 broker；接入方式见上述调度说明。
 
 准备私有 binding：账号匿名键、notebook/target、workspace/surface UUID、broker 文件哈希、transport 文件哈希、按 operation 列出的 argv 模板及严格复用标志。`commands` 是已验证 transport 的命令数组，使用 `{notebook_id}`、`{source_ids_csv}`、`{prompt_file}`、`{file}` 等占位；不拼 shell 字符串。

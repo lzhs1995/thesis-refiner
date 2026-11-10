@@ -1,4 +1,5 @@
 from pathlib import Path
+from importlib.util import find_spec
 import json
 import sys
 import tempfile
@@ -16,6 +17,7 @@ class SuccessorDelta(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'DEPENDENCY_VERSION'):
             dependency_preflight({'h2':'missing'})
 
+    @unittest.skipUnless(find_spec("notebooklm"), "optional Teng SDK: run dedicated SDK CI job")
     def test_teng_actual_references_pass_existing_runtime(self):
         source='11111111-2222-3333-4444-555555555555'
         quote='云鹤𠮷😀 e\u0301';width=len(quote.encode('utf-16-le'))//2

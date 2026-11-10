@@ -30,6 +30,13 @@ bytes, gzip/deflate negotiation, decoder-trailer checks, a 90-second idle limit
 and a 240-second total limit. Unknown/multiple content encodings are rejected.
 There is no POST replay, SDK fallback, browser login or automatic auth refresh.
 
+Jacob interception temporarily replaces the conversation module's global
+`_httpx` object and restores it in `finally`. It is **not thread-safe** and may
+only run in a dedicated process handling one request. Do not embed it in a
+threaded MCP server or share its process with another SDK query. The new task
+entry below rejects an already threaded caller and uses one broker child per
+request; this is a serial execution restriction, not a concurrency guarantee.
+
 Preserve every parser-exposed reference field and the original full raw body.
 Keep cited text, structured tables, source ranges, fragment ranges, answer
 anchors and UTF-16 units separate. Raw preservation is not proof the SDK
@@ -72,3 +79,50 @@ factually correct but had no references and was rejected. This is evidence for
 the bounded low-level SDK seam, not a complete CLI/MCP integration test, independent
 model comparison, concurrency test, or a guarantee that future answers cite
 sources. Keep transport, source validation and semantic acceptance separate.
+
+## Prepare a new task
+
+`scripts/nlm_sdk_entry.py` is the reusable opt-in entry. Copy
+[`adapters/nlm-sdk-task.example.json`](../adapters/nlm-sdk-task.example.json),
+[`adapters/nlm-sdk-source.example.json`](../adapters/nlm-sdk-source.example.json)
+and [`adapters/nlm-sdk-query.example.json`](../adapters/nlm-sdk-query.example.json)
+into the new task. Replace placeholders with the actual executor environment,
+authorized task budget, account, notebook, source acceptance evidence and a prior
+COMPLETE receipt confirming the persistent conversation. Never copy another
+task's IDs or claim environment checks are native actor authentication. Notebook
+creation, upload/fulltext acceptance and first conversation confirmation remain
+the original separately bound workflow; this entry does not perform them.
+
+Every file reference is its absolute resolved `path`, exact `bytes` and SHA-256.
+Bind Python 3.11+ and run with `-BE`, without optimization. `sdk_manifest` uses
+schema `nlm-sdk-environment-v1`: `import_roots` in precedence order, `files` for
+every non-bytecode file in those roots, `versions` for the selected distributions,
+and `sources` containing each distribution's version, official upstream URL and
+pinned METADATA. An installed tree hash identifies the actual local bytes; it
+does not claim a wheel download hash or signature that was not recorded. Include
+both isolated SDK roots and exact h2/hpack/hyperframe dependencies. Missing,
+changed or extra files fail before budget admission. These external SDK trees
+remain explicit dependencies; the skill installer does not bundle or install them.
+
+From the complete release's source directory (replace absolute task paths):
+
+```bash
+rtk proxy /opt/homebrew/bin/python3.14 -BE scripts/nlm_sdk_entry.py prepare --config /absolute/new-task/task-input.json --output-dir /absolute/new-task/prepared
+rtk proxy /opt/homebrew/bin/python3.14 -BE scripts/nlm_sdk_entry.py run --config /absolute/new-task/prepared/CONFIG.json --request /absolute/new-task/query.json
+```
+
+`prepare` performs local identity, source, dependency and existing account-policy
+checks; it freezes code/config pins without network or budget writes. `run`
+admits through the original account broker, existing external locks and explicit
+task budget. The dedicated child uses one POST, 240 seconds total and 90 seconds
+idle, disables auth refresh/retry and reuses the confirmed conversation without
+an extra listing. An unchanged request remains deduplicated by the runtime.
+Do not edit prepared pins to recover or upgrade an old attempt. A changed SDK or
+scope requires a named new task binding after original settlement. Failed source
+validation preserves `PARSED-ANSWER.json`; local settlement still requires the
+original owner's established protocol and never implies remote cancellation.
+
+This reusable wrapper has offline guard/recorded-stream validation. The six live
+observations above exercised the same adapters via the original task controller,
+not this wrapper's complete live lifecycle or the public CLI/MCP facade. Keep
+that remaining validation boundary visible when choosing a new task entry.
