@@ -128,7 +128,8 @@ def approved_entry(argv, policy_ref, policy, cwd):
     require(str(Path(argv[0]).resolve()) == policy['python']['path'] and argv[1] == '-BE'
             and str(Path(argv[2]).resolve()) == policy['entry']['path'], 'PINNED_ENTRY_REQUIRED')
     mode = argv[3]
-    require(mode in {'prepare', 'run'}, 'DIRECT_TRANSPORT_OR_UNKNOWN_MODE_FORBIDDEN')
+    allowed = policy.get('_registered_modes', ['prepare', 'run'])
+    require(mode in allowed and mode in {'prepare', 'run', 'legacy-run'}, 'DIRECT_TRANSPORT_OR_UNKNOWN_MODE_FORBIDDEN')
     flags = {'--config', '--output-dir'} if mode == 'prepare' else {'--config', '--request'}
     require(len(argv) == 8 and set(argv[4::2]) == flags and len(set(argv[4::2])) == 2,
             'EXACT_ENTRY_ARGUMENTS_REQUIRED')
@@ -142,9 +143,13 @@ def approved_entry(argv, policy_ref, policy, cwd):
             'TASK_ROUTE_OR_PYTHON_NOT_APPROVED')
     route = json.loads(pinned(policy['route_binding']))
     require(cfg.get('proxy') == route['proxy'], 'TASK_PROXY_NOT_APPROVED')
-    if mode == 'run':
+    if mode in {'run', 'legacy-run'}:
         require(cfg.get('code_pins') == policy['code_pins']
                 and cfg.get('scripts') == str(Path(policy['entry']['path']).parent), 'PREPARED_ENTRY_CHANGED')
+    if mode == 'legacy-run':
+        require(cfg.get('schema') == 'nlm-legacy-task-v1'
+                and cfg.get('legacy_contract') in policy.get('legacy_contracts', []), 'REGISTERED_LEGACY_CONTRACT_REQUIRED')
+        pinned(cfg['legacy_contract'])
     # The entry checks actor/account/source/queue, and obtains fresh live route
     # evidence. The hook must not spend query budget or use historic TLS as PASS.
 
@@ -191,6 +196,8 @@ def shell_command(command, policy_loader, cwd, depth=0):
         require(len(chunks) == 1 and '\n' not in command.strip() and '$' not in command and '`' not in command
                 and not any(v in {'>', '>>', '<', '<<'} for v in argv), 'NLM_SHELL_COMPOSITION_FORBIDDEN')
         policy_ref, policy = policy_loader()
+        if policy.get('schema') == 'nlm-loaded-entry-registry-v1':
+            policy_ref, policy = select_registered(argv, policy)
         offline = [item for item in policy.get('offline_commands', []) if item.get('argv') == argv]
         if offline:
             require(len(offline) == 1 and offline[0].get('network') == 'none'
@@ -257,10 +264,58 @@ def event_check(payload, policy_loader):
     require(not executable_mentions(literals, cwd), 'NLM_DYNAMIC_WRAPPER_FORBIDDEN')
 
 
+def load_registry(path, sha256):
+    """Installation-pinned entry dispatch, never a task-selected policy list."""
+    registry_ref, body = file_ref(path)
+    require(registry_ref['sha256'] == sha256, 'REGISTERED_REGISTRY_CHANGED')
+    registry = json.loads(body)
+    require(registry.get('schema') == 'nlm-network-entry-registry-v1'
+            and 1 <= len(registry.get('entries', [])) <= 8, 'ENTRY_REGISTRY_SCHEMA')
+    paths = set()
+    for item in registry['entries']:
+        # Registry is pinned; inspect descriptors without coupling old entry
+        # availability to another release's current files.
+        for key in ('entry', 'authority', 'policy'):
+            require(set(item[key]) == {'path', 'bytes', 'sha256'}
+                    and Path(item[key]['path']).is_absolute(), 'REGISTRY_EXACT_DESCRIPTOR_REQUIRED')
+        entry = item['entry']['path']
+        require(item['authority']['path'] == str(Path(entry).parent.parent.parent / 'NLM-ROUTE-POLICY-PIN.json')
+                and entry not in paths, 'ENTRY_AUTHORITY_NOT_UNIQUE')
+        modes = item['modes']
+        require(modes in (['prepare', 'run'], ['legacy-run']), 'EXACT_REGISTERED_MODES_REQUIRED')
+        paths.add(entry)
+    return registry_ref, {'schema': 'nlm-loaded-entry-registry-v1', 'entries': registry['entries']}
+
+
+def select_registered(argv, registry):
+    matches = [item for item in registry['entries'] if len(argv) >= 3
+               and str(Path(argv[2]).resolve()) == item['entry']['path']]
+    if not matches:
+        # Preserve exact reviewed old offline commands; none is invented here.
+        matches = [item for item in registry['entries'] if item['modes'] == ['prepare', 'run']
+                   and argv in item.get('offline_argv', [])]
+    require(len(matches) == 1, 'REGISTERED_ENTRY_REQUIRED')
+    item = matches[0]
+    authority = json.loads(pinned(item['authority']))
+    require(authority.get('schema') == 'nlm-network-policy-authority-v1'
+            and authority.get('policy') == item['policy'], 'REGISTRY_AUTHORITY_CHANGED')
+    policy_ref, policy = load_policy(item['policy']['path'], item['policy']['sha256'])
+    require(policy_ref == item['policy'] and policy['entry'] == item['entry'], 'REGISTRY_POLICY_CHANGED')
+    if item['modes'] == ['legacy-run']:
+        require(not policy.get('offline_commands') and not item.get('offline_argv'), 'LEGACY_OFFLINE_BYPASS_FORBIDDEN')
+        contracts = policy.get('legacy_contracts')
+        require(isinstance(contracts, list) and bool(contracts), 'LEGACY_POLICY_CONTRACTS_REQUIRED')
+        for contract in contracts: pinned(contract)
+    return policy_ref, {**policy, '_registered_modes': item['modes']}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--policy', required=True)
-    parser.add_argument('--policy-sha256', required=True)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--policy')
+    group.add_argument('--registry')
+    parser.add_argument('--policy-sha256')
+    parser.add_argument('--registry-sha256')
     args = parser.parse_args()
     def deadline(*_):
         raise Denied('NLM_NETWORK_GUARD_LOCAL_DEADLINE')
@@ -270,7 +325,10 @@ def main():
         raw = sys.stdin.buffer.read(MAX_BYTES + 1)
         require(len(raw) <= MAX_BYTES, 'EVENT_TOO_LARGE')
         payload = json.loads(raw)
-        event_check(payload, lambda: load_policy(args.policy, args.policy_sha256))
+        require(bool(args.policy_sha256) if args.policy else bool(args.registry_sha256), 'REGISTERED_PIN_REQUIRED')
+        loader = (lambda: load_policy(args.policy, args.policy_sha256)) if args.policy else (
+            lambda: load_registry(args.registry, args.registry_sha256))
+        event_check(payload, loader)
         print('{}')
         return 0
     except (Exception, KeyboardInterrupt) as exc:
