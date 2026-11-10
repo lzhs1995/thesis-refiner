@@ -11,16 +11,24 @@ import asyncio
 from contextlib import ExitStack, closing, contextmanager
 import fcntl
 import hashlib
+import importlib.abc
+import importlib.machinery
 import json
 import os
 from pathlib import Path
 import signal
 import sqlite3
+import subprocess
 import sys
 import threading
 import time
+import types
 
 SCRIPTS = Path(__file__).resolve().parent
+PREFLIGHT_SECONDS = 30
+CHILD_SECONDS = 240
+CLEANUP_SECONDS = 5
+DRAIN_SECONDS = 5
 
 
 def require(ok, message):
@@ -105,7 +113,7 @@ def validate_inputs(cfg):
     return source
 
 
-def sdk_preflight(cfg):
+def verify_sdk_tree(cfg):
     manifest = read(cfg['sdk_manifest'])
     require(manifest['schema'] == 'nlm-sdk-environment-v1', 'COMPLETE_SDK_MANIFEST_REQUIRED')
     roots = [Path(p).resolve(strict=True) for p in manifest['import_roots']]
@@ -116,20 +124,173 @@ def sdk_preflight(cfg):
         require(any(path.is_relative_to(root) for root in roots), 'SDK_FILE_OUTSIDE_IMPORT_ROOT')
         require(str(path) not in declared, 'DUPLICATE_SDK_FILE')
         declared.add(str(path))
-    # Full immutable import trees: no silently added modules/dependency shadows.
-    actual = {str(p.resolve()) for root in roots for p in root.rglob('*')
-              if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc'}
+    # -B prevents writes, not reads. Never accept an unrecorded cache, even an
+    # empty cache directory; do not delete it to make validation pass.
+    members = [p for root in roots for p in root.rglob('*')]
+    require(not any(p.name == '__pycache__' or p.suffix in {'.pyc', '.pyo'}
+                    for p in members), 'SDK_BYTECODE_CACHE_FORBIDDEN')
+    actual = {str(p.resolve()) for p in members if p.is_file()}
     require(actual == declared, 'SDK_IMPORT_TREE_CHANGED')
     require(bool(manifest['sources']), 'SDK_PROVENANCE_REQUIRED')
     for source in manifest['sources']:
         checked(source['metadata'])
         require(source['version'] and source['upstream'], 'SDK_SOURCE_VERSION_REQUIRED')
+    return manifest, roots
+
+
+class PinnedSourceLoader(importlib.machinery.SourceFileLoader):
+    def __init__(self, fullname, value):
+        super().__init__(fullname, value['path'])
+        self.value = value
+
+    def get_code(self, fullname):
+        # Compile the checked source directly. SourceFileLoader's default
+        # get_code can read a new valid pyc added after the tree preflight.
+        body = checked(self.value).read_bytes()
+        require(len(body) == self.value['bytes']
+                and hashlib.sha256(body).hexdigest() == self.value['sha256'],
+                'SDK_SOURCE_CHANGED_DURING_LOAD')
+        return self.source_to_code(body, self.value['path'])
+
+
+class PinnedImportFinder(importlib.abc.MetaPathFinder):
+    def __init__(self, roots, files):
+        self.roots = tuple(Path(root).resolve() for root in roots)
+        self.files = {item['path']: item for item in files}
+
+    def find_spec(self, fullname, path=None, target=None):
+        spec = importlib.machinery.PathFinder.find_spec(fullname, path)
+        if not spec or not spec.origin or spec.origin in {'built-in', 'frozen'}:
+            return None
+        origin = Path(spec.origin).resolve()
+        if not any(origin.is_relative_to(root) for root in self.roots):
+            return None
+        require(origin.suffix not in {'.pyc', '.pyo'} and '__pycache__' not in origin.parts,
+                'SDK_BYTECODE_IMPORT_FORBIDDEN')
+        require(str(origin) in self.files, 'UNPINNED_IMPORT_FORBIDDEN:' + str(origin))
+        value = self.files[str(origin)]
+        checked(value)
+        if origin.suffix == '.py':
+            spec.loader = PinnedSourceLoader(fullname, value)
+            spec.cached = None
+        return spec
+
+
+def source_guard(roots, files):
+    for old in list(sys.meta_path):
+        if isinstance(old, PinnedImportFinder):
+            require(old.roots == tuple(roots) and old.files == {v['path']: v for v in files},
+                    'IMPORT_BINDING_CHANGED_IN_PROCESS')
+            return
+    sys.meta_path.insert(0, PinnedImportFinder(roots, files))
+
+
+def sdk_preflight(cfg):
+    manifest, roots = verify_sdk_tree(cfg)
+    script_members = list(SCRIPTS.rglob('*'))
+    require(not any(p.name == '__pycache__' or p.suffix in {'.pyc', '.pyo'}
+                    for p in script_members), 'ENTRY_BYTECODE_CACHE_FORBIDDEN')
+    script_pins = cfg.get('code_pins') or [ref(p) for p in sorted(SCRIPTS.glob('*.py'))]
+    source_guard([SCRIPTS, *roots], [*script_pins, *manifest['files']])
     sys.path[:0] = [str(p) for p in roots]
     from importlib import metadata
     for package, version in manifest['versions'].items():
         require(metadata.version(package) == version, 'SDK_VERSION_CHANGED:' + package)
     from nlm_sdk_adapter_v3 import dependency_preflight
     return dependency_preflight({k: manifest['versions'][k] for k in ('h2', 'hpack', 'hyperframe')})
+
+
+@contextmanager
+def phase_deadline(seconds, label):
+    """Local phase timer; parent process supplies the admitted child's hard cap."""
+    require(threading.current_thread() is threading.main_thread(), 'MAIN_THREAD_REQUIRED')
+    started = time.monotonic()
+    previous_handler = signal.getsignal(signal.SIGALRM)
+    previous_timer = signal.getitimer(signal.ITIMER_REAL)
+    def expired(*_):
+        raise TimeoutError(label)
+    signal.signal(signal.SIGALRM, expired)
+    signal.setitimer(signal.ITIMER_REAL, min(seconds, previous_timer[0]) if previous_timer[0] else seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+        if previous_timer[0]:
+            signal.setitimer(signal.ITIMER_REAL,
+                max(.001, previous_timer[0] - (time.monotonic() - started)), previous_timer[1])
+
+
+def bounded_broker(module, *, total=CHILD_SECONDS, drain=DRAIN_SECONDS):
+    """Override only run for new SDK callers; original queue/release rules stay."""
+    class BoundedBroker(module.Broker):
+        def run(self, ticket, token, command, **kwargs):
+            started = time.monotonic()
+            require(isinstance(command, list) and command, 'ARGV_REQUIRED')
+            proc = None
+            with ExitStack() as stack:
+                timed_out = False
+                try:
+                    with phase_deadline(min(PREFLIGHT_SECONDS, total), 'BROKER_PRELAUNCH_DEADLINE'):
+                        row = self.require(ticket, token)
+                        stack.enter_context(module.os_lock(self.lock_path(row['resource'])))
+                        self.require(ticket, token)
+                        self._external_free(row['resource'])
+                        proc = subprocess.Popen(command, start_new_session=True, **kwargs)
+                        self.db.execute('UPDATE tickets SET pgid=?,invocations=invocations+1 WHERE id=?',
+                                        (proc.pid, ticket))
+                    stdout, stderr = proc.communicate(timeout=max(.001, total - (time.monotonic() - started)))
+                except (subprocess.TimeoutExpired, TimeoutError):
+                    if proc is None:
+                        raise
+                    timed_out = True
+                    # Popen created this session/PGID. Never inspect or kill any
+                    # other application's group, and never infer remote cancel.
+                    try: os.killpg(proc.pid, signal.SIGTERM)
+                    except ProcessLookupError: pass
+                    try:
+                        stdout, stderr = proc.communicate(timeout=drain)
+                    except subprocess.TimeoutExpired:
+                        try: os.killpg(proc.pid, signal.SIGKILL)
+                        except ProcessLookupError: pass
+                        try:
+                            stdout, stderr = proc.communicate(timeout=drain)
+                        except subprocess.TimeoutExpired:
+                            # An uninterruptible child/escaped pipe is not drain.
+                            # Raise into the original runtime's UNKNOWN journal.
+                            raise TimeoutError('OWN_CHILD_DRAIN_UNPROVEN')
+                empty = not module.group_alive(proc.pid)
+                if empty:
+                    self.db.execute('UPDATE tickets SET pgid=NULL WHERE id=?', (ticket,))
+                if timed_out:
+                    marker = '\nSDK_CHILD_HARD_DEADLINE_REMOTE_STATE_UNKNOWN\n'
+                    stderr = (stderr or ('' if kwargs.get('text') else b'')) + (
+                        marker if kwargs.get('text') else marker.encode())
+                return {'exit_code': 124 if timed_out else proc.returncode,
+                        'stdout': stdout, 'stderr': stderr,
+                        'process_group_empty': empty, 'pgid': proc.pid}
+    return BoundedBroker
+
+
+@contextmanager
+def bounded_runtime(runtime):
+    require(threading.active_count() == 1, 'DEDICATED_RUNTIME_PROCESS_REQUIRED')
+    original = runtime.broker_module
+    def load(value):
+        # The legacy loader uses SourceFileLoader and may consume pyc. Compile
+        # the original pinned broker source without changing its on-disk bytes.
+        path = checked(value['broker_module'])
+        body = path.read_bytes()
+        require(hashlib.sha256(body).hexdigest() == value['broker_module']['sha256'], 'BROKER_SOURCE_CHANGED')
+        module = types.ModuleType('thesis_sdk_original_broker')
+        module.__file__ = str(path)
+        exec(compile(body, str(path), 'exec', dont_inherit=True), module.__dict__)
+        return types.SimpleNamespace(Broker=bounded_broker(module))
+    runtime.broker_module = load
+    try:
+        yield
+    finally:
+        runtime.broker_module = original
 
 
 def request_input(path):
@@ -155,6 +316,11 @@ def queue_preflight(cfg):
 
 
 def prepare(config, output):
+    with phase_deadline(PREFLIGHT_SECONDS, 'PREPARE_30_SECONDS'):
+        return _prepare(config, output)
+
+
+def _prepare(config, output):
     cfg = json.loads(Path(config).read_text())
     validate_inputs(cfg)
     dependencies = sdk_preflight(cfg)
@@ -168,11 +334,19 @@ def prepare(config, output):
     prepared = freeze(out / 'CONFIG.json', cfg)
     freeze(out / 'PREPARED.json', {'config': prepared, 'dependencies': dependencies,
         'native_actor_authentication': False, 'actor_check': 'actual caller environment; no root substitution',
-        'no_network': True, 'budget_mutations': False, 'global_entry_changes': False})
+        'no_network': True, 'budget_mutations': False, 'global_entry_changes': False,
+        'preflight_seconds': PREFLIGHT_SECONDS, 'child_hard_seconds': CHILD_SECONDS,
+        'cleanup_seconds': CLEANUP_SECONDS, 'termination_grace_seconds': DRAIN_SECONDS,
+        'kill_drain_seconds': DRAIN_SECONDS})
     return prepared
 
 
 def config_checked(path, expected=None):
+    with phase_deadline(PREFLIGHT_SECONDS, 'CONFIG_PREFLIGHT_30_SECONDS'):
+        return _config_checked(path, expected)
+
+
+def _config_checked(path, expected=None):
     actual = ref(path)
     if expected:
         require(actual['sha256'] == expected, 'TASK_CONFIG_CHANGED')
@@ -225,7 +399,8 @@ def run(path, request_path):
         else:
             budget.allocate(cfg['account_key'], cfg['task_id'], cfg['query_budget'])
         try:
-            result = runtime.run_bound(binding(cfg, path), request, budget)
+            with bounded_runtime(runtime):
+                result = runtime.run_bound(binding(cfg, path), request, budget)
             if result.get('cached'):
                 receipt = result['receipt']
                 require(ref(receipt['path'])['sha256'] == receipt['sha256'], 'CACHED_RECEIPT_CHANGED')
@@ -236,82 +411,88 @@ def run(path, request_path):
 
 
 def transport(path, expected, output):
-    cfg = config_checked(path, expected)
-    out = Path(output).resolve()
-    require(out.parent == Path(cfg['budget_root']).resolve() / 'receipts', 'ORIGINAL_RECEIPT_ROOT')
-    request = json.loads((out / 'request.json').read_text())
-    lease = json.loads((out / 'lease.json').read_text())
-    require(request['task_id'] == cfg['task_id'] and request['operation'] == 'query'
-            and request['account_key'] == cfg['account_key'] and request['notebook_id'] == cfg['notebook_id']
-            and request['source_ids'] == cfg['source_ids'] and request['conversation_id'] == cfg['conversation_id'],
-            'ORIGINAL_REQUEST_SCOPE_REQUIRED')
-    with closing(sqlite3.connect((Path(cfg['resource_root']) / 'queue.sqlite3').as_uri() + '?mode=ro', uri=True)) as db:
-        db.row_factory = sqlite3.Row
-        ticket = dict(db.execute('SELECT * FROM tickets WHERE id=?', (lease['id'],)).fetchone())
-    require(ticket['status'] == 'ACTIVE' and ticket['token'] == lease['token']
-            and ticket['task_id'] == cfg['task_id'] and ticket['resource'] == 'nlm-account:' + cfg['account_key']
-            and ticket['pgid'] == os.getpgrp() and ticket['expires'] > time.time(), 'LIVE_ORIGINAL_BROKER_CHILD')
-    with closing(sqlite3.connect((Path(cfg['budget_root']) / 'budget.sqlite3').as_uri() + '?mode=ro', uri=True)) as db:
-        require(db.execute("SELECT 1 FROM requests WHERE id=? AND task_id=? AND state='STARTED'",
-                           (out.name, cfg['task_id'])).fetchone(), 'ORIGINAL_BUDGET_ADMISSION')
-    from nlm_sdk_adapter_v3 import BoundedHTTP, save, jacob_request, teng_request, parse_answer, validate_answer
-    from notebooklm_tools.services.auth import AuthManager
-    from notebooklm_tools.core.client import NotebookLMClient
-    manager = AuthManager(cfg['profile_name'])
-    before = [ref(manager.cookies_file), ref(manager.metadata_file)]
+    began = time.monotonic()
+    with phase_deadline(PREFLIGHT_SECONDS, 'CHILD_PREFLIGHT_30_SECONDS'):
+        cfg = config_checked(path, expected)
+        out = Path(output).resolve()
+        require(out.parent == Path(cfg['budget_root']).resolve() / 'receipts', 'ORIGINAL_RECEIPT_ROOT')
+        request = json.loads((out / 'request.json').read_text())
+        lease = json.loads((out / 'lease.json').read_text())
+        require(request['task_id'] == cfg['task_id'] and request['operation'] == 'query'
+                and request['account_key'] == cfg['account_key'] and request['notebook_id'] == cfg['notebook_id']
+                and request['source_ids'] == cfg['source_ids'] and request['conversation_id'] == cfg['conversation_id'],
+                'ORIGINAL_REQUEST_SCOPE_REQUIRED')
+        with closing(sqlite3.connect((Path(cfg['resource_root']) / 'queue.sqlite3').as_uri() + '?mode=ro', uri=True)) as db:
+            db.row_factory = sqlite3.Row
+            ticket = dict(db.execute('SELECT * FROM tickets WHERE id=?', (lease['id'],)).fetchone())
+        require(ticket['status'] == 'ACTIVE' and ticket['token'] == lease['token']
+                and ticket['task_id'] == cfg['task_id'] and ticket['resource'] == 'nlm-account:' + cfg['account_key']
+                and ticket['pgid'] == os.getpgrp() and ticket['expires'] > time.time(), 'LIVE_ORIGINAL_BROKER_CHILD')
+        with closing(sqlite3.connect((Path(cfg['budget_root']) / 'budget.sqlite3').as_uri() + '?mode=ro', uri=True)) as db:
+            require(db.execute("SELECT 1 FROM requests WHERE id=? AND task_id=? AND state='STARTED'",
+                               (out.name, cfg['task_id'])).fetchone(), 'ORIGINAL_BUDGET_ADMISSION')
+        from nlm_sdk_adapter_v3 import BoundedHTTP, save, jacob_request, teng_request, parse_answer, validate_answer
+        from notebooklm_tools.services.auth import AuthManager
+        from notebooklm_tools.core.client import NotebookLMClient
+        manager = AuthManager(cfg['profile_name'])
+        before = [ref(manager.cookies_file), ref(manager.metadata_file)]
     record = {'provider': cfg['provider'], 'request_id': out.name, 'single_request_per_process': True,
-              'native_actor_authentication': False, 'started_at': time.time(), 'auth_files_before': before}
+              'native_actor_authentication': False, 'started_at': time.time(), 'auth_files_before': before,
+              'preflight_seconds': PREFLIGHT_SECONDS, 'child_hard_seconds': CHILD_SECONDS,
+              'cleanup_seconds': CLEANUP_SECONDS, 'hard_limit_owner': 'original broker child parent'}
     client = None
     code = 2
-    def deadline(*_):
-        raise TimeoutError('TOTAL_240_SECONDS')
-    signal.signal(signal.SIGALRM, deadline)
-    signal.alarm(240)
     try:
-        with ExitStack() as stack:
-            for lock in cfg['external_locks']:
-                stack.enter_context(locked(lock))
-            profile = manager.load_profile()
-            require(profile.email == cfg['email'] and profile.csrf_token and profile.session_id,
-                    'BOUND_CACHED_ACCOUNT_AUTH_REQUIRED')
-            client = NotebookLMClient(cookies=profile.cookies, csrf_token=profile.csrf_token,
-                session_id=profile.session_id, build_label=profile.build_label,
-                base_host=profile.base_host, profile_name=cfg['profile_name'], rpc_transport='http')
-            def prohibited(*args, **kwargs):
-                raise RuntimeError('NO_METADATA_RETRY_AUTH_REFRESH_OR_LOGIN')
-            for method in ('_refresh_auth_tokens', '_try_reload_or_headless_auth', '_update_cached_tokens',
-                           '_prepare_cdp_transport', '_call_rpc'):
-                setattr(client, method, prohibited)
-            require(threading.active_count() == 1, 'THREADED_JACOB_CAPTURE_FORBIDDEN')
-            if cfg['provider'] == 'jacob':
-                url, body, wire_id = jacob_request(client, cfg['notebook_id'], request['prompt'],
-                                                   cfg['source_ids'], cfg['conversation_id'])
-            else:
-                url, body, wire_id = teng_request(profile, cfg['notebook_id'], request['prompt'],
-                                                 cfg['source_ids'], cfg['conversation_id'])
-            http = BoundedHTTP(out, proxy=cfg['proxy'], cookies=client._get_httpx_cookies(), total=240, idle=90)
-            raw = asyncio.run(http.post('query', url, body))
-            value = parse_answer(cfg['provider'], client, raw)
-            # Always preserve a completed useful answer, including missing citations.
-            save(out / 'PARSED-ANSWER.json', value)
-            value.update(conversation_id=cfg['conversation_id'], notebook_id=cfg['notebook_id'],
-                         request_conversation_id=wire_id, conversation_receipt=cfg['conversation_receipt'],
-                         conversation_evidence='explicit previously confirmed persistent ID; no metadata POST')
-            validate_answer(value, request)
-            code = 0
+        with phase_deadline(max(.001, CHILD_SECONDS - (time.monotonic() - began)), 'CHILD_TOTAL_240_SECONDS'):
+            with ExitStack() as stack:
+                for lock in cfg['external_locks']:
+                    stack.enter_context(locked(lock))
+                profile = manager.load_profile()
+                require(profile.email == cfg['email'] and profile.csrf_token and profile.session_id,
+                        'BOUND_CACHED_ACCOUNT_AUTH_REQUIRED')
+                client = NotebookLMClient(cookies=profile.cookies, csrf_token=profile.csrf_token,
+                    session_id=profile.session_id, build_label=profile.build_label,
+                    base_host=profile.base_host, profile_name=cfg['profile_name'], rpc_transport='http')
+                def prohibited(*args, **kwargs):
+                    raise RuntimeError('NO_METADATA_RETRY_AUTH_REFRESH_OR_LOGIN')
+                for method in ('_refresh_auth_tokens', '_try_reload_or_headless_auth', '_update_cached_tokens',
+                               '_prepare_cdp_transport', '_call_rpc'):
+                    setattr(client, method, prohibited)
+                require(threading.active_count() == 1, 'THREADED_JACOB_CAPTURE_FORBIDDEN')
+                if cfg['provider'] == 'jacob':
+                    url, body, wire_id = jacob_request(client, cfg['notebook_id'], request['prompt'],
+                                                       cfg['source_ids'], cfg['conversation_id'])
+                else:
+                    url, body, wire_id = teng_request(profile, cfg['notebook_id'], request['prompt'],
+                                                     cfg['source_ids'], cfg['conversation_id'])
+                remaining = max(.001, CHILD_SECONDS - (time.monotonic() - began))
+                http = BoundedHTTP(out, proxy=cfg['proxy'], cookies=client._get_httpx_cookies(), total=remaining, idle=90)
+                raw = asyncio.run(http.post('query', url, body))
+                value = parse_answer(cfg['provider'], client, raw)
+                save(out / 'PARSED-ANSWER.json', value)
+                value.update(conversation_id=cfg['conversation_id'], notebook_id=cfg['notebook_id'],
+                             request_conversation_id=wire_id, conversation_receipt=cfg['conversation_receipt'],
+                             conversation_evidence='explicit previously confirmed persistent ID; no metadata POST')
+                validate_answer(value, request)
+                code = 0
     except BaseException as exc:
         value = {'status': 'UNCERTAIN', 'error_type': type(exc).__name__}
         record['error_type'] = type(exc).__name__
     finally:
-        signal.alarm(0)
-        if client:
-            client.close()
-        record['auth_files_after'] = [ref(manager.cookies_file), ref(manager.metadata_file)]
-        record['auth_files_unchanged'] = before == record['auth_files_after']
-        if not record['auth_files_unchanged']:
-            code, value = 2, {'status': 'UNCERTAIN', 'error_type': 'AuthFilesChanged'}
-        record.update(exit_code=code, ended_at=time.time())
-        save(out / 'TRANSPORT.json', record)
+        try:
+            # Parent timeout remains active throughout close, auth readback and
+            # TRANSPORT persistence. No unbounded cleanup after cancelling it.
+            with phase_deadline(CLEANUP_SECONDS, 'CLEANUP_5_SECONDS'):
+                if client:
+                    client.close()
+                record['auth_files_after'] = [ref(manager.cookies_file), ref(manager.metadata_file)]
+                record['auth_files_unchanged'] = before == record['auth_files_after']
+                if not record['auth_files_unchanged']:
+                    code, value = 2, {'status': 'UNCERTAIN', 'error_type': 'AuthFilesChanged'}
+                record.update(exit_code=code, ended_at=time.time())
+                save(out / 'TRANSPORT.json', record)
+        except BaseException as exc:
+            code, value = 2, {'status': 'UNCERTAIN', 'error_type': 'Cleanup' + type(exc).__name__}
     print(json.dumps(value, ensure_ascii=False))
     return code
 

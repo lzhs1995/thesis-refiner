@@ -26,8 +26,10 @@ builders and parsers are used; the public CLI/MCP retry/auth/cache machinery is
 not invoked. This scope must be reported accurately in validation. The Jacob
 builder is intercepted before its buffered HTTP send. Teng uses its official
 streaming request builder. Both use a single query POST, archived decoded raw
-bytes, gzip/deflate negotiation, decoder-trailer checks, a 90-second idle limit
-and a 240-second total limit. Unknown/multiple content encodings are rejected.
+bytes, gzip/deflate negotiation, decoder-trailer checks and a 90-second idle limit.
+The new entry's parent bounds its entire admitted child to 240 seconds, including
+startup checks, imports, HTTP, parsing and cleanup; the HTTP segment receives
+only the remaining time. Unknown/multiple content encodings are rejected.
 There is no POST replay, SDK fallback, browser login or automatic auth refresh.
 
 Jacob interception temporarily replaces the conversation module's global
@@ -96,12 +98,16 @@ the original separately bound workflow; this entry does not perform them.
 Every file reference is its absolute resolved `path`, exact `bytes` and SHA-256.
 Bind Python 3.11+ and run with `-BE`, without optimization. `sdk_manifest` uses
 schema `nlm-sdk-environment-v1`: `import_roots` in precedence order, `files` for
-every non-bytecode file in those roots, `versions` for the selected distributions,
+every file in those roots, `versions` for the selected distributions,
 and `sources` containing each distribution's version, official upstream URL and
 pinned METADATA. An installed tree hash identifies the actual local bytes; it
 does not claim a wheel download hash or signature that was not recorded. Include
 both isolated SDK roots and exact h2/hpack/hyperframe dependencies. Missing,
-changed or extra files fail before budget admission. These external SDK trees
+changed or extra files fail before budget admission. Any `.pyc`, `.pyo` or
+`__pycache__` directory is refused, not deleted: `-B` alone does not prevent
+reading bytecode. A checked-source import loader also compiles the pinned Python
+source directly, so a cache added after preflight cannot replace it. Newly added
+sourceless bytecode and unpinned modules in these roots are rejected. These external SDK trees
 remain explicit dependencies; the skill installer does not bundle or install them.
 
 From the complete release's source directory (replace absolute task paths):
@@ -112,10 +118,22 @@ rtk proxy /opt/homebrew/bin/python3.14 -BE scripts/nlm_sdk_entry.py run --config
 ```
 
 `prepare` performs local identity, source, dependency and existing account-policy
-checks; it freezes code/config pins without network or budget writes. `run`
+checks with a 30-second local preflight timer; it freezes code/config pins without
+network or budget writes. `run`
 admits through the original account broker, existing external locks and explicit
-task budget. The dedicated child uses one POST, 240 seconds total and 90 seconds
-idle, disables auth refresh/retry and reuses the confirmed conversation without
+task budget. Its dedicated parent replaces only the broker's child-wait method
+for this process; queue, grant, budget, receipt and release rules are unchanged.
+The parent deadline is 240 seconds from broker-run entry through child exit,
+including prelaunch and all child phases. Child preflight has a 30-second timer;
+close, auth-file readback and receipt cleanup have a 5-second timer inside the
+same parent deadline. At the hard deadline, only this newly created process group
+receives TERM, then KILL after up to 5 seconds, followed by at most 5 seconds of
+drain observation. If drain cannot be proven, retain UNKNOWN; the parent does not
+wait forever or claim remote cancellation. A timeout returns non-success even
+if the child previously printed a plausible answer. The original budget remains
+charged and the lease stays with its original owner for reconciliation.
+The dedicated child uses one POST and a 90-second idle limit,
+disables auth refresh/retry and reuses the confirmed conversation without
 an extra listing. An unchanged request remains deduplicated by the runtime.
 Do not edit prepared pins to recover or upgrade an old attempt. A changed SDK or
 scope requires a named new task binding after original settlement. Failed source
