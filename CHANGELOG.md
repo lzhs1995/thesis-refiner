@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Preserve existing task controllers, request identities and budgets through an explicitly pinned legacy entry with the approved route checked before sending.
+- Separate exact offline preparation from network permission, using installation-owned registration without changing prior SDK policies.
+- Make deadline tests deterministic while preserving zero-send and no-retry assertions.
 - Add a separate exact-SHA Codex discovery-alias preview/apply path. A symlinked shared canonical entry is supported without copying a release or changing the immutable full-source installer contract.
 - Reject symlinked alias files, including dangling links, during preview and the locked apply preflight before creating a mutation journal.
 - Recheck alias identity, canonical resolution and approved plan under the installer lock; retain the original alias and report post-commit uncertainty without automatic retry or rollback. Active-client adoption and in-flight source retention remain separate checks.

@@ -5,7 +5,9 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+import time
 import unittest
+from unittest.mock import patch
 import zlib
 from types import SimpleNamespace
 from urllib.parse import parse_qs
@@ -55,10 +57,34 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
             await self.receive('br',b'payload')
 
     async def test_idle_and_total_are_not_retried(self):
-        with self.assertRaises(TimeoutError):
-            await self.receive('identity',b'answer',idle=.01,total=1,delay=.03)
-        with self.assertRaises(TimeoutError):
-            await self.receive('identity',b'a'*60,idle=1,total=.04,delay=.01)
+        # 此处测试发送后的超时；文件预写耗时另由下一个测试覆盖。
+        # 仅固定适配器的准备时钟，asyncio 的真实超时钟保持不变。
+        clock = SimpleNamespace(monotonic=lambda: 0.0, time=time.time)
+        with patch('nlm_sdk_adapter.time', clock):
+            with self.assertRaises(TimeoutError):
+                await self.receive('identity',b'answer',idle=.01,total=1,delay=.03)
+            with self.assertRaises(TimeoutError):
+                await self.receive('identity',b'a'*60,idle=1,total=.04,delay=.01)
+
+    async def test_expired_before_send_has_zero_calls_and_no_retry(self):
+        import httpx
+        now = [0.0]
+        calls = []
+        async def send(request):
+            calls.append(request)
+            raise AssertionError('EXPIRED_REQUEST_SENT')
+        clock = SimpleNamespace(monotonic=lambda: now[0], time=time.time)
+        with tempfile.TemporaryDirectory() as d, patch('nlm_sdk_adapter.time', clock):
+            net = BoundedHTTP(d, proxy=None, cookies={}, total=.04,
+                              transport=httpx.MockTransport(send))
+            now[0] = 1.0
+            with self.assertRaisesRegex(TimeoutError, 'TOTAL_DEADLINE'):
+                await net.post('query', 'https://notebooklm.google.com/query', 'f.req=test')
+            self.assertEqual(calls, [])
+            self.assertEqual(net.calls[0]['send_calls'], 0)
+            with self.assertRaisesRegex(ValueError, 'SECOND_POST_FORBIDDEN'):
+                await net.post('query', 'https://notebooklm.google.com/query', 'f.req=test')
+            self.assertEqual(calls, [])
 
 
 class ContractTests(unittest.TestCase):
