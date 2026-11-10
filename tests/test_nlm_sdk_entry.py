@@ -1,4 +1,6 @@
 import json
+import contextlib
+import io
 import os
 from pathlib import Path
 import sqlite3
@@ -10,6 +12,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import nlm_sdk_entry as entry
+from nlm_route_gate import RouteGateError
 
 
 @unittest.skipUnless(sys.version_info >= (3, 11), 'Optional SDK entry requires Python 3.11+')
@@ -31,6 +34,7 @@ class TaskEntryTests(unittest.TestCase):
             query_budget=2, single_request_per_process=True, source_ids=['source'],
             conversation_id='persistent', actor=dict(thread_id='thread',workspace_uuid='workspace',surface_uuid='surface'),
             authorization=evidence, python=entry.ref(sys.executable), broker_module=evidence,
+            route_binding=evidence,
             external_locks=[str(self.root/'original.lock')],
             source_binding=file('source.json',dict(notebook_id='book',source_ids=['source'],
                 acceptance='ACCEPTED_FOR_REQUEST_SCOPE',document=document,evidence=[evidence])),
@@ -82,7 +86,8 @@ class TaskEntryTests(unittest.TestCase):
             db.execute('CREATE TABLE accounts(id TEXT)');db.execute("INSERT INTO accounts VALUES('account')")
         databases=[entry.ref(self.root/'resources/queue.sqlite3'),entry.ref(self.root/'budget/budget.sqlite3')]
         p=self.root/'input.json';p.write_text(json.dumps(self.cfg));out=self.root/'prepared'
-        with patch.object(entry,'sdk_preflight',return_value={'checked':'fixture'}):
+        with patch.object(entry,'sdk_preflight',return_value={'checked':'fixture'}), \
+                patch.object(entry,'check_route',return_value={'route':'isolated fixture'}):
             prepared=entry.prepare(p,out)
             with self.assertRaisesRegex(ValueError,'FRESH_TASK_DIRECTORY'):
                 entry.prepare(p,out)
@@ -97,6 +102,60 @@ class TaskEntryTests(unittest.TestCase):
             import_roots=[str(root)],files=[],sources=[],versions={})))
         with self.assertRaisesRegex(ValueError,'SDK_IMPORT_TREE_CHANGED'):
             entry.sdk_preflight({'sdk_manifest':entry.ref(p)})
+
+    def test_route_failure_stops_prepare_before_freezing(self):
+        p=self.root/'input.json';p.write_text(json.dumps(self.cfg));out=self.root/'prepared'
+        with patch.object(entry,'sdk_preflight'), patch.object(entry,'queue_preflight'), \
+                patch.object(entry,'check_route',side_effect=RouteGateError('NLM_ROUTE_LIVE_CHAIN_MISMATCH')):
+            with self.assertRaisesRegex(RouteGateError,'LIVE_CHAIN_MISMATCH'):
+                entry.prepare(p,out)
+        self.assertFalse(out.exists())
+
+    def test_route_failure_stops_run_before_allocation_or_admission(self):
+        import nlm_runtime
+        with patch.object(entry,'config_checked',return_value=self.cfg), \
+                patch.object(entry,'check_route',side_effect=RouteGateError('NLM_ROUTE_PROCESS_RESTARTED')), \
+                patch.object(nlm_runtime,'Budget') as budget:
+            with self.assertRaisesRegex(RouteGateError,'PROCESS_RESTARTED'):
+                entry.run(self.root/'unused.json',self.root/'request.json')
+            budget.assert_not_called()
+
+    def test_route_failure_in_actual_transport_prevents_post(self):
+        import nlm_sdk_adapter_v3 as adapter
+        cfg={**self.cfg};out=Path(cfg['budget_root'])/'receipts'/'request';out.mkdir(parents=True)
+        resources=Path(cfg['resource_root']);resources.mkdir()
+        request=dict(task_id=cfg['task_id'],operation='query',account_key=cfg['account_key'],
+                     notebook_id=cfg['notebook_id'],source_ids=cfg['source_ids'],
+                     conversation_id=cfg['conversation_id'],prompt='synthetic')
+        (out/'request.json').write_text(json.dumps(request))
+        (out/'lease.json').write_text(json.dumps(dict(id='lease',token='token')))
+        with sqlite3.connect(resources/'queue.sqlite3') as db:
+            db.execute('CREATE TABLE tickets(id,token,status,task_id,resource,pgid,expires)')
+            db.execute('INSERT INTO tickets VALUES(?,?,?,?,?,?,?)',('lease','token','ACTIVE',
+                cfg['task_id'],'nlm-account:'+cfg['account_key'],os.getpgrp(),entry.time.time()+60))
+        with sqlite3.connect(Path(cfg['budget_root'])/'budget.sqlite3') as db:
+            db.execute('CREATE TABLE requests(id,task_id,state)')
+            db.execute('INSERT INTO requests VALUES(?,?,?)',('request',cfg['task_id'],'STARTED'))
+        cookies=self.root/'cookies.json';cookies.write_text('{}')
+        metadata=self.root/'metadata.json';metadata.write_text('{}')
+        manager=SimpleNamespace(cookies_file=cookies,metadata_file=metadata,
+            load_profile=lambda:SimpleNamespace(email=cfg['email'],csrf_token='synthetic',
+                session_id='synthetic',cookies={},build_label='synthetic',base_host='notebook.google.com'))
+        class Client:
+            def __init__(self,**kwargs): pass
+            def close(self): pass
+        modules={'notebooklm_tools.services.auth':SimpleNamespace(AuthManager=lambda *_:manager),
+                 'notebooklm_tools.core.client':SimpleNamespace(NotebookLMClient=Client)}
+        with patch.dict(sys.modules,modules), patch.object(entry,'config_checked',return_value=cfg), \
+                patch.object(adapter,'jacob_request',return_value=('https://notebook.google.com/query','body','persistent')), \
+                patch.object(entry,'check_route',side_effect=RouteGateError('NLM_ROUTE_LIVE_CHAIN_MISMATCH')), \
+                patch.object(adapter,'BoundedHTTP') as http, contextlib.redirect_stdout(io.StringIO()) as stdout:
+            self.assertEqual(entry.transport('unused','unused',out),2)
+            http.assert_not_called()
+        self.assertEqual(json.loads(stdout.getvalue()),{'status':'UNCERTAIN','error_type':'RouteGateError'})
+        record=json.loads((out/'TRANSPORT.json').read_text())
+        self.assertEqual(record['route_gate_failure'],'NLM_ROUTE_LIVE_CHAIN_MISMATCH')
+        self.assertTrue(record['auth_files_unchanged'])
 
 
 if __name__ == '__main__':

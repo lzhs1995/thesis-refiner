@@ -28,6 +28,7 @@ metadata:
   旧controller、回执和已授权continuing登记不迁移。
 - NLM阶段：[完整审查与额度](references/nlm-review-and-budget.md)。
 - 新任务可选 [有界 SDK 入口与依赖绑定](references/nlm-sdk-adapter.md)；仅已确认来源和持久会话，保留原账号队列与预算，不切换同名 MCP 或在途控制器。
+  任一新SDK入口须沿领域NLM路线门槛：不能只核代理端口；prepare和发送前核实际监听进程、固定路线及连接所用节点，缺证据在发送前拒绝。本机节点与凭据只写私有任务绑定。
   若任务已绑定有界执行扩展，继续其240秒总期限、90秒无进展规则及原预算；
   不把超时当服务端取消，也不重复询问已有作废许可。
 - Word原生检查使用已绑定的officecli-word-revision；保留引文域、
