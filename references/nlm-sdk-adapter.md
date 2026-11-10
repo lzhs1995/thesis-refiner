@@ -1,11 +1,14 @@
 # Explicit SDK candidate transport
 
-For new requests, use `nlm_sdk_adapter_v2.py`. It checks the pinned h2, hpack and
+For new requests, use `nlm_sdk_adapter_v3.py`. It includes v2's pinned h2, hpack and
 hyperframe imports before budget admission, and supplies the existing runtime's
 citation map for Teng while preserving its full reference objects. The original
 adapter remains intact for its original attempts. Pin/copy those three optional
 HTTP/2 dependencies into the new isolated entry; SDK installation alone did not
 include them. Missing dependencies must fail locally before network admission.
+Version 3 serializes SDK Enum fields to their original values while retaining
+all structured-document and reference fields. Actual Teng answers contained
+BlockStyle enums that `dataclasses.asdict` alone could not serialize.
 
 `scripts/nlm_sdk_adapter.py` supplies a narrow HTTP boundary for separately pinned
 Jacob and Teng installations. It does not select/install an SDK, obtain a login,
@@ -36,8 +39,11 @@ not establish COMPLETE.
 
 The stream ID is not used as a persistent conversation ID. A fresh request is
 allowed only in a newly created task-owned notebook; later requests must bind
-the actual persistent conversation. Read it once with `hPTbtc` in that exclusive
-notebook and require one unique ID. That separately named read-only RPC is not a
+the actual persistent conversation. For a fresh request, read it once with
+`hPTbtc` in that exclusive notebook and require one unique ID. For subsequent
+explicitly bound requests, reuse the pinned prior confirmation; another listing
+is unnecessary and must not downgrade an already complete answer. That separately
+named read-only RPC is not a
 second query POST. An ambiguous/failed readback retains the parsed answer and
 UNKNOWN; it does not authorize replay. Never use Teng `ask --new` to remove chat
 history. Do not infer a fresh conversation just from `conversation_id=None`.
@@ -57,3 +63,12 @@ contract. A transport failure is distinct from a wrong semantic answer.
 On UNKNOWN, retain the original request, receipt, budget usage and lease. Any
 local abandonment must follow the original owner protocol and cannot claim
 remote cancellation. A new SDK version or route never permits blind replay.
+
+The six-query 2026-11-10 task observation used one dedicated synthetic notebook
+and one explicitly confirmed persistent conversation, serially: three Jacob
+requests followed by three Teng requests. Every query HTTP stream reached 200
+and gzip EOF. Five passed source/semantic acceptance; one Teng answer was
+factually correct but had no references and was rejected. This is evidence for
+the bounded low-level SDK seam, not a complete CLI/MCP integration test, independent
+model comparison, concurrency test, or a guarantee that future answers cite
+sources. Keep transport, source validation and semantic acceptance separate.
