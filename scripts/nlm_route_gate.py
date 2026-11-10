@@ -1,7 +1,8 @@
 """Read-only gate for a task-owned fixed local HTTP proxy listener.
 
-This checks a pinned process/configuration and runtime proxy chain. It does not
-probe Google, change selectors, claim a public egress country, or prove that a
+This checks a pinned process/configuration and runtime proxy chain, using a
+credential-free TLS handshake. It does not send origin HTTP, change selectors,
+claim a public egress country, or prove that a
 control API independently exposes listener-to-node mappings.
 """
 from datetime import datetime, timezone

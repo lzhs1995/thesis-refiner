@@ -31,13 +31,15 @@ PREFLIGHT_SECONDS = 30
 CHILD_SECONDS = 240
 CLEANUP_SECONDS = 5
 DRAIN_SECONDS = 5
+ROUTE_POLICY_AUTHORITY = SCRIPTS.parent.parent / 'NLM-ROUTE-POLICY-PIN.json'
 
 
 def check_route(*args, **kwargs):
     # Called only after sdk_preflight installed the pinned source loader; -B
     # alone would still permit importing a pre-existing local bytecode cache.
     from nlm_route_gate import check_route as route_check
-    return route_check(*args, **kwargs)
+    with phase_deadline(20, 'ROUTE_WHOLE_PHASE_20_SECONDS'):
+        return route_check(*args, **kwargs)
 
 
 def require(ok, message):
@@ -83,6 +85,29 @@ def actor_check(cfg):
                 'ACTUAL_TASK_EXECUTOR_REQUIRED:' + variable)
 
 
+def enforce_route_policy(cfg):
+    # This file is installed by the maintainer beside the immutable source tree,
+    # not accepted from a CLI flag, environment variable or task input. The
+    # client's hook independently pins the same policy in its registered command.
+    authority = json.loads(ROUTE_POLICY_AUTHORITY.read_text())
+    require(authority['schema'] == 'nlm-network-policy-authority-v1', 'ROUTE_AUTHORITY_SCHEMA')
+    policy_ref = authority['policy']
+    require(cfg.get('route_policy') == policy_ref, 'REGISTERED_ROUTE_POLICY_REQUIRED')
+    policy = read(policy_ref)
+    require(policy['schema'] == 'nlm-network-policy-v1'
+            and policy['policy_role'] == 'mandatory-domain-route'
+            and bool(policy['required_route_label']), 'MANDATORY_DOMAIN_ROUTE_POLICY')
+    require(policy['entry'] == ref(__file__) and policy['python'] == cfg['python']
+            and cfg['route_binding'] == policy['route_binding'], 'TASK_ROUTE_NOT_APPROVED')
+    require(policy['code_pins'] == [ref(p) for p in sorted(SCRIPTS.glob('*.py'))],
+            'APPROVED_ENTRY_CODE_CHANGED')
+    if 'code_pins' in cfg:
+        require(cfg['code_pins'] == policy['code_pins'], 'PREPARED_CODE_NOT_APPROVED')
+    route = read(cfg['route_binding'])
+    require(cfg['proxy'] == route['proxy'], 'APPROVED_ROUTE_PROXY_REQUIRED')
+    return policy
+
+
 def validate_inputs(cfg):
     require(sys.version_info >= (3, 11), 'SDK_ENTRY_REQUIRES_PYTHON_3_11')
     require(cfg['schema'] == 'nlm-sdk-task-v1', 'TASK_SCHEMA')
@@ -97,6 +122,7 @@ def validate_inputs(cfg):
     checked(cfg['authorization'])
     require('route_binding' in cfg, 'PRIVATE_DOMAIN_ROUTE_BINDING_REQUIRED')
     checked(cfg['route_binding'])
+    enforce_route_policy(cfg)
     checked(cfg['python'])
     require(Path(sys.executable).resolve() == checked(cfg['python']), 'PINNED_PYTHON_REQUIRED')
     require(sys.flags.ignore_environment and sys.dont_write_bytecode and not sys.flags.optimize,
@@ -386,7 +412,9 @@ def _prepare(config, output):
     prepared = freeze(out / 'CONFIG.json', cfg)
     freeze(out / 'PREPARED.json', {'config': prepared, 'dependencies': dependencies, 'route': route,
         'native_actor_authentication': False, 'actor_check': 'actual caller environment; no root substitution',
-        'no_network': True, 'budget_mutations': False, 'global_entry_changes': False,
+        'no_network': False, 'network_scope': 'credential-free CONNECT/TLS route observation only',
+        'origin_http_requests': 0, 'query_posts': 0,
+        'budget_mutations': False, 'global_entry_changes': False,
         'preflight_seconds': PREFLIGHT_SECONDS, 'child_hard_seconds': CHILD_SECONDS,
         'cleanup_seconds': CLEANUP_SECONDS, 'termination_grace_seconds': DRAIN_SECONDS,
         'kill_drain_seconds': DRAIN_SECONDS})
@@ -422,7 +450,8 @@ def locked(path):
 def binding(cfg, path):
     path = Path(path).resolve()
     artifacts = [*cfg['code_pins'], cfg['python'], ref(path), cfg['sdk_manifest'],
-                 cfg['source_binding'], cfg['conversation_receipt'], cfg['authorization'], cfg['route_binding']]
+                 cfg['source_binding'], cfg['conversation_receipt'], cfg['authorization'], cfg['route_binding'],
+                 cfg['route_policy'], ref(ROUTE_POLICY_AUTHORITY)]
     return {'account_key': cfg['account_key'], 'notebook_id': cfg['notebook_id'],
         'target_id': cfg['target_id'] + ':' + cfg['provider'],
         'workspace_uuid': cfg['actor']['workspace_uuid'], 'surface_uuid': cfg['actor']['surface_uuid'],

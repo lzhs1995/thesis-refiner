@@ -34,12 +34,20 @@ class TaskEntryTests(unittest.TestCase):
             query_budget=2, single_request_per_process=True, source_ids=['source'],
             conversation_id='persistent', actor=dict(thread_id='thread',workspace_uuid='workspace',surface_uuid='surface'),
             authorization=evidence, python=entry.ref(sys.executable), broker_module=evidence,
-            route_binding=evidence,
+            route_binding=file('route.json', {'proxy':'http://127.0.0.1:1'}),
             external_locks=[str(self.root/'original.lock')],
             source_binding=file('source.json',dict(notebook_id='book',source_ids=['source'],
                 acceptance='ACCEPTED_FOR_REQUEST_SCOPE',document=document,evidence=[evidence])),
             conversation_receipt=file('conversation.json',dict(status='COMPLETE',account_key='account',
                 notebook_id='book',conversation_id='persistent',raw_answer=document)))
+        self.cfg['route_policy'] = file('policy.json', dict(schema='nlm-network-policy-v1',
+            policy_role='mandatory-domain-route', required_route_label='synthetic approved route',
+            entry=entry.ref(entry.__file__), python=entry.ref(sys.executable),
+            code_pins=[entry.ref(p) for p in sorted(entry.SCRIPTS.glob('*.py'))],
+            route_binding=self.cfg['route_binding']))
+        authority=file('authority.json',dict(schema='nlm-network-policy-authority-v1',policy=self.cfg['route_policy']))
+        self.authority=patch.object(entry,'ROUTE_POLICY_AUTHORITY',Path(authority['path']))
+        self.authority.start();self.addCleanup(self.authority.stop)
         self.actor = patch.dict(os.environ, {'CODEX_THREAD_ID':'thread','CMUX_WORKSPACE_ID':'workspace','CMUX_SURFACE_ID':'surface'})
         self.actor.start(); self.addCleanup(self.actor.stop)
         # Parent CI uses -B; the wrapper itself additionally requires -E.
@@ -95,6 +103,9 @@ class TaskEntryTests(unittest.TestCase):
         value=entry.read(prepared)
         self.assertEqual(value['actor'],self.cfg['actor'])
         self.assertTrue(value['code_pins'])
+        report=json.loads((out/'PREPARED.json').read_text())
+        self.assertFalse(report['no_network'])
+        self.assertEqual(report['query_posts'],0)
 
     def test_sdk_extra_import_file_rejected_before_import(self):
         root=self.root/'sdk';root.mkdir();(root/'injected.py').write_text('raise AssertionError("must not import")')
@@ -110,6 +121,31 @@ class TaskEntryTests(unittest.TestCase):
             with self.assertRaisesRegex(RouteGateError,'LIVE_CHAIN_MISMATCH'):
                 entry.prepare(p,out)
         self.assertFalse(out.exists())
+
+    def test_self_selected_route_policy_and_missing_route_rejected(self):
+        cfg={**self.cfg};cfg.pop('route_binding')
+        with self.assertRaisesRegex(ValueError,'PRIVATE_DOMAIN_ROUTE_BINDING_REQUIRED'):
+            entry.validate_inputs(cfg)
+        cfg={**self.cfg};cfg['route_policy']=cfg['authorization']
+        with self.assertRaisesRegex(ValueError,'REGISTERED_ROUTE_POLICY_REQUIRED'):
+            entry.validate_inputs(cfg)
+
+    def test_missing_installation_policy_authority_rejected(self):
+        with patch.object(entry,'ROUTE_POLICY_AUTHORITY',self.root/'absent.json'):
+            with self.assertRaises(FileNotFoundError):entry.validate_inputs(self.cfg)
+
+    def test_route_whole_phase_deadline_precedes_query_deadline(self):
+        import time
+        original=entry.phase_deadline
+        def short_phase(seconds,label):
+            self.assertEqual(seconds,20)
+            return original(.04,label)
+        with patch.object(entry,'phase_deadline',side_effect=short_phase), \
+                patch('nlm_route_gate.check_route',side_effect=lambda *_:time.sleep(.3)):
+            started=time.monotonic()
+            with self.assertRaisesRegex(TimeoutError,'ROUTE_WHOLE_PHASE'):
+                entry.check_route({},'pre_send')
+            self.assertLess(time.monotonic()-started,.2)
 
     def test_route_failure_stops_run_before_allocation_or_admission(self):
         import nlm_runtime
