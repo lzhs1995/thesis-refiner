@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="210" viewBox="0 0 900 210" role="img" aria-labelledby="title desc">
+<title id="title">Thesis Refiner</title><desc id="desc">Source-grounded research review. Original project illustration.</desc>
+<rect width="900" height="210" rx="24" fill="#f8fafc"/><rect x="15" y="15" width="195" height="180" rx="20" fill="#047857"/>
+<g transform="translate(5 10)"><path d="M45 50q30-12 60 6q30-18 60-6v80q-30-12-60 6q-30-18-60-6ZM105 56v80" fill="none" stroke="white" stroke-width="5"/><circle cx="142" cy="110" r="21" fill="#047857" stroke="white" stroke-width="5"/><path d="M157 127l17 17" stroke="white" stroke-width="7"/></g>
+<text x="242" y="96" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="700">Thesis Refiner</text>
+<text x="244" y="136" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="22">Source-grounded research review.</text>
+</svg>

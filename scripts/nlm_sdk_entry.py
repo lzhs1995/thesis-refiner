@@ -601,13 +601,37 @@ def transport(path, expected, output):
     return code
 
 
+def legacy_dispatch(config, *, request=None, expected=None, output=None, lookup_original=False):
+    # Only the new release uses this explicit compatibility mode. Do not run the
+    # SDK preflight/runtime for an already registered legacy task.
+    cfg = json.loads(Path(config).read_text())
+    policy = enforce_route_policy(cfg)
+    source_guard([SCRIPTS], policy['code_pins'])
+    from nlm_legacy_entry import run, transport
+    entry = sys.modules[__name__]
+    if output is not None:
+        return transport(entry, config, expected, output, lookup_original=lookup_original)
+    return run(entry, config, request)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest='mode', required=True)
     pre = sub.add_parser('prepare'); pre.add_argument('--config', required=True); pre.add_argument('--output-dir', required=True)
     call = sub.add_parser('run'); call.add_argument('--config', required=True); call.add_argument('--request', required=True)
     child = sub.add_parser('transport'); child.add_argument('--config', required=True); child.add_argument('--config-sha256', required=True); child.add_argument('--output-dir', required=True)
+    legacy = sub.add_parser('legacy-run'); legacy.add_argument('--config', required=True); legacy.add_argument('--request', required=True)
+    internal = sub.add_parser('legacy-transport'); internal.add_argument('--config', required=True); internal.add_argument('--config-sha256', required=True); internal.add_argument('--output-dir', required=True); internal.add_argument('--lookup-original', action='store_true')
     a = p.parse_args()
+    if a.mode == 'legacy-transport':
+        try:
+            return legacy_dispatch(a.config, expected=a.config_sha256, output=a.output_dir, lookup_original=a.lookup_original)
+        except TimeoutError:
+            return 124
+    if a.mode == 'legacy-run':
+        result = legacy_dispatch(a.config, request=a.request)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get('status') == 'COMPLETE' else 2
     if a.mode == 'transport':
         try:
             return transport(a.config, a.config_sha256, a.output_dir)
