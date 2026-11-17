@@ -14,6 +14,15 @@ are denied: their actual server transport has not been bound to this policy.
 Direct CLI/SDK scripts are denied too. Use the exact pinned SDK `prepare`/`run`
 entry; a direct `transport` invocation is not an alternative.
 
+Ordinary local reads and writes, offline tests, receipt summaries and messages
+do not require NLM registration. An NLM name in a filename, comment, report,
+message body or synthetic test string is not evidence of an NLM operation.
+Classify executable calls and their destination slots: an explicit NLM endpoint,
+SDK/CLI invocation or executing wrapper remains guarded. General HTTP arguments
+with no identified NLM destination are not presumed to be NLM. Compiling source
+as data is distinct from executing that compiled source. Tests that actually
+invoke NLM must still use the approved route.
+
 The hook does no network I/O. For a permitted entry it validates the registered
 policy, Python, code pins, task route and proxy. The entry repeats actor/source/
 account/queue validation and obtains fresh route evidence at preparation,
@@ -50,15 +59,18 @@ against an actor able to rewrite those trusted files or disable client hooks.
 Add this command under `PreToolUse`, matcher `*`, preserving all existing hooks:
 
 ```text
-/absolute/pinned/python -BE /absolute/release/source/scripts/nlm_network_guard.py --policy /absolute/private-policy/NLM-ROUTE-POLICY.json --policy-sha256 ACTUAL_SHA256
+/absolute/pinned/python -BE /absolute/release/source/scripts/nlm_network_guard.py --policy /absolute/private-policy/NLM-ROUTE-POLICY.json --policy-sha256 ACTUAL_SHA256 --entry-path /absolute/release/source/scripts/nlm_sdk_entry.py
 ```
 
 Use a client timeout above the guard's 4-second local deadline (for example 6
 seconds). Refresh any client-specific trusted hook hash using that client's
 supported mechanism. Do not replace another hook or claim registration proves
-loading. Test an actual client negative event (an NLM command must be refused
-without invoking it) and an ordinary read event. Also record direct process
-tests separately; they alone do not prove the client ran its hook.
+loading. Test actual client positive events for ordinary local execution,
+receipt processing and offline tests, including data that mentions NLM. Also
+test an NLM negative event without sending a request; make the fixture harmless
+even if the guard unexpectedly allows it. Record direct process tests separately;
+they alone do not prove the client ran its hook. Configuration, UI trust, actual
+handler loading and observed allow/deny behavior are separate evidence.
 
 Input accepts `tool_name`/`toolName`/`tool`/`name` and
 `tool_input`/`toolInput`/`input`/`arguments`. A permitted event prints `{}` and
@@ -71,8 +83,13 @@ protocol; until that is verified, report installed versus loaded separately.
 ## Local recovery and limitations
 
 Known read commands such as `cat`, safe `rg`, and line-range `sed` can inspect
-receipts, source and status without loading policy or networking. An exact,
-reviewed offline parser or original local-settlement command may be listed in
+receipts, source and status without loading policy or networking. Ordinary
+offline execution also needs no NLM exception or per-task allowlist. A false
+positive must be fixed in scope classification and verified in the affected
+client, rather than relabelled as missing user authorization.
+
+For compatibility, an already registered, exact reviewed offline parser or
+original local-settlement command may remain listed in
 `offline_commands`: `{ "argv": ["absolute", "literal", "arguments"],
 "network": "none", "files": ["exact path/bytes/sha256 references"] }`.
 List the script and its executable dependencies. No wildcard, argument suffix,
@@ -81,7 +98,10 @@ These entries are maintainer attestations about reviewed local code, not a
 sandbox that can infer absence of network effects. Existing UNKNOWN receipts,
 budgets, and original attempts remain unchanged by installing the guard.
 
-The classifier is intentionally conservative for recognized NLM executions;
+The classifier uses bounded Python syntax and JavaScript lexical analysis; it
+does not interpret every runtime path or prove that opaque code is offline.
+Unresolved general network destinations are outside that proof, not evidence of
+NLM by themselves. The classifier is conservative for recognized NLM executions;
 compound shell forms, environment substitution and unresolved NLM wrappers are
 denied. It is not an OS firewall, interpreter sandbox or proof about arbitrary
 obfuscated binaries, remote machines, already-running services, disabled hooks,
@@ -128,7 +148,18 @@ Legacy entries cannot carry `offline_argv` or `offline_commands`. If preserving
 an existing SDK offline command, its exact argv must be listed in that registry
 item's `offline_argv` and remain an exact reviewed item in its original policy.
 
-Register a single guard command with `--registry ABS --registry-sha256 SHA`.
+Register a single guard command with `--registry ABS --registry-sha256 SHA` and
+one `--entry-path ABS` for every entry in that installation-pinned registry.
+Generate these exact paths from the reviewed registry during installation; they
+are scope hints, not network permissions or registrations for ordinary offline
+scripts. A matching path still passes the unchanged registry, authority, policy,
+code, argument and route checks. Keeping these hints in the hook command means a
+missing or changed policy cannot make a dynamic registered entry disappear from
+classification, while unrelated local work does not read that policy. Existing
+reviewed offline exceptions may retain their exact script path as a scope hint.
+Without hints, explicit NLM SDK/CLI/destination evidence remains detected, but
+classification of an otherwise opaque dynamically loaded entry is not assured.
+Native client loading and a zero-network negative event remain separate checks.
 Adding a second wildcard guard alongside the old one does not work: the old
 guard would still reject the new entry. Preserve other unrelated hooks. The new
 entry also reads its installation-owned `NLM-GUARD-REGISTRY-PIN.json` beside

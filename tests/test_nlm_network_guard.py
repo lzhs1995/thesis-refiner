@@ -33,7 +33,12 @@ class NetworkGuardTests(unittest.TestCase):
 
     def check(self,command):
         guard.event_check({'tool_name':'Bash','tool_input':{'command':command},'cwd':str(self.root)},
-                          lambda:guard.load_policy(self.policy_path,self.policy_ref['sha256']))
+                          self.loader())
+
+    def loader(self):
+        paths=[str(self.entry)]
+        paths.extend(item['argv'][2] for item in self.policy.get('offline_commands', []))
+        return guard.PolicyLoader('policy', self.policy_path, self.policy_ref['sha256'], paths)
 
     def test_exact_entry_and_simple_shell_wrapper_allowed(self):
         self.check(self.command)
@@ -105,7 +110,7 @@ class NetworkGuardTests(unittest.TestCase):
         with self.assertRaisesRegex(guard.Denied,'PIN_CHANGED'):self.check('rtk proxy '+shlex.join(argv))
 
     def test_exec_nested_literal_checked_and_dynamic_nlm_denied(self):
-        loader=lambda:guard.load_policy(self.policy_path,self.policy_ref['sha256'])
+        loader=self.loader()
         code='text(await tools.exec_command({cmd: '+json.dumps(self.command)+'}));'
         guard.event_check({'tool_name':'functions.exec','tool_input':code},loader)
         for code in ['await tools.mcp__notebooklm__query({})',
@@ -116,7 +121,7 @@ class NetworkGuardTests(unittest.TestCase):
 
     def test_nested_exec_respects_literal_workdir_and_dynamic_file_wrapper_denied(self):
         script=self.root/'go.py';script.write_text('import notebooklm\n')
-        loader=lambda:guard.load_policy(self.policy_path,self.policy_ref['sha256'])
+        loader=self.loader()
         for code in ['await tools.exec_command({cmd:"python go.py",workdir:'+json.dumps(str(self.root))+'})',
                      'const f='+json.dumps(str(script))+';await tools.exec_command({cmd:f})']:
             with self.assertRaises(guard.Denied):
@@ -125,11 +130,11 @@ class NetworkGuardTests(unittest.TestCase):
     def test_protocol_variants_and_read_file_allowed(self):
         guard.event_check({'toolName':'Read','toolInput':{'file_path':'/tmp/nlm.py'}},lambda:None)
         guard.event_check({'tool':'shell','arguments':{'command':self.command}},
-                         lambda:guard.load_policy(self.policy_path,self.policy_ref['sha256']))
+                         self.loader())
 
     def test_hook_process_protocol_no_network(self):
         command=[sys.executable,'-BE',guard.__file__,'--policy',str(self.policy_path),
-                 '--policy-sha256',self.policy_ref['sha256']]
+                 '--policy-sha256',self.policy_ref['sha256'],'--entry-path',str(self.entry)]
         for payload,expected in [({'tool_name':'Bash','tool_input':{'command':'nlm query x'}},2),
                                  ({'tool_name':'Bash','tool_input':{'command':'cat /tmp/nlm.json'}},0),
                                  ({'tool_name':'Bash','tool_input':{'command':self.command}},0)]:

@@ -98,7 +98,7 @@ def explicit_guard(entry, config_path, request_path):
     authority = json.loads(path.read_text())
     entry.require(authority.get('schema') == 'nlm-network-entry-registry-authority-v1', 'GUARD_REGISTRY_AUTHORITY_REQUIRED')
     registry = authority['registry']; entry.checked(registry)
-    from nlm_network_guard import event_check, load_registry
+    from nlm_network_guard import event_check, PolicyLoader
     raw_argv = list(sys.orig_argv)
     argv = list(raw_argv)
     entry.require(len(argv) == 8 and argv[1] == '-BE'
@@ -140,7 +140,7 @@ def explicit_guard(entry, config_path, request_path):
                     'launcher': policy['python'], 'runtime': compat['runtime'],
                     'process_image': str(process_image), 'proc_pidpath_returned': returned}
     event_check({'tool_name': 'exec_command', 'tool_input': {'cmd': shlex.join(argv)}},
-                lambda: load_registry(registry['path'], registry['sha256']))
+                PolicyLoader('registry', registry['path'], registry['sha256'], [argv[2]]))
     return {'status': 'EXPLICIT_SAME_RELEASE_GUARD_ALLOW', 'registry': registry,
             'automatic_client_hook_observed': False, 'query_credit': False, 'invocation': evidence}
 
