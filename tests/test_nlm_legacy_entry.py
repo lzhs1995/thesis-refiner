@@ -92,7 +92,11 @@ class RegistryTests(unittest.TestCase):
         return {'tool_name': 'exec_command', 'tool_input': {'cmd': shlex.join(argv)}}
 
     def check(self, argv):
-        G.event_check(self.event(argv), lambda: G.load_registry(self.registry['path'], self.registry['sha256']))
+        G.event_check(self.event(argv), self.guard_loader())
+
+    def guard_loader(self):
+        return G.PolicyLoader('registry', self.registry['path'], self.registry['sha256'],
+                              [str(self.old['script']), str(self.new['script'])])
 
     def test_old_prepare_run_and_new_legacy_allowed(self):
         for argv in (self.argv(self.old), self.argv(self.old, 'prepare'), self.argv(self.new)):
@@ -112,7 +116,7 @@ class RegistryTests(unittest.TestCase):
                         shlex.join(argv) + '\ntrue'):
             with self.assertRaises(G.Denied):
                 G.event_check({'tool_name': 'exec_command', 'tool_input': {'cmd': command}},
-                              lambda: G.load_registry(self.registry['path'], self.registry['sha256']))
+                              self.guard_loader())
 
     def test_task_cannot_choose_route_or_policy_or_contract(self):
         for field, value in [('proxy', 'http://127.0.0.1:49999'), ('route_policy', self.old['item']['policy']),
@@ -131,7 +135,7 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaises(G.Denied): self.check(self.argv(self.old))
 
     def test_unapproved_adapter_and_duplicate_registry_refused(self):
-        adapter = self.root / 'nlm_old_adapter.py'; adapter.write_text('# original adapter fixture')
+        adapter = self.root / 'nlm_old_adapter.py'; adapter.write_text('import notebooklm\n')
         with self.assertRaises(G.Denied): self.check([str(self.python), '-BE', str(adapter), 'run'])
         self.registry = write(Path(self.registry['path']), {'schema': 'nlm-network-entry-registry-v1',
                          'entries': [self.old['item'], self.old['item']]})
@@ -148,7 +152,8 @@ class RegistryTests(unittest.TestCase):
 
     def test_real_guard_process_protocol_allow_and_deny(self):
         command = [sys.executable, '-BE', str(SCRIPTS / 'nlm_network_guard.py'), '--registry',
-                   self.registry['path'], '--registry-sha256', self.registry['sha256']]
+                   self.registry['path'], '--registry-sha256', self.registry['sha256'],
+                   '--entry-path',str(self.old['script']),'--entry-path',str(self.new['script'])]
         for argv, code in ((self.argv(self.old), 0), (self.argv(self.new), 0),
                            (self.argv(self.new, 'legacy-transport'), 2)):
             done = subprocess.run(command, input=json.dumps(self.event(argv)), text=True, capture_output=True)

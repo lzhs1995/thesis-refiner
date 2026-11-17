@@ -121,8 +121,16 @@ class OfflinePreparationGuardTests(unittest.TestCase):
         variants += ['text(await tools.exec_command('+args[:-1]+', "yield_time_ms":'+v+'}));'
                      for v in ('NaN','Infinity','-Infinity','true')]
         for variant in variants:
-            with self.subTest(variant=variant),self.assertRaises(ValueError):
-                D.event_check({'tool_name':'functions.exec','tool_input':variant},self.loader())
+            with self.subTest(variant=variant):
+                # No exact offline attestation is granted. The generic guard
+                # nevertheless permits this synthetic no-network program;
+                # mentions of NLM in fixture text do not require registration.
+                self.assertIsNone(D.event_check(
+                    {'tool_name':'functions.exec','tool_input':variant},self.loader()))
+        with self.assertRaises(ValueError):
+            D.event_check({'tool_name':'functions.exec','tool_input':
+                           code+'text(await tools.exec_command({cmd:"nlm query fixture"}));'},
+                          self.loader())
 
     def test_network_script_cannot_be_disguised_as_offline(self):
         item=self.item();item['script']=self.policy['entry'];item['argv'][2]=item['script']['path']

@@ -24,6 +24,7 @@ MAX_BYTES = 2 * 1024 * 1024
 NETWORK_GUARD_SHA256 = {
     '19ddbe15e874c26375ba21558829d9239d582d87a5501acbc7ec2882ec6b981f',
     'cac540ae0d1b4e6ff6820f0b8855b41c1b7c4d30aae83c151252365f7fab568f',
+    '09c204d3365dc27f1f0bf7338fed7b1d8e4a5b1cc987a09502d9dcd7c86458bf',
 }
 EXECUTION = re.compile(r'bash|shell|exec|run_command|terminal|python|javascript|browser|navigate', re.I)
 
@@ -168,6 +169,16 @@ def delegate_event(payload, registry):
         pinned(selected)
         method = guard.load_policy if authority['kind'] == 'policy' else guard.load_registry
         return method(selected['path'], selected['sha256'])
+    if hasattr(guard, 'PolicyLoader'):
+        # This compatibility dispatcher is itself already an explicitly bound
+        # contract. Derive scope hints from its exact pinned network authority;
+        # all actual permissions remain in the delegated validators.
+        document = json.loads(pinned(selected))
+        if authority['kind'] == 'policy':
+            paths = [document['entry']['path']]
+        else:
+            paths = [item['entry']['path'] for item in document['entries']]
+        loader.scope_entry_paths = frozenset(paths)
     return guard.event_check(payload, loader)
 
 

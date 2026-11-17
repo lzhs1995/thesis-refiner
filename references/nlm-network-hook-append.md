@@ -1,5 +1,13 @@
 ### Offline preparation registration / 離線封裝登記
 
+This is a compatibility mechanism for existing, explicitly registered tasks.
+It is not a prerequisite for ordinary local scripts, offline tests, receipt
+summaries or collaboration messages. NLM text in their filenames or data does
+not make them NLM network operations. Do not add per-task registrations to work
+around a scope false positive; correct the network guard and verify the affected
+client's real execution. Existing registrations and original attempts remain
+valid under their original contracts; this clarification does not migrate them.
+
 `scripts/nlm_offline_preparation_guard.py` adds a separate, exact offline path for
 reviewed static preparation, transport preparation and local maintenance
 installation. It never executes the registered command. All other events are
@@ -76,6 +84,8 @@ must not include the hash of an outer registry that contains its own input or
 plan hash. The maintainer reads and preserves that current outer state at the
 actual update, without weakening the separately pinned network policy.
 
+普通離線工作不要求此登記；它只保留已明確登記任務的相容途徑。分類器是有界
+解析，不是任意程式無網路副作用的證明，文件或測試通過也不代表客戶端已載入。
 離線登記只接受具名完整命令及固定檔案，不能以 `network: none` 標籤把原網路
 腳本變成離線例外。先有 static 契約，再安裝對應 policy，最後產生 prepare
 輸入；內部網路 registry 與可追加離線登記的外層 registry 分開，避免雜湊循環。
