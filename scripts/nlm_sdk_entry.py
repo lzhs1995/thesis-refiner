@@ -563,7 +563,8 @@ def transport(path, expected, output):
                 value = parse_answer(cfg['provider'], client, raw)
                 save(out / 'PARSED-ANSWER.json', value)
                 value.update(conversation_id=cfg['conversation_id'], notebook_id=cfg['notebook_id'],
-                             request_conversation_id=wire_id, conversation_receipt=cfg['conversation_receipt'],
+                             request_conversation_id=request['conversation_id'], wire_conversation_id=wire_id,
+                             conversation_receipt=cfg['conversation_receipt'],
                              conversation_evidence='explicit previously confirmed persistent ID; no metadata POST')
                 validate_answer(value, request)
                 code = 0
