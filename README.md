@@ -34,6 +34,8 @@ See [the two connected work loops](references/dual-loop-workflow.md), [review an
 
 ## Three complementary projects
 
+For an existing spatial study, the optional [Spatial Reproduction Audit skill](skills/spatial-reproduction-audit/README.md) checks sample/weight ordering, estimands, custom formulas and historical evidence. Supply a private project binding and let your agent read its `SKILL.md` directly. It reuses authorized project scripts; it does not install a model runner or change an active manuscript task.
+
 | Project | Use it for | When it is needed here |
 | --- | --- | --- |
 | **Thesis Refiner** | Evidence tracing, manuscript review, and local decisions | Start here for the research workflow and standalone local checks |

@@ -34,6 +34,8 @@ Thesis Refiner 為 AI agent 提供可重複執行的流程：將論文主張對�
 
 ## 三個互補專案
 
+核查既有空間研究時，可直接讓 agent 讀取選用的 [Spatial Reproduction Audit 技能](skills/spatial-reproduction-audit/README.md)，搭配包外的私有專案綁定，檢查樣本與權重順序、估計量、自訂公式及歷史證據。它沿用獲授權的專案腳本，不安裝模型執行器，也不變更在途論文任務。
+
 | 專案 | 用途 | 在本流程中的需要時機 |
 | --- | --- | --- |
 | **Thesis Refiner** | 證據追溯、文稿審閱與本地裁定 | 研究流程及獨立本地檢查可從這裡開始 |
