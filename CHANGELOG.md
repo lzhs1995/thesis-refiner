@@ -1,3 +1,8 @@
+## Unreleased
+
+- Preserve Teng source citation tables and raw fragments from the selected answer chunk, including multiple and nested tables constrained to their parent ranges; reject malformed shapes or citation identity mismatches.
+- Keep the original request conversation ID separate from the wire stream identifier in the ordinary SDK entry. Existing task bindings and archived responses remain unchanged.
+
 ## 2026.10.24.1
 
 - Consume MAC0.4.67 fair file sweeps, semantic successor previews, original-pair coverage and complete scoped-result receipts without copying shared hooks or senders.

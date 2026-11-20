@@ -10,6 +10,17 @@ Version 3 serializes SDK Enum fields to their original values while retaining
 all structured-document and reference fields. Actual Teng answers contained
 BlockStyle enums that `dataclasses.asdict` alone could not serialize.
 
+The citation-table helper also preserves tables in the source fragment of the
+same answer chunk selected by Teng 0.8.6. It verifies citation ordinals and
+source-side fields before adding `cited_tables` and `cited_fragment_raw`; when
+there is exactly one table, `cited_table` provides that table directly. Multiple
+tables remain distinct, including nested tables. Text is constrained by the
+effective table, row and cell ranges, including inherited bounds for nested
+tables; empty cell intersections retain an empty column. Existing text,
+coordinates and answer fields are retained. A malformed or mismatched table raises an error;
+an absent table is not filled from an earlier stream chunk. Bind
+`nlm_citation_tables.py` with the other code files for a new prepared task.
+
 `scripts/nlm_sdk_adapter.py` supplies a narrow HTTP boundary for separately pinned
 Jacob and Teng installations. It does not select/install an SDK, obtain a login,
 allocate an account budget, release an UNKNOWN request, or change a controller.
@@ -52,7 +63,10 @@ exposes every future server field. A marked final answer outranks a longer
 intermediate answer. Thinking text, empty answers and unterminated streams do
 not establish COMPLETE.
 
-The stream ID is not used as a persistent conversation ID. A fresh request is
+`request_conversation_id` records the request's original conversation value;
+`wire_conversation_id` records the stream's generated or supplied wire identifier.
+These fields must not be substituted for the separately confirmed persistent
+`conversation_id`. The stream ID is not used as a persistent conversation ID. A fresh request is
 allowed only in a newly created task-owned notebook; later requests must bind
 the actual persistent conversation. For a fresh request, read it once with
 `hPTbtc` in that exclusive notebook and require one unique ID. For subsequent

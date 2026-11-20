@@ -75,4 +75,8 @@ def parse_answer(provider, client, raw):
         raise ProviderApplicationError(error)
     # dataclasses.asdict retains Enum objects in real structured documents.
     # Keep all keys and raw enum values; never drop the document to serialize.
-    return json_value(previous.parse_answer(provider, client, raw))
+    value = json_value(previous.parse_answer(provider, client, raw))
+    if provider == 'teng':
+        from nlm_citation_tables import retain_teng_citation_tables
+        retain_teng_citation_tables(value, raw)
+    return value
