@@ -152,9 +152,10 @@ class OriginalReadTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(cleaned.is_set())
 
     async def test_logging_failure_does_not_leave_a_background_read(self):
-        cleaned = asyncio.Event()
+        started, cleaned = asyncio.Event(), asyncio.Event()
 
         async def read_forever():
+            started.set()
             try:
                 await asyncio.Event().wait()
             finally:
@@ -163,9 +164,15 @@ class OriginalReadTests(unittest.IsolatedAsyncioTestCase):
         def failed_callback(_):
             raise OSError("local evidence disk unavailable")
 
+        # A not-yet-started coroutine may be cancelled without entering its
+        # finally block. Exercise cleanup of an actual in-flight read explicitly.
+        original = asyncio.create_task(read_forever())
+        await started.wait()
         with self.assertRaises(OSError):
-            await await_stream_operation(read_forever, self.deadline(), {"chars": 0},
+            await await_stream_operation(lambda: original, self.deadline(), {"chars": 0},
                                          on_observation=failed_callback)
+        self.assertTrue(original.done())
+        self.assertTrue(original.cancelled())
         self.assertTrue(cleaned.is_set())
 
     async def test_expired_total_cap_does_not_start_another_read(self):
