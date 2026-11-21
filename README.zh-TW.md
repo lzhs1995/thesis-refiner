@@ -36,6 +36,8 @@ Thesis Refiner 為 AI agent 提供可重複執行的流程：將論文主張對�
 
 核查既有空間研究時，可直接讓 agent 讀取選用的 [Spatial Reproduction Audit 技能](skills/spatial-reproduction-audit/README.md)，搭配包外的私有專案綁定，檢查樣本與權重順序、估計量、自訂公式及歷史證據。它沿用獲授權的專案腳本，不安裝模型執行器，也不變更在途論文任務。
 
+人口普查與統計年鑑取件可選用 [Census Source Trace 技能](skills/census-source-trace/README.zh-TW.md)，沿用既有授權工具定位來源、復用已驗下載，登記頁碼／儲存格、單位、年份、地域及口徑，並分開記錄候選審核與研究正式採用。已有一次 Codex 離線虛構範例演練；它不是盲測，也不證明線上取件或 Claude／Gemini 已實際運作。
+
 | 專案 | 用途 | 在本流程中的需要時機 |
 | --- | --- | --- |
 | **Thesis Refiner** | 證據追溯、文稿審閱與本地裁定 | 研究流程及獨立本地檢查可從這裡開始 |
