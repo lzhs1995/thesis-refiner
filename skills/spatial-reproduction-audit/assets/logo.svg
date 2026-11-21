@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Spatial Reproduction Audit</title>
+  <desc id="desc">Three spatial nodes joined by paths beside a verification check.</desc>
+  <rect width="128" height="128" rx="24" fill="#F0FDFA"/>
+  <path d="M28 36 88 28 48 92Z" fill="none" stroke="#0F766E" stroke-width="5" stroke-linejoin="round"/>
+  <g fill="#0F766E"><circle cx="28" cy="36" r="8"/><circle cx="88" cy="28" r="8"/><circle cx="48" cy="92" r="8"/></g>
+  <circle cx="91" cy="87" r="25" fill="#FFFFFF"/>
+  <path d="m76 87 10 10 21-24" fill="none" stroke="#0F766E" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

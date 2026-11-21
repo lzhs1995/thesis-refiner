@@ -1,0 +1,47 @@
+{
+  "example_only": true,
+  "task_id": "synthetic-census-example",
+  "mode": "offline_existing_sources",
+  "request": {
+    "source_family": "official-census-or-yearbook",
+    "book_title": "Synthetic Census Tables",
+    "edition": "example-edition",
+    "publication_year": 2022,
+    "statistical_years": [
+      2020
+    ],
+    "regions": [
+      {
+        "code": "EXAMPLE-A01",
+        "name": "Example Region A",
+        "geographic_level": "example-local-area",
+        "boundary_version": "example-2020-boundary"
+      }
+    ],
+    "table_title": "Household counts",
+    "indicator": "households_total",
+    "unit": "households",
+    "population": "households in the specified boundary",
+    "numerator": null,
+    "denominator": null
+  },
+  "private_project": {
+    "checkpoint": "./private-project/CHECKPOINT.md",
+    "source_register": "./private-project/source-register.json",
+    "existing_receipts": "./private-project/receipts",
+    "output_directory": "./private-project/new-candidates"
+  },
+  "tools": {
+    "browser": "existing host tool when acquisition is authorized",
+    "table_reader": "existing format-compatible reader"
+  },
+  "network_budget": {
+    "max_new_requests": 0,
+    "max_retries": 0,
+    "timeout_seconds": null
+  },
+  "formal_adoption": {
+    "requested": false,
+    "decision_reference": null
+  }
+}

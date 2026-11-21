@@ -1,0 +1,67 @@
+{
+  "example_only": true,
+  "record_id": "synthetic-candidate-001",
+  "source": {
+    "database": "synthetic-example",
+    "resource_id": "example-table-01",
+    "url": null,
+    "book_title": "Synthetic Census Tables",
+    "edition": "example-edition",
+    "publication_year": 2022,
+    "statistical_year": 2020,
+    "table_number": "1-1",
+    "table_title": "Household counts",
+    "printed_page": 12,
+    "platform_page": null,
+    "sheet": "Table 1",
+    "cell": "B6",
+    "image_bbox": null,
+    "original_file": null,
+    "bytes": null,
+    "sha256": null,
+    "retrieved_at": null,
+    "reader": null,
+    "footnotes": null
+  },
+  "semantics": {
+    "region_code": "EXAMPLE-A01",
+    "region_name": "Example Region A",
+    "boundary_version": "example-2020-boundary",
+    "region_members": null,
+    "source_indicator": "Households",
+    "standard_indicator": "households_total",
+    "population": "households in the specified boundary",
+    "age_threshold": null,
+    "census_or_sample": null,
+    "residence_scope": null,
+    "unit_original": "households",
+    "numerator": null,
+    "denominator": null
+  },
+  "lineage": {
+    "raw_value": "12",
+    "raw_type": "text",
+    "parsed_value": 12,
+    "unit_factor": 1,
+    "formula": null,
+    "parents": [],
+    "measurement_origin": "unknown"
+  },
+  "review": {
+    "state": "candidate",
+    "reason": "Synthetic illustration; no source file or real observation supplied.",
+    "file_check": "not_run",
+    "table_check": "not_run",
+    "numeric_check": "not_run",
+    "unresolved_fields": [
+      "source artifact/hash",
+      "boundary membership",
+      "source footnotes",
+      "population scope"
+    ],
+    "formal_adoption": {
+      "adopted": false,
+      "decision_reference": null
+    }
+  }
+}
