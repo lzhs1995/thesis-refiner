@@ -19,6 +19,7 @@ import locale
 import os
 from pathlib import Path
 import signal
+import stat
 import sqlite3
 import subprocess
 import sys
@@ -154,7 +155,7 @@ def verify_sdk_tree(cfg):
     manifest = read(cfg['sdk_manifest'])
     require(manifest['schema'] == 'nlm-sdk-environment-v1', 'COMPLETE_SDK_MANIFEST_REQUIRED')
     roots = [Path(p).resolve(strict=True) for p in manifest['import_roots']]
-    require(all(p.is_dir() for p in roots), 'SDK_IMPORT_ROOT_REQUIRED')
+    require(all(stat.S_ISDIR(p.stat().st_mode) for p in roots), 'SDK_IMPORT_ROOT_REQUIRED')
     declared = set()
     for item in manifest['files']:
         path = checked(item)
@@ -163,10 +164,24 @@ def verify_sdk_tree(cfg):
         declared.add(str(path))
     # -B prevents writes, not reads. Never accept an unrecorded cache, even an
     # empty cache directory; do not delete it to make validation pass.
-    members = [p for root in roots for p in root.rglob('*')]
+    # Direct scandir/stat propagates phase TimeoutError (an OSError subtype).
+    # Roots and every declared file were resolved and hashed above. Reject all
+    # symlinks before comparing canonical-root lexical members, avoiding a
+    # second resolve of every file. This is not an atomic filesystem snapshot.
+    members, pending, actual = [], list(roots), set()
+    while pending:
+        with os.scandir(pending.pop()) as entries:
+            for entry in entries:
+                path = Path(entry.path)
+                mode = entry.stat(follow_symlinks=False).st_mode
+                require(not stat.S_ISLNK(mode), 'SDK_TREE_SYMLINK_FORBIDDEN')
+                members.append(path)
+                if stat.S_ISDIR(mode):
+                    pending.append(path)
+                elif stat.S_ISREG(mode):
+                    actual.add(str(path))
     require(not any(p.name == '__pycache__' or p.suffix in {'.pyc', '.pyo'}
                     for p in members), 'SDK_BYTECODE_CACHE_FORBIDDEN')
-    actual = {str(p.resolve()) for p in members if p.is_file()}
     require(actual == declared, 'SDK_IMPORT_TREE_CHANGED')
     require(bool(manifest['sources']), 'SDK_PROVENANCE_REQUIRED')
     for source in manifest['sources']:
