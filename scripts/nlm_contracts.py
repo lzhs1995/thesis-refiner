@@ -2,6 +2,13 @@
 from __future__ import annotations
 from pathlib import Path
 
+SAFE_TRANSPORT_CODES = frozenset({
+    'EMPTY_HISTORY_SHAPE_UNVERIFIED', 'SERVER_TURNS_NOT_EXPLICITLY_EMPTY',
+    'PERSISTENT_CONVERSATION_SHAPE_OR_MULTIPLICITY', 'PERSISTENT_CONVERSATION_UUID_REQUIRED',
+    'SETUP_RPC_PARSE_FAILED_NO_RETRY', 'FULLTEXT_CONTENT_REQUIRED',
+    'HPTBTC_NON_NULL_JSON_PAYLOAD_REQUIRED', 'HPTBTC_ERROR_ENVELOPE',
+    'ONE_EXPLICIT_HPTBTC_ENVELOPE_REQUIRED', 'HPTBTC_FIXED_PARSER_DISAGREEMENT'})
+
 
 def cli_argv(provider, operation, *, notebook_id, file=None, prompt=None,
              source_ids=(), conversation_id=None):
@@ -36,6 +43,11 @@ def cli_argv(provider, operation, *, notebook_id, file=None, prompt=None,
 
 
 def reject_error(data):
+    # A bounded transport failure is not a source payload. Preserve only these
+    # non-secret diagnostics, never arbitrary exception text or token strings.
+    if data.get('status') == 'UNCERTAIN' and data.get('error_type'):
+        code = data.get('error_code')
+        raise ValueError(code if isinstance(code, str) and code in SAFE_TRANSPORT_CODES else 'TRANSPORT_UNCERTAIN')
     if data.get("success") is False or data.get("ok") is False or data.get("error") or str(data.get("status", "")).upper() in {"ERROR", "FAILED", "FAILURE"}:
         raise ValueError("REMOTE_ERROR_RESPONSE")
 
@@ -72,6 +84,14 @@ def normalized_result(operation, data, *, source_id=None, notebook_id=None):
                 raise ValueError("NOTEBOOK_ID_MISSING")
         return {"notebooks": value}
     value = unwrap(data)
+    if operation == "notebook_create":
+        if not isinstance(value.get("created_notebook_id"), str) or not value["created_notebook_id"]:
+            raise ValueError("CREATED_NOTEBOOK_ID_REQUIRED")
+        return value
+    if operation == "source_text_add":
+        if not value.get("source_id") or value.get("notebook_id") != notebook_id:
+            raise ValueError("BOUND_TEXT_SOURCE_REQUIRED")
+        return value
     if notebook_id and value.get("notebook_id") not in {None, notebook_id}:
         raise ValueError("RESPONSE_NOTEBOOK_MISMATCH")
     if operation == "source_add":
