@@ -1,5 +1,7 @@
 # 协作、租约与恢复
 
+本页cmux身份、握手、callback及continuing段落仅适用于已登记cmux合同；新Herdr任务使用MAC的Herdr适配。资源与科学验收规则仍共用。
+
 任务分工、握手预算归因与已验收成果收尾见[协作提效与收尾](collaboration-efficiency-and-closeout.md)。沿用下列原会话、身份与资源边界。
 
 身份不符必须 fail-closed、零发送：发送前核实当前 caller 与指定 receiver 的真实

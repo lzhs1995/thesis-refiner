@@ -67,7 +67,7 @@ pending_enrollment 定位停点。file_posts_complete=false 表示计数可能�
   通信维修不自动扩大论文审查范围，也不能绕过原Stop guard或未知资源终态。
 
 Claude可重试API故障按[协作与恢复](collaboration-and-recovery.md)执行：有界同会话重试，
-从首次真实失败到新鲜失败至少连续300秒，任何真实API成功重置计时；静屏、排队、
+按[当前API重试规则](collaboration-and-recovery.md#三态连续推进与主动反馈)使用最多3次独立终态尝试，至少间隔60秒并遵守更长Retry-After；不另加300秒空等。任何真实API成功重置计时；静屏、排队、
 未知结果和重试次数不够作不可用判断。等待期间推进独立工作，满足门槛后保留原会话
 和失败证据、冻结执行者并核实无并发写入，再按已有授权由Codex接管。
 欠费/认证/额度故障不盲重试，用户明确停用或撤回授权单列。
