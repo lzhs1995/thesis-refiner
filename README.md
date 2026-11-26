@@ -12,6 +12,19 @@ Thesis Refiner gives an AI agent a repeatable workflow for checking claims again
 
 <p align="center"><img src="assets/workflow.svg" alt="Freeze a manuscript version, review by topic in NotebookLM, verify citations locally, and review the same version again" width="960"></p>
 
+## Demo
+
+- [Quick overview (34 seconds)](https://youtu.be/SltgxIEEnI0)
+- [Walkthrough (4:16)](https://youtu.be/hlrzT_IOQVk)
+
+Local evidence tracing on a synthetic chapter, using the Codex revision produced in rehearsal. The videos retain the failed original check and show the corrected numerical check. They do not rerun a statistical model or execute NotebookLM review.
+
+Silent, edited videos with burned-in Traditional Chinese and English captions.
+
+以合成短章與 Codex 彩排修訂產物示範本地數字溯源，保留原稿的失敗檢查並展示修訂後結果；本片未重跑統計模型，也未執行 NotebookLM 複核。
+
+無聲剪輯版，附繁中／英文燒錄字幕。
+
 ## The review loop
 
 1. **Freeze a candidate.** Identify the Word manuscript, its exported PDF, source files, and hashes. Trace empirical claims to data, variables, sample definitions, model specifications, and outputs. Keep a separate backup of the research originals and work on named copies.
