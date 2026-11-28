@@ -47,6 +47,10 @@ See [the two connected work loops](references/dual-loop-workflow.md), [review an
 
 ## Three complementary projects
 
+For an existing spatial study, the optional [Spatial Reproduction Audit skill](skills/spatial-reproduction-audit/README.md) checks sample/weight ordering, estimands, custom formulas and historical evidence. Supply a private project binding and let your agent read its `SKILL.md` directly. It reuses authorized project scripts; it does not install a model runner or change an active manuscript task.
+
+For census and statistical-yearbook sourcing, the optional [Census Source Trace skill](skills/census-source-trace/README.md) guides source location, verified-download reuse, and page/cell, unit, year, geography and definition records. It separates candidate review from formal research adoption and uses your existing authorized tools. One Codex offline synthetic-fixture exercise is recorded; it was not a blind test and does not establish live acquisition or Claude/Gemini runtime.
+
 | Project | Use it for | When it is needed here |
 | --- | --- | --- |
 | **Thesis Refiner** | Evidence tracing, manuscript review, and local decisions | Start here for the research workflow and standalone local checks |

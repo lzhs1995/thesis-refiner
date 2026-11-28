@@ -1,0 +1,90 @@
+{
+  "example_only": true,
+  "project_id": "synthetic-spatial-example",
+  "base_directory": ".",
+  "scope_contract": "analysis/EXECUTION.md",
+  "mode": "audit_existing",
+  "components": [
+    {
+      "id": "spatial_model",
+      "mode": "audit_existing"
+    },
+    {
+      "id": "legacy_maps",
+      "mode": "historical_only"
+    }
+  ],
+  "inputs": {
+    "data": "data/analysis.csv",
+    "id_column": "area_id",
+    "time_column": null,
+    "unit_definition": "Study areas under the documented boundary version",
+    "included_ids": "data/included_ids.csv",
+    "exclusion_reasons": "data/exclusions.csv",
+    "ordered_model_ids": "results/model_ids.csv"
+  },
+  "weights": {
+    "object": "results/weights.rds",
+    "row_ids": "results/weight_row_ids.csv",
+    "column_ids": "results/weight_column_ids.csv",
+    "specification": "analysis/weights.json",
+    "required_fields": [
+      "crs",
+      "coordinate_source",
+      "distance_metric",
+      "distance_units",
+      "neighbor_rule",
+      "standardization",
+      "island_policy"
+    ]
+  },
+  "execution": {
+    "entrypoint": "analysis/spatial.R",
+    "invocation_contract": "analysis/EXECUTION.md",
+    "working_directory": ".",
+    "environment": {},
+    "arguments": [],
+    "replay_authorized": false,
+    "reuse_completed_results": true
+  },
+  "results": {
+    "point_estimates": "results/effects_point.csv",
+    "simulation_summary": "results/effects_simulation.csv",
+    "historical_reference": "reference/published_cells.csv",
+    "environment_record": "results/session-info.txt"
+  },
+  "statistics": [
+    {
+      "name": "direct_share",
+      "formula": "D / T",
+      "input_kind": "point_estimate",
+      "zero_denominator": "undefined"
+    },
+    {
+      "name": "custom_statistic",
+      "formula": null,
+      "input_kind": null,
+      "source_locator": null,
+      "status": "UNVERIFIED until the authoritative formula is supplied"
+    }
+  ],
+  "comparison": {
+    "rule": "abs(observed-reference) <= atol + rtol*abs(reference)",
+    "atol": null,
+    "rtol": null,
+    "display_digits": null,
+    "note": "Set from the project contract before comparison; null means not yet specified."
+  },
+  "randomness": {
+    "historical_seed": null,
+    "replay_seed": null,
+    "rng_kind": null,
+    "simulation_count": null,
+    "null_means": "unknown or not supplied, not zero"
+  },
+  "pins": [],
+  "audit_output_directory": "audit/spatial-review",
+  "unresolved_items": [
+    "Replace synthetic paths and attach authoritative scope, IDs, formulas, tolerance and file pins before claiming verification."
+  ]
+}
